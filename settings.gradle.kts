@@ -24,4 +24,17 @@ dependencyResolutionManagement {
 
 rootProject.name = "NefroPed"
 include(":app")
- 
+
+// Nuevos módulos
+include(":core:domain")
+include(":core:data")
+include(":core:local")
+include(":core:common")
+include(":features:auth")
+include(":features:chat")
+include(":features:courses")
+include(":features:onboarding")
+include(":features:splash")
+include(":designsystem")
+include(":di")
+include(":domain")
