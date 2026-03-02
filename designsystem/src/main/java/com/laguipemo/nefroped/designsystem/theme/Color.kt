@@ -1,4 +1,5 @@
-package com.laguipemo.nefropediatra.presentation.theme
+package com.laguipemo.nefroped.designsystem.theme
+
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF415F91)
