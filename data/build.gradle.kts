@@ -1,8 +1,10 @@
+import com.android.build.api.dsl.LibraryExtension
+
 plugins {
     alias(libs.plugins.android.library)
 }
 
-android {
+configure<LibraryExtension> {
     namespace = "com.laguipemo.nefroped.core.data"
     compileSdk {
         version = release(36) {
@@ -33,6 +35,22 @@ android {
 }
 
 dependencies {
+    implementation(project(":domain"))
+    implementation(project(":local"))
+    implementation(project(":common"))
+
+    // Supabase
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.realtime)
+
+    // Ktor (para fallback GitHub/markdown)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

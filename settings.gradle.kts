@@ -19,6 +19,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        //add itpack.io for compose markdown
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
@@ -28,4 +30,5 @@ include(":app")
 // Nuevos módulos
 include(":domain")
 include(":common")
-
+include(":local")
+include(":data")
