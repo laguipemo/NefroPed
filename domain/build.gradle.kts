@@ -11,3 +11,8 @@ kotlin {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
     }
 }
+
+dependencies {
+    // Coroutines para Flow y suspend functions
+    implementation(libs.kotlinx.coroutines.core)
+}
