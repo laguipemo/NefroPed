@@ -37,7 +37,6 @@ configure<LibraryExtension> {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":local"))
-    implementation(project(":common"))
 
     // Supabase
     implementation(libs.supabase.auth)
@@ -54,6 +53,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
