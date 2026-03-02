@@ -1,4 +1,4 @@
-package com.laguipemo.nefroped.core.domain.repository
+package com.laguipemo.nefroped.core.domain.repository.auth
 
 import com.laguipemo.nefroped.core.domain.model.auth.AuthState
 import com.laguipemo.nefroped.core.domain.model.user.User
