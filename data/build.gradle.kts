@@ -41,6 +41,7 @@ dependencies {
     // Supabase
     implementation(libs.supabase.auth)
     implementation(libs.supabase.realtime)
+    implementation(libs.supabase.postgrest)
 
     // Ktor (para fallback GitHub/markdown)
     implementation(libs.ktor.client.core)

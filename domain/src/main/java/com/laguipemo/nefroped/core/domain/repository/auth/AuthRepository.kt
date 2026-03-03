@@ -1,21 +1,19 @@
 package com.laguipemo.nefroped.core.domain.repository.auth
 
+import com.laguipemo.nefroped.core.domain.model.auth.AuthError
 import com.laguipemo.nefroped.core.domain.model.auth.AuthState
+import com.laguipemo.nefroped.core.domain.model.result.NefroResult
 import com.laguipemo.nefroped.core.domain.model.user.User
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
 
-    val currentAuthState: Flow<AuthState>
-
-    suspend fun loginWithEmail(email: String, password: String)
-    suspend fun loginAnonymously()
-    suspend fun loginWithGoogle()
-
-    suspend fun registerWithEmail(email: String, password: String)
-    suspend fun sendPasswordReset(email: String)
-
+    fun observeAuthState(): Flow<AuthState>
+    suspend fun login(email: String, password: String): NefroResult<Unit, AuthError>
+    suspend fun register(
+        email: String,
+        password: String
+    ): NefroResult<Unit, AuthError>
+    suspend fun anonymous(): NefroResult<Unit, AuthError>
     suspend fun logout()
-
-    suspend fun getCurrentUser(): User?
 }
