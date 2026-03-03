@@ -43,6 +43,12 @@ configure<ApplicationExtension> {
 
 dependencies {
     implementation(project(":designsystem"))
+    implementation(project(":di"))
+    implementation(project(":domain"))
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
