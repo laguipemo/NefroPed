@@ -36,11 +36,19 @@ configure<LibraryExtension> {
 
 dependencies {
     // Conoce todos los módulos para inyectarlos
+    implementation(project(":domain"))
     implementation(project(":data"))
+    implementation(project(":local"))
     implementation(project(":auth"))
+
+    // Supabase (needed for SupabaseClient type)
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.realtime)
+    implementation(libs.supabase.postgrest)
 
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
 
+    implementation(libs.androidx.datastore.preferences)
 }
