@@ -1,0 +1,13 @@
+package com.laguipemo.nefroped.core.local.datastore
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+
+object DataStoreModule {
+
+    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+        "app_entry_test"
+    )
+}

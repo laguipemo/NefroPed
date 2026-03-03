@@ -19,6 +19,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        //add itpack.io for compose markdown
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
@@ -26,15 +28,10 @@ rootProject.name = "NefroPed"
 include(":app")
 
 // Nuevos módulos
-include(":core:domain")
-include(":core:data")
-include(":core:local")
-include(":core:common")
-include(":features:auth")
-include(":features:chat")
-include(":features:courses")
-include(":features:onboarding")
-include(":features:splash")
+include(":domain")
+include(":common")
+include(":local")
+include(":data")
+include(":auth")
 include(":designsystem")
 include(":di")
-include(":domain")
