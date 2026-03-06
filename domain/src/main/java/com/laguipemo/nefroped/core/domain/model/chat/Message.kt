@@ -2,6 +2,7 @@ package com.laguipemo.nefroped.core.domain.model.chat
 
 import kotlin.time.Instant
 
+
 data class Message(
     val id: String,
     val clientId: String,

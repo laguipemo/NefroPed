@@ -15,4 +15,5 @@ kotlin {
 dependencies {
     // Coroutines para Flow y suspend functions
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.datetime)
 }

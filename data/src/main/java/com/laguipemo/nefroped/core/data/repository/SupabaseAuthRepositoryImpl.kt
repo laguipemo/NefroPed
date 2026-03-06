@@ -1,5 +1,7 @@
 package com.laguipemo.nefroped.core.data.repository
 
+import android.util.Log
+import com.laguipemo.nefroped.core.data.mapper.toDomain
 import com.laguipemo.nefroped.core.domain.model.auth.AuthError
 import com.laguipemo.nefroped.core.domain.model.auth.AuthState
 import com.laguipemo.nefroped.core.domain.model.result.NefroResult
@@ -40,6 +42,7 @@ class SupabaseAuthRepositoryImpl(
             NefroResult.Success(Unit)
 
         } catch (e: Exception) {
+            Log.i("CHACHY::: repositorio login", e.stackTraceToString())
             NefroResult.Error(e.toAuthError())
         }
     }
@@ -64,6 +67,7 @@ class SupabaseAuthRepositoryImpl(
             supabase.auth.signInAnonymously()
             NefroResult.Success(Unit)
         } catch (e: Exception) {
+            Log.i("CHACHY::: nononymoues()", e.stackTraceToString())
             NefroResult.Error(e.toAuthError())
         }
     }
