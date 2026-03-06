@@ -1,5 +1,6 @@
 package com.laguipemo.nefroped.features.chat
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,7 +22,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+
 
 class ChatViewModel(
     savedStateHandle: SavedStateHandle,
@@ -81,6 +83,7 @@ class ChatViewModel(
                 is SessionState.User -> {
                     val user = sessionState.user
                     val clientId = UUID.randomUUID().toString()
+                    Log.i("CHACHY::: ChatViewModel", "userId: ${user.id} clientId: ${clientId}")
                     val tempMessage = Message(
                         id = "local-${System.currentTimeMillis()}",
                         clientId = clientId,
@@ -97,6 +100,7 @@ class ChatViewModel(
                         // Éxito: Lo eliminamos de la lista local porque ya sabemos que vendrá por el Flow remoto
                         _localMessages.update { list -> list.filterNot { it.clientId == clientId } }
                     } catch (e: Exception) {
+                        Log.i("CHACHY::: ChatViewModel ", e.stackTraceToString())
                         // Error: Lo mantenemos pero marcamos el error
                         _localMessages.update { list ->
                             list.map {

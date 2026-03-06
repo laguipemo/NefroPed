@@ -1,6 +1,7 @@
 package com.laguipemo.nefroped.core.domain.model.chat
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
+
 
 data class Message(
     val id: String,

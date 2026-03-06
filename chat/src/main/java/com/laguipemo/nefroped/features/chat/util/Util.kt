@@ -2,11 +2,11 @@ package com.laguipemo.nefroped.features.chat.util
 
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import java.util.Locale.getDefault
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.minus
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 
 fun formatTime(instant: Instant): String {
@@ -25,7 +25,7 @@ fun formatDateHeader(instant: Instant): String {
     return when (messageDate) {
         now -> "Hoy"
         now.minus(1, DateTimeUnit.DAY) -> "Ayer"
-        else -> "${messageDate.dayOfMonth} de ${
+        else -> "${messageDate.day} de ${
             messageDate.month.name.lowercase().replaceFirstChar {
                 if (it.isLowerCase()) it.titlecase(getDefault()) else it.toString()
             }

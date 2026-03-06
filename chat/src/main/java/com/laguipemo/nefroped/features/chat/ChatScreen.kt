@@ -34,7 +34,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -124,7 +123,8 @@ fun ChatScreen(
                             modifier = Modifier
                                 .background(
                                     color = MaterialTheme.colorScheme.primary,
-                                    shape = CircleShape) // Color y forma
+                                    shape = CircleShape
+                                ) // Color y forma
                                 .padding(8.dp)
                                 .size(24.dp),
                             enabled = state.canSendMessage
@@ -187,7 +187,8 @@ fun ChatScreen(
                                     currentDate != prevDate // Mostrar solo si el día cambió
                                 }
                                 Column(
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier
+                                        .fillMaxWidth()
                                         .animateItem()
                                 ) {
                                     if (showHeader) {
@@ -205,8 +206,10 @@ fun ChatScreen(
                         // Calculamos visibilidad: si el primer item visible > 2
                         val showScrollToBottom by remember {
                             derivedStateOf {
-                                val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
-                                val totalItems = listState.layoutInfo.totalItemsCount
+                                val lastVisibleItem =
+                                    listState.layoutInfo.visibleItemsInfo.lastOrNull()
+                                val totalItems =
+                                    listState.layoutInfo.totalItemsCount
 
                                 // El botón se muestra si:
                                 // 1. Hay mensajes en la lista
@@ -230,7 +233,10 @@ fun ChatScreen(
                                     if (showScrollToBottom) {
                                         Badge(
                                             containerColor = Color.Red,
-                                            modifier = Modifier.offset(x = (-8).dp, y = 8.dp) // Ajuste fino de posición
+                                            modifier = Modifier.offset(
+                                                x = (-8).dp,
+                                                y = 8.dp
+                                            ) // Ajuste fino de posición
                                         )
                                     }
                                 }

@@ -42,6 +42,7 @@ class SupabaseAuthRepositoryImpl(
             NefroResult.Success(Unit)
 
         } catch (e: Exception) {
+            Log.i("CHACHY::: repositorio login", e.stackTraceToString())
             NefroResult.Error(e.toAuthError())
         }
     }
