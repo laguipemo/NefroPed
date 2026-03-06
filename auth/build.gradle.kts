@@ -42,6 +42,16 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":designsystem"))
+    implementation(project(":navigation"))
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
+
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.compose.material.icons.extended)
+
+    implementation(libs.androidx.navigation.compose)
 
     // Compose base
     implementation(platform(libs.androidx.compose.bom))

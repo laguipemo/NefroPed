@@ -39,7 +39,6 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":local"))
-    implementation(project(":auth"))
 
     // Supabase (needed for SupabaseClient type)
     implementation(libs.supabase.auth)

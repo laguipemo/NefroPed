@@ -9,7 +9,7 @@ class LogoutUseCaseImpl(
 ) : LogoutUseCase {
     override suspend fun invoke() {
         repository.logout()
-        appEntryRepository.clearGuest()
+        //appEntryRepository.clearGuest()
         //appEntryRepository.clearOnboarding() <- futuro
     }
 }

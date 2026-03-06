@@ -10,7 +10,6 @@ import com.laguipemo.nefroped.core.domain.repository.appentry.AppEntryRepository
 import com.laguipemo.nefroped.core.domain.repository.auth.AuthRepository
 import com.laguipemo.nefroped.core.domain.repository.chat.ChatRepository
 import com.laguipemo.nefroped.core.domain.usecase.app.ObserveAuthStateUseCase
-import com.laguipemo.nefroped.core.domain.usecase.app.ObserveGuestModeUseCase
 import com.laguipemo.nefroped.core.domain.usecase.app.ObserveOnboardingCompleteUseCase
 import com.laguipemo.nefroped.core.domain.usecase.app.ResolveAppEntryStateUseCase
 import com.laguipemo.nefroped.core.domain.usecase.chat.ObserveMessagesUseCase
@@ -35,8 +34,8 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+
 
 val koinAppModule = module {
 
@@ -80,15 +79,9 @@ val koinAppModule = module {
         bind<ObserveMessagesUseCase>()
     }
     factoryOf(::ObserveAuthStateUseCase)
-    factoryOf(::ObserveGuestModeUseCase)
     factoryOf(::ObserveOnboardingCompleteUseCase)
     factoryOf(::ResolveAppEntryStateUseCase)
     factoryOf(::ObserveSessionStateUseCase)
     factoryOf(::ResolveChatCapabilitiesUseCase)
 
-    viewModelOf(::LoginViewModel)
-    viewModelOf(::RegisterViewModel)
-    viewModelOf(::AppEntryViewModel)
-    viewModelOf(::ProfileViewModel)
-    viewModelOf(::OnboardingViewModel)
-    viewModelOf(::ChatViewModel)
+}

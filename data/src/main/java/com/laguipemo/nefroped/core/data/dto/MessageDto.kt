@@ -4,6 +4,7 @@ import com.laguipemo.nefroped.core.domain.model.chat.Message
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
+
 @Serializable
 data class MessageDto(
     val id: String,
