@@ -21,20 +21,29 @@ fun AppRoot(
         }
 
         AppEntryState.RequireLogin -> {
-            UnauthenticatedNavGraph()
+            AnimatedAppEntry {
+                UnauthenticatedNavGraph()
+            }
+
         }
 
         AppEntryState.RequireOnboarding -> {
-            OnboardingNavGraph()
+            AnimatedAppEntry {
+                OnboardingNavGraph()
+            }
         }
 
 
         AppEntryState.Ready -> {
-            AuthenticatedNavGraph()
+            AnimatedAppEntry {
+                AuthenticatedNavGraph()
+            }
         }
 
         AppEntryState.Error -> {
-            //ErrorScreen()
+            AnimatedAppEntry {
+                //ErrorScreen()
+            }
         }
     }
 }
