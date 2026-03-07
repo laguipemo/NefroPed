@@ -24,7 +24,7 @@ Cada versión debería:
   - En el registro solicitar nombre de usuario como encajar esto en un anónimo
     para que se difrencie de otros anónimos.
   - Recuperar contraseña
-  - Utilizar cuenta de goole
+  - Utilizar cuenta de google
   - Mejorar la interfaz gráfica parecida a NefroPediatra
 
 - Implementar el feature Curso como está en NefroPediatra pero
@@ -35,6 +35,16 @@ Cada versión debería:
 - Corregir el crash cuando hay un tiempo de inactividad y hay una cancelación/renovadión 
   del token. En principio era un bug del ChannelFlow en Supabase 3.3.0 que debería estar
   corregido en la versión actual 3.4.1
+
+
+## [0.2.0] - 2026-03-07
+
+### Added
+
+- Splash Screen utilizando androidx-core-splashscreen
+- Ligera animación a primera pantalla que se muestre después de la splashscreen.
+  En principio se aplica al navgraph del mundo en el que entre la aplicación 
+  excepto la splashscreen.
 
 
 ## [0.1.0] - 2026-03-06
