@@ -4,6 +4,7 @@ import android.app.Application
 import com.laguipemo.nefroped.app.di.appEntryKoinModule
 import com.laguipemo.nefroped.di.koinAppModule
 import com.laguipemo.nefroped.features.auth.login.di.authKoinModule
+import com.laguipemo.nefroped.features.auth.recoverpassword.di.recoverPasswordKoinModule
 import com.laguipemo.nefroped.features.auth.register.di.registerKoinModule
 import com.laguipemo.nefroped.features.chat.di.chatKoinModule
 import com.laguipemo.nefroped.features.onboarding.di.onboardingKoinModule
@@ -22,6 +23,7 @@ class NefroPedApp: Application() {
                 koinAppModule,
                 authKoinModule,
                 registerKoinModule,
+                recoverPasswordKoinModule,
                 appEntryKoinModule,
                 chatKoinModule,
                 onboardingKoinModule,

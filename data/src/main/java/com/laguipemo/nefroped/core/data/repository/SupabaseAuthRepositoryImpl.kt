@@ -72,6 +72,15 @@ class SupabaseAuthRepositoryImpl(
         }
     }
 
+    override suspend fun recoverPassword(email: String): NefroResult<Unit, AuthError> {
+        return try {
+            supabase.auth.resetPasswordForEmail(email)
+            NefroResult.Success(Unit)
+        } catch (e: Exception) {
+            NefroResult.Error(e.toAuthError())
+        }
+    }
+
 
     override suspend fun logout() {
         supabase.auth.signOut()

@@ -73,6 +73,7 @@ fun LoginScreen(
     val spaceS = dimensionResource(R.dimen.space_s)
     val spaceM = dimensionResource(R.dimen.space_m)
     val spaceL = dimensionResource(R.dimen.space_l)
+    val spaceXL = dimensionResource(R.dimen.space_xl)
     val buttonHeight = dimensionResource(R.dimen.button_height)
 
     LaunchedEffect(Unit) {
@@ -116,144 +117,151 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // HEADER: título + logo + subtítulo
-            HeaderAuth(
-                stringResource(R.string.auth_title_login)
-            )
-
-            // FORM + BOTONES
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                EmailTextField(
-                    value = uiState.email,
-                    onValueChange = {
-                        viewModel.onEvent(
-                            LoginUserEvent.EmailChanged(it)
-                        )
-                    },
-                    isError = uiState.emailError != null,
-                    supportingText = when (uiState.emailError) {
-                        ValidationError.EmptyEmail ->
-                            stringResource(R.string.auth_error_email_required)
-
-                        ValidationError.InvalidEmailFormat ->
-                            stringResource(R.string.auth_error_email_invalid)
-
-                        else -> null
-                    },
+            Column() {
+                // HEADER: título + logo + subtítulo
+                HeaderAuth(
+                    stringResource(R.string.auth_title_login)
                 )
 
-                Spacer(modifier = Modifier.height(spaceS))
+                Spacer(modifier = Modifier.height(spaceXL))
 
-                PasswordTextField(
-                    value = uiState.password,
-                    onValueChange = {
-                        viewModel.onEvent(
-                            LoginUserEvent.PasswordChanged(it)
-                        )
-                    },
-                    isError = uiState.passwordError != null,
-                    supportingText = when (val error = uiState.passwordError) {
-                        ValidationError.EmptyPassword ->
-                            stringResource(R.string.auth_error_password_required)
-
-                        is ValidationError.PasswordTooShort ->
-                            stringResource(
-                                R.string.auth_error_password_too_short,
-                                error.minLength
-                            )
-
-                        else -> null
-                    },
-                    onImeDone = { viewModel.onEvent(LoginUserEvent.Submit) }
-                )
-
-                Spacer(modifier = Modifier.height(spaceS))
-
-                // ¿Olvidaste tu contraseña? Recupérala
-                Row(
+                // FORM + BOTONES
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val recoverText = buildAnnotatedString {
-                        append(
-                            stringResource(
-                                com.laguipemo.nefroped.designsystem.R.string
-                                    .auth_forgot_password_question
-                            ) + " "
-                        )
-                        pushLink(
-                            LinkAnnotation.Clickable(
-                                tag = "recover_password",
-                                styles = TextLinkStyles(
-                                    style = SpanStyle(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        textDecoration = TextDecoration.Underline
-                                    )
-                                ),
-                                linkInteractionListener = { onRecoverPassword() }
+                    EmailTextField(
+                        value = uiState.email,
+                        onValueChange = {
+                            viewModel.onEvent(
+                                LoginUserEvent.EmailChanged(it)
                             )
-                        )
-                        append(
-                            stringResource(
-                                com.laguipemo.nefroped.designsystem.R.string
-                                    .auth_forgot_password_action
+                        },
+                        isError = uiState.emailError != null,
+                        supportingText = when (uiState.emailError) {
+                            ValidationError.EmptyEmail ->
+                                stringResource(R.string.auth_error_email_required)
+
+                            ValidationError.InvalidEmailFormat ->
+                                stringResource(R.string.auth_error_email_invalid)
+
+                            else -> null
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(spaceS))
+
+                    PasswordTextField(
+                        value = uiState.password,
+                        onValueChange = {
+                            viewModel.onEvent(
+                                LoginUserEvent.PasswordChanged(it)
                             )
-                        )
-                        pop()
+                        },
+                        isError = uiState.passwordError != null,
+                        supportingText = when (val error = uiState.passwordError) {
+                            ValidationError.EmptyPassword ->
+                                stringResource(R.string.auth_error_password_required)
+
+                            is ValidationError.PasswordTooShort ->
+                                stringResource(
+                                    R.string.auth_error_password_too_short,
+                                    error.minLength
+                                )
+
+                            else -> null
+                        },
+                        onImeDone = { viewModel.onEvent(LoginUserEvent.Submit) }
+                    )
+
+                    Spacer(modifier = Modifier.height(spaceS))
+
+                    // ¿Olvidaste tu contraseña? Recupérala
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        val recoverText = buildAnnotatedString {
+                            append(
+                                stringResource(
+                                    com.laguipemo.nefroped.designsystem.R.string
+                                        .auth_forgot_password_question
+                                ) + " "
+                            )
+                            pushLink(
+                                LinkAnnotation.Clickable(
+                                    tag = "recover_password",
+                                    styles = TextLinkStyles(
+                                        style = SpanStyle(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            textDecoration = TextDecoration.Underline
+                                        )
+                                    ),
+                                    linkInteractionListener = { onRecoverPassword() }
+                                )
+                            )
+                            append(
+                                stringResource(
+                                    com.laguipemo.nefroped.designsystem.R.string
+                                        .auth_forgot_password_action
+                                )
+                            )
+                            pop()
+                        }
+                        Text(text = recoverText)
                     }
-                    Text(text = recoverText)
-                }
 
-                Spacer(Modifier.height(spaceM))
+                    Spacer(Modifier.height(spaceM))
 
-                Button(
-                    onClick = { viewModel.onEvent(LoginUserEvent.Submit) },
-                    enabled = !uiState.isLoading,
-                    modifier = Modifier
-                        .padding(horizontal = spaceM)
-                        .fillMaxWidth()
-                        .height(buttonHeight)
-                ) {
-                    Text(
-                        text = stringResource(R.string.auth_login_button),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Normal
+                    Button(
+                        onClick = { viewModel.onEvent(LoginUserEvent.Submit) },
+                        enabled = !uiState.isLoading,
+                        modifier = Modifier
+                            .padding(horizontal = spaceM)
+                            .fillMaxWidth()
+                            .height(buttonHeight)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.auth_login_button),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Normal
+                            )
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(spaceL))
+
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = dimensionResource(R.dimen.space_48))
+                    )
+
+                    Spacer(modifier = Modifier.height(spaceL))
+
+                    SocialMediaButton(
+                        onClick = { viewModel.onEvent(LoginUserEvent.ContinueAsGuest) },
+                        text = stringResource(R.string.auth_continue_guest),
+                        icon = R.drawable.ic_incognito,
+                        color = colorResource(R.color.bg_btn_incognito)
+                    )
+
+                    Spacer(modifier = Modifier.height(spaceS))
+
+                    SocialMediaButton(
+                        onClick = onContinueWithGoogle,
+                        text = stringResource(R.string.auth_continue_google),
+                        icon = R.drawable.ic_google,
+                        color = colorResource(R.color.bg_btn_google)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(spaceL))
-
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = dimensionResource(R.dimen.space_48))
-                )
-
-                Spacer(modifier = Modifier.height(spaceL))
-
-                SocialMediaButton(
-                    onClick = { viewModel.onEvent(LoginUserEvent.ContinueAsGuest) },
-                    text = stringResource(R.string.auth_continue_guest),
-                    icon = R.drawable.ic_incognito,
-                    color = colorResource(R.color.bg_btn_incognito)
-                )
-
-                Spacer(modifier = Modifier.height(spaceS))
-
-                SocialMediaButton(
-                    onClick = onContinueWithGoogle,
-                    text = stringResource(R.string.auth_continue_google),
-                    icon = R.drawable.ic_google,
-                    color = colorResource(R.color.bg_btn_google)
-                )
             }
 
+            //Spacer(modifier = Modifier.height(spaceXL))
+
             // FOOTER
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column( horizontalAlignment = Alignment.CenterHorizontally ) {
+
                 val createAccount = buildAnnotatedString {
                     append(
                         stringResource(

@@ -1,4 +1,4 @@
-package com.laguipemo.nefroped.features.auth.register
+package com.laguipemo.nefroped.features.auth.recoverpassword
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,14 +28,13 @@ import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.features.auth.components.EmailTextField
 import com.laguipemo.nefroped.features.auth.components.HeaderAuth
-import com.laguipemo.nefroped.features.auth.components.PasswordTextField
 import com.laguipemo.nefroped.features.auth.util.toMessage
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun RegisterScreen(
-    viewModel: RegisterViewModel = koinViewModel(),
-    onRegisterSuccess: () -> Unit,
+fun RecoverPasswordScreen(
+    viewModel: RecoverPasswordViewModel = koinViewModel(),
+    onRecoverPasswordSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -49,16 +48,18 @@ fun RegisterScreen(
     val spaceS = dimensionResource(R.dimen.space_s)
     val spaceM = dimensionResource(R.dimen.space_m)
     val spaceXL = dimensionResource(R.dimen.space_xl)
+    dimensionResource(R.dimen.space_l)
     val buttonHeight = dimensionResource(R.dimen.button_height)
 
     LaunchedEffect(Unit) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
-                is RegisterUiEffect.ShowError ->
+                is RecoverPasswordUiEffect.ShowError -> {
                     snackbarHostState.showSnackbar(effect.error.toMessage())
+                }
 
-                RegisterUiEffect.RegisterSuccess -> {
-                    onRegisterSuccess()
+                RecoverPasswordUiEffect.RecoverPasswordSuccess -> {
+                    onRecoverPasswordSuccess()
                 }
             }
         }
@@ -73,7 +74,6 @@ fun RegisterScreen(
                     contentColor = MaterialTheme.colorScheme.error
                 )
             }
-
         }
     ) { padding ->
 
@@ -91,7 +91,7 @@ fun RegisterScreen(
 
             // HEADER: título + logo + subtítulo
             HeaderAuth(
-                stringResource(R.string.auth_title_register)
+                stringResource(R.string.auth_title_recoverpassword)
             )
 
             Spacer(modifier = Modifier.height(spaceXL))
@@ -105,76 +105,25 @@ fun RegisterScreen(
                     value = uiState.email,
                     onValueChange = {
                         viewModel.onEvent(
-                            RegisterUserEvent.EmailChanged(it)
+                            RecoverPasswordUserEvent.EmailChanged(it)
                         )
                     },
                     isError = uiState.emailError != null,
                     supportingText = when (uiState.emailError) {
-                        is ValidationError.EmptyEmail ->
+                        ValidationError.EmptyEmail ->
                             stringResource(R.string.auth_error_email_required)
 
-                        is ValidationError.InvalidEmailFormat ->
+                        ValidationError.InvalidEmailFormat ->
                             stringResource(R.string.auth_error_email_invalid)
 
                         else -> null
                     }
                 )
 
-                Spacer(modifier = Modifier.height(spaceS))
-
-                PasswordTextField(
-                    value = uiState.password,
-                    onValueChange = {
-                        viewModel.onEvent(
-                            RegisterUserEvent.PasswordChanged(it)
-                        )
-                    },
-                    isError = uiState.passwordError != null,
-                    supportingText = when (val error = uiState.passwordError) {
-                        is ValidationError.EmptyPassword ->
-                            stringResource(R.string.auth_error_password_required)
-
-                        is ValidationError.PasswordTooShort ->
-                            stringResource(
-                                R.string.auth_error_password_too_short,
-                                error.minLength
-                            )
-
-                        else -> null
-                    },
-                    onImeDone = { }
-                )
-
-                Spacer(modifier = Modifier.height(spaceS))
-
-                PasswordTextField(
-                    value = uiState.confirmPassword,
-                    onValueChange = {
-                        viewModel.onEvent(
-                            RegisterUserEvent.ConfirmPasswordChanged(it)
-                        )
-                    },
-                    isError = uiState.confirmPasswordError != null,
-                    supportingText = when (val error = uiState.passwordError) {
-                        is ValidationError.EmptyPassword ->
-                            stringResource(R.string.auth_error_password_required)
-
-                        is ValidationError.PasswordTooShort ->
-                            stringResource(
-                                R.string.auth_error_password_too_short,
-                                error.minLength
-                            )
-
-                        else -> null
-                    }
-                ) {
-                    viewModel.onEvent(RegisterUserEvent.Submit)
-                }
-
-                Spacer(modifier = Modifier.height(spaceM))
+                Spacer(Modifier.height(spaceM))
 
                 Button(
-                    onClick = { viewModel.onEvent(RegisterUserEvent.Submit) },
+                    onClick = { viewModel.onEvent(RecoverPasswordUserEvent.Submit) },
                     enabled = !uiState.isLoading,
                     modifier = Modifier
                         .padding(horizontal = spaceM)
@@ -182,7 +131,7 @@ fun RegisterScreen(
                         .height(buttonHeight)
                 ) {
                     Text(
-                        text = stringResource(R.string.auth_register_button),
+                        text = stringResource(R.string.auth_recoverpassword_button),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Normal
                         )
@@ -190,6 +139,7 @@ fun RegisterScreen(
                 }
             }
         }
+
     }
 
 }
