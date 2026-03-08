@@ -1,3 +1,29 @@
 <resources>
     <string name="app_name">NefroPed</string>
+
+    <!-- Auth / Login -->
+    <string name="auth_title_app">NefroPed</string>
+    <string name="auth_title_login">Iniciar sesión</string>
+
+    <string name="auth_email_label">Correo electrónico</string>
+    <string name="auth_password_label">Contraseña</string>
+
+    <string name="auth_forgot_password_question">¿Olvidaste tu contraseña?</string>
+    <string name="auth_forgot_password_action">Recupérala</string>
+
+    <string name="auth_login_button">Iniciar sesión</string>
+    <string name="auth_continue_guest">Continuar como invitado</string>
+    <string name="auth_continue_google">Continuar con Google</string>
+
+    <string name="auth_no_account_question">¿No tienes una cuenta?</string>
+    <string name="auth_register_action">Regístrate</string>
+
+    <string name="auth_logo_content_description">Logo</string>
+
+    <!-- Mensajes de validación -->
+    <string name="auth_error_email_required">Email es obligatorio</string>
+    <string name="auth_error_email_invalid">Email no es válido</string>
+    <string name="auth_error_password_required">Password es obligatorio</string>
+    <string name="auth_error_password_too_short">El password debe tener al menos %1$d caracteres</string>
+
 </resources>

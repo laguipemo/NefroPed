@@ -1,31 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="zero">0.dp</dimen>
-    <dimen name="xsmall">4.dp</dimen>
-    <dimen name="small">8.dp</dimen>
-    <dimen name="medium">16.dp</dimen>
-    <dimen name="large">24.dp</dimen>
-    <dimen name="large_32">32dp</dimen>
-    <dimen name="large_48">48dp</dimen>
-    <dimen name="large_64">64dp</dimen>
-    <dimen name="large_80">80dp</dimen>
-    <dimen name="large_96">96dp</dimen>
+    <!-- Spacing global -->
+    <dimen name="space_zero">0.dp</dimen>
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_s">8dp</dimen>
+    <dimen name="space_m">16dp</dimen>
+    <dimen name="space_l">24dp</dimen>
+    <dimen name="space_xl">32dp</dimen>
+    <dimen name="space_48">48.dp</dimen>
+    <dimen name="space_64">64dp</dimen>
+    <dimen name="space_80">80dp</dimen>
+    <dimen name="space_96">96dp</dimen>
 
-    <dimen name="button_height">50dp</dimen>
-    <dimen name="button_rounded_corner">50dp</dimen>
+    <!-- Paddings de pantalla -->
+    <dimen name="screen_horizontal_padding">24dp</dimen>
+    <dimen name="screen_vertical_padding">16dp</dimen>
 
-    <dimen name="grid_cell_adaptive_min_size">300.dp</dimen>
-    <dimen name="shimmer_card_min_size">250.dp</dimen>
-    <dimen name="shimmer_circle_shape_size">95.dp</dimen>
-    <dimen name="shimmer_top_element_height">20.dp</dimen>
-    <dimen name="shimmer_content_element_height">40.dp</dimen>
-    <dimen name="card_elevation">4.dp</dimen>
-    <dimen name="card_height_landscape">300.dp</dimen>
-    <dimen name="card_height_portrait">600.dp</dimen>
-    <dimen name="card_width_landscape">550.dp</dimen>
-    <dimen name="card_width_portrait">300.dp</dimen>
-    <dimen name="column_height_scrolled_landscape">230.dp</dimen>
-    <dimen name="column_height_scrolled_portrait">360.dp</dimen>
-    <dimen name="quiz_top_bar_icon_size">21.dp</dimen>
+    <!-- Logo en el header -->
+    <dimen name="logo_header_size">112dp</dimen>
+
+    <!-- Botones -->
+    <dimen name="button_height">40dp</dimen>
+    <dimen name="button_corner_radius">24dp</dimen>
+    <dimen name="button_icon_size">24dp</dimen>
+
+    <dimen name="border_stroke_width">1.dp</dimen>
 
 </resources>
