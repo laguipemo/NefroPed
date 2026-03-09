@@ -11,7 +11,8 @@ sealed interface SessionState {
     // Sesión autenticada
     data class User(
         val user: com.laguipemo.nefroped.core.domain.model.user.User,
-        val isAnonymous: Boolean
+        val isAnonymous: Boolean,
+        val isResetPasswordFlow: Boolean = false
     ) : SessionState
 
     // Fallo grave del sistema

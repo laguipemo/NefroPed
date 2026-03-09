@@ -14,4 +14,7 @@ sealed interface UnauthenticatedRoute {
 
     @Serializable
     data object Register: UnauthenticatedRoute
+
+    @Serializable
+    data object ResetPassword: UnauthenticatedRoute
 }

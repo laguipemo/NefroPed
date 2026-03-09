@@ -6,9 +6,12 @@
     <string name="auth_title_login">Iniciar sesión</string>
     <string name="auth_title_register">Registar cuenta</string>
     <string name="auth_title_recoverpassword">Restablecer contraseña</string>
+    <string name="auth_title_reset_password">Nueva Contraseña</string>
 
     <string name="auth_email_label">Correo electrónico</string>
     <string name="auth_password_label">Contraseña</string>
+    <string name="auth_new_password_label">Nueva contraseña</string>
+    <string name="auth_confirm_password_label">Confirmar contraseña</string>
 
     <string name="auth_forgot_password_question">¿Olvidaste tu contraseña?</string>
     <string name="auth_forgot_password_action">Recupérala</string>
@@ -18,6 +21,7 @@
     <string name="auth_continue_google">Continuar con Google</string>
     <string name="auth_register_button">Registrar</string>
     <string name="auth_recoverpassword_button">Recuperar</string>
+    <string name="auth_reset_password_button">Actualizar Contraseña</string>
 
     <string name="auth_no_account_question">¿No tienes una cuenta?</string>
     <string name="auth_register_action">Regístrate</string>
@@ -29,6 +33,6 @@
     <string name="auth_error_email_invalid">Email no es válido</string>
     <string name="auth_error_password_required">Password es obligatorio</string>
     <string name="auth_error_password_too_short">El password debe tener al menos %1$d caracteres</string>
-
+    <string name="auth_error_passwords_do_not_match">Las contraseñas no coinciden</string>
 
 </resources>

@@ -15,5 +15,6 @@ interface AuthRepository {
     ): NefroResult<Unit, AuthError>
     suspend fun anonymous(): NefroResult<Unit, AuthError>
     suspend fun recoverPassword(email: String): NefroResult<Unit, AuthError>
+    suspend fun updatePassword(newPassword: String): NefroResult<Unit, AuthError>
     suspend fun logout()
 }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.app.AppEntryState
+import com.laguipemo.nefroped.features.auth.recoverpassword.ResetPasswordScreen
 import com.laguipemo.nefroped.navigation.AuthenticatedNavGraph
 import com.laguipemo.nefroped.navigation.OnboardingNavGraph
 import com.laguipemo.nefroped.navigation.UnauthenticatedNavGraph
@@ -24,7 +25,6 @@ fun AppRoot(
             AnimatedAppEntry {
                 UnauthenticatedNavGraph()
             }
-
         }
 
         AppEntryState.RequireOnboarding -> {
@@ -33,6 +33,16 @@ fun AppRoot(
             }
         }
 
+        AppEntryState.ResetPassword -> {
+            AnimatedAppEntry {
+                ResetPasswordScreen(
+                    onResetSuccess = {
+                        // Al resetear con éxito, el estado cambiará a Ready automáticamente 
+                        // o podemos forzar un logout para que entre limpio
+                    }
+                )
+            }
+        }
 
         AppEntryState.Ready -> {
             AnimatedAppEntry {

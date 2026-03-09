@@ -20,7 +20,11 @@ class ObserveSessionStateUseCase(
                         SessionState.Error(authState.filure)
 
                     is AuthState.Authenticated ->
-                        SessionState.User(authState.user, authState.isAnonymous)
+                        SessionState.User(
+                            user = authState.user,
+                            isAnonymous = authState.isAnonymous,
+                            isResetPasswordFlow = authState.isResetPasswordFlow
+                        )
 
                     is AuthState.Unauthenticated -> SessionState.LoggedOut
                 }

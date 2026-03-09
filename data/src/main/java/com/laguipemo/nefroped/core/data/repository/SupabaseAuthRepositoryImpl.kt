@@ -33,16 +33,8 @@ class SupabaseAuthRepositoryImpl(
                 this.email = email
                 this.password = password
             }
-            val session = supabase.auth.currentSessionOrNull()
-                ?: return NefroResult.Error(AuthError.SessionExpired)
-
-            session.user
-                ?: return NefroResult.Error(AuthError.UserNotFound)
-
             NefroResult.Success(Unit)
-
         } catch (e: Exception) {
-            Log.i("CHACHY::: repositorio login", e.stackTraceToString())
             NefroResult.Error(e.toAuthError())
         }
     }
@@ -74,9 +66,28 @@ class SupabaseAuthRepositoryImpl(
 
     override suspend fun recoverPassword(email: String): NefroResult<Unit, AuthError> {
         return try {
-            supabase.auth.resetPasswordForEmail(email)
+            supabase.auth.resetPasswordForEmail(
+                email = email,
+                redirectUrl = "nefroped://reset-password"
+            )
             NefroResult.Success(Unit)
         } catch (e: Exception) {
+            NefroResult.Error(e.toAuthError())
+        }
+    }
+
+    override suspend fun updatePassword(newPassword: String): NefroResult<Unit, AuthError> {
+        return try {
+            supabase.auth.updateUser {
+                password = newPassword
+            }
+            
+            // 1. Cerramos sesión para que AppRoot cambie el estado y nos mande al Login
+            supabase.auth.signOut()
+            
+            NefroResult.Success(Unit)
+        } catch (e: Exception) {
+            Log.e("CHACHY::: Error updatePassword", e.stackTraceToString())
             NefroResult.Error(e.toAuthError())
         }
     }
@@ -84,7 +95,6 @@ class SupabaseAuthRepositoryImpl(
 
     override suspend fun logout() {
         supabase.auth.signOut()
-        // o borrar token, datastore, etc.
     }
 
     private fun SessionStatus.toDomain(): AuthState =
@@ -95,9 +105,13 @@ class SupabaseAuthRepositoryImpl(
                 val user = session.user ?: return AuthState.Unauthenticated
                 val isAnonymous = user.identities.isNullOrEmpty()
 
+                // Mantenemos la solución que funciona
+                val isResetFlow = session.type == "recovery"
+
                 AuthState.Authenticated(
                     user.toDomain(),
-                    isAnonymous
+                    isAnonymous,
+                    isResetPasswordFlow = isResetFlow
                 )
             }
 
@@ -110,19 +124,19 @@ class SupabaseAuthRepositoryImpl(
     private fun Throwable.toAuthError(): AuthError =
         when (this) {
             is AuthRestException -> {
-                when (this.errorCode) {
-                    AuthErrorCode.InvalidCredentials -> AuthError.InvalidCredentials
-                    AuthErrorCode.UserNotFound -> AuthError.UserNotFound
-                    else -> AuthError.Unknown(this)
+                // Detectamos el error de misma contraseña
+                if (this.error == "same_password" || this.message?.contains("same_password", ignoreCase = true) == true) {
+                    AuthError.SamePassword
+                } else {
+                    when (this.errorCode) {
+                        AuthErrorCode.InvalidCredentials -> AuthError.InvalidCredentials
+                        AuthErrorCode.UserNotFound -> AuthError.UserNotFound
+                        else -> AuthError.Unknown(this)
+                    }
                 }
             }
-
-            is java.io.IOException ->
-                AuthError.Network
-
-            else ->
-                AuthError.Unknown(this)
-
+            is java.io.IOException -> AuthError.Network
+            else -> AuthError.Unknown(this)
         }
 
 }
