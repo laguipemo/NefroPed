@@ -37,6 +37,25 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
+## [0.2.1] - 2026-03-10
+
+## Added
+
+- Implementa todo el flujo de recuperación de la contraseña en Supabase, dentro de la 
+  app sin necesidad de web externa.
+  - Utiliza la estrategía clásica en Supabase, envió de email con enlace (nefroped://reset-password) 
+    que mediante el uso de deep link nos hace regresar a la app para indicar nueva contraseña
+
+## Fix 
+
+- Suaviza la transición de pantallas durante el flujo de recuperación de la contraseña
+  y para ello:
+  - Implementa delay en MainActivity y demora de la splashscreen para dar tiempo a que
+    se estabilice el estado se Supabase.
+  - Remueve envoltura con AnimateAppEntry en cada uno de los NavGraph y envuelve
+    todo el when con AnimatedContent()
+- Evita la utilización de autocompletado al regreso a la pantalla de nueva contraseña.
+
 ## [0.2.0] - 2026-03-07
 
 ### Added
