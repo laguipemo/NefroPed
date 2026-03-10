@@ -166,10 +166,9 @@ fun RegisterScreen(
                             )
 
                         else -> null
-                    }
-                ) {
-                    viewModel.onEvent(RegisterUserEvent.Submit)
-                }
+                    },
+                    onImeDone = { viewModel.onEvent(RegisterUserEvent.Submit) }
+                )
 
                 Spacer(modifier = Modifier.height(spaceM))
 

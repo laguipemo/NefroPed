@@ -1,5 +1,10 @@
 package com.laguipemo.nefroped.app
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -16,43 +21,41 @@ fun AppRoot(
 ) {
     val appEntryState: AppEntryState by viewModel.appEntryState.collectAsStateWithLifecycle()
 
-    when (appEntryState) {
-        AppEntryState.Loading -> {
-            //SplashScreen()
-        }
+    // Usamos AnimatedContent para que la transición entre estados de la app sea fluida
+    AnimatedContent(
+        targetState = appEntryState,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
+        },
+        label = "AppEntryTransition"
+    ) { state ->
+        when (state) {
+            AppEntryState.Loading -> {
+                // Pantalla de carga persistente mientras se decide el estado
+            }
 
-        AppEntryState.RequireLogin -> {
-            AnimatedAppEntry {
+            AppEntryState.RequireLogin -> {
                 UnauthenticatedNavGraph()
             }
-        }
 
-        AppEntryState.RequireOnboarding -> {
-            AnimatedAppEntry {
+            AppEntryState.RequireOnboarding -> {
                 OnboardingNavGraph()
             }
-        }
 
-        AppEntryState.ResetPassword -> {
-            AnimatedAppEntry {
+            AppEntryState.ResetPassword -> {
                 ResetPasswordScreen(
                     onResetSuccess = {
-                        // Al resetear con éxito, el estado cambiará a Ready automáticamente 
-                        // o podemos forzar un logout para que entre limpio
+                        // El estado cambiará automáticamente por el signOut del repositorio
                     }
                 )
             }
-        }
 
-        AppEntryState.Ready -> {
-            AnimatedAppEntry {
+            AppEntryState.Ready -> {
                 AuthenticatedNavGraph()
             }
-        }
 
-        AppEntryState.Error -> {
-            AnimatedAppEntry {
-                //ErrorScreen()
+            AppEntryState.Error -> {
+                // ErrorScreen()
             }
         }
     }

@@ -5,8 +5,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
@@ -22,6 +26,7 @@ fun ResetPasswordScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val focusManager = LocalFocusManager.current
 
     val spaceM = dimensionResource(R.dimen.space_m)
     val buttonHeight = dimensionResource(R.dimen.button_height)
@@ -51,7 +56,6 @@ fun ResetPasswordScreen(
         ) {
             HeaderAuth(stringResource(R.string.auth_title_reset_password))
 
-            // Un pequeño retraso visual para que la pantalla no aparezca de golpe
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
 
             PasswordTextField(
@@ -59,7 +63,8 @@ fun ResetPasswordScreen(
                 onValueChange = { viewModel.onEvent(ResetPasswordUserEvent.PasswordChanged(it)) },
                 isError = uiState.passwordError != null,
                 supportingText = if (uiState.passwordError is ValidationError.PasswordTooShort) stringResource(R.string.auth_error_password_too_short, 6) else null,
-                onImeDone = { }
+                onImeDone = { },
+                modifier = Modifier.semantics { contentType = ContentType.NewPassword }
             )
 
             Spacer(modifier = Modifier.height(spaceM))
@@ -69,13 +74,20 @@ fun ResetPasswordScreen(
                 onValueChange = { viewModel.onEvent(ResetPasswordUserEvent.ConfirmPasswordChanged(it)) },
                 isError = uiState.confirmPasswordError != null,
                 supportingText = if (uiState.confirmPasswordError is ValidationError.PasswordsDoNotMatch) stringResource(R.string.auth_error_passwords_do_not_match) else null,
-                onImeDone = { viewModel.onEvent(ResetPasswordUserEvent.Submit) }
+                onImeDone = { 
+                    focusManager.clearFocus()
+                    viewModel.onEvent(ResetPasswordUserEvent.Submit) 
+                },
+                modifier = Modifier.semantics { contentType = ContentType.NewPassword }
             )
 
             Spacer(modifier = Modifier.height(spaceM))
 
             Button(
-                onClick = { viewModel.onEvent(ResetPasswordUserEvent.Submit) },
+                onClick = { 
+                    focusManager.clearFocus()
+                    viewModel.onEvent(ResetPasswordUserEvent.Submit) 
+                },
                 enabled = !uiState.isLoading,
                 modifier = Modifier.fillMaxWidth().height(buttonHeight)
             ) {
