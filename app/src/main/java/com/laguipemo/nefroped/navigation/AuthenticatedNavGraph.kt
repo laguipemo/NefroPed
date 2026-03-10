@@ -5,6 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
+import com.laguipemo.nefroped.features.auth.recoverpassword.ResetPasswordScreen
 import com.laguipemo.nefroped.features.chat.ChatScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
 
@@ -15,7 +17,6 @@ fun AuthenticatedNavGraph(
     NavHost(
         navController = navController,
         startDestination = AuthenticatedRoute.Profile
-
     ) {
         composable<AuthenticatedRoute.Profile> {
             ProfileScreen(
@@ -25,12 +26,24 @@ fun AuthenticatedNavGraph(
                     )
                 }
             )
-
         }
 
         composable<AuthenticatedRoute.Chat> {
             ChatScreen()
         }
 
+        composable<AuthenticatedRoute.ResetPassword>(
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "nefroped://reset-password" }
+            )
+        ) {
+            ResetPasswordScreen(
+                onResetSuccess = {
+                    navController.navigate(AuthenticatedRoute.Profile) {
+                        popUpTo(AuthenticatedRoute.ResetPassword) { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 }

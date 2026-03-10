@@ -5,6 +5,7 @@ sealed interface AuthError {
     data object UserNotFound: AuthError
     data object Network: AuthError
     data object SessionExpired: AuthError
+    data object SamePassword: AuthError
 
     data class Unknown(val cause: Throwable? = null): AuthError
 }

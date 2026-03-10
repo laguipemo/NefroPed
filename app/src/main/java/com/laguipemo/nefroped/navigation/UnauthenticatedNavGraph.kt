@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.laguipemo.nefroped.features.auth.login.LoginScreen
+import com.laguipemo.nefroped.features.auth.recoverpassword.RecoverPasswordScreen
 import com.laguipemo.nefroped.features.auth.register.RegisterScreen
 
 @Composable
@@ -14,22 +15,33 @@ fun UnauthenticatedNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = UnauthenticatedRoute.Login
     ) {
-        composable("login") {
+        composable<UnauthenticatedRoute.Login> {
             LoginScreen(
                 onLoginSuccess = {
 
                 },
                 onRegister = {
-                    navController.navigate("register")
+                    navController.navigate(UnauthenticatedRoute.Register)
+                },
+                onRecoverPassword = {
+                    navController.navigate(UnauthenticatedRoute.RecoverPassword)
                 }
             )
         }
 
-        composable("register") {
+        composable<UnauthenticatedRoute.Register> {
             RegisterScreen(
                 onRegisterSuccess = {
+                }
+            )
+        }
+
+        composable<UnauthenticatedRoute.RecoverPassword> {
+            RecoverPasswordScreen(
+                onRecoverPasswordSuccess = {
+                    navController.navigate(UnauthenticatedRoute.Login)
                 }
             )
         }

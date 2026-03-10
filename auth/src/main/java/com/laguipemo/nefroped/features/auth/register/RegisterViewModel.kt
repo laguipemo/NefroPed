@@ -130,7 +130,7 @@ class RegisterViewModel(
     ): ValidationError? =
         when {
             confirmPassword.isBlank() -> ValidationError.EmptyPassword
-            password != confirmPassword -> ValidationError.PasswordDoNotMatch
+            password != confirmPassword -> ValidationError.PasswordsDoNotMatch
             else -> null
         }
 }

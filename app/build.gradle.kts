@@ -16,7 +16,7 @@ configure<ApplicationExtension> {
 
     defaultConfig {
         applicationId = "com.laguipemo.nefroped"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "0.2.0"
@@ -51,6 +51,7 @@ dependencies {
     implementation(project(":chat"))
     implementation(project(":onboarding"))
     implementation(project(":profile"))
+    implementation(project(":data"))
 
     implementation(libs.androidx.core.splashscreen)
 
@@ -73,6 +74,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    
+    // Supabase needed for handleDeeplinks in MainActivity
+    implementation(libs.supabase.auth)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
