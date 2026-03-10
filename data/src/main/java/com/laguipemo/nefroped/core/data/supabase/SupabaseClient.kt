@@ -11,7 +11,11 @@ fun createSupabaseClient(): SupabaseClient {
         supabaseUrl = "https://dokkkyeyixyyurjophor.supabase.co",
         supabaseKey = "sb_publishable_tySdxMCRHeUFs_umUqc9nQ_5cTrAdeE"
     ) {
-        install(Auth)
+        install(Auth) {
+            // Esto ayuda al SDK a construir las URLs de redirección por defecto
+            scheme = "nefroped"
+            host = "reset-password"
+        }
         install(Postgrest)
         install(Realtime)
     }

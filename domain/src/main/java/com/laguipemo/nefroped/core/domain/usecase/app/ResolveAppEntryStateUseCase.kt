@@ -34,7 +34,7 @@ class ResolveAppEntryStateUseCase(
                         AppEntryState.RequireLogin
 
                     SessionFailure.Network ->
-                        AppEntryState.Ready //mantener mundo actual
+                        AppEntryState.Ready
 
                     else ->
                         AppEntryState.Error
@@ -43,12 +43,16 @@ class ResolveAppEntryStateUseCase(
             SessionState.LoggedOut ->
                 AppEntryState.RequireLogin
 
-            is SessionState.User ->
-                if (!onboardingCompleted) {
+            is SessionState.User -> {
+                // Si el usuario está autenticado pero detectamos que es un flujo de reset
+                // (Podemos pasar esta info a través de SessionState)
+                if (sessionState.isResetPasswordFlow) {
+                    AppEntryState.ResetPassword
+                } else if (!onboardingCompleted) {
                     AppEntryState.RequireOnboarding
                 } else {
                     AppEntryState.Ready
                 }
-
+            }
         }
 }

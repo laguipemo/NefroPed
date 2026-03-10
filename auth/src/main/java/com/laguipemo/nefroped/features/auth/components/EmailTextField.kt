@@ -2,8 +2,10 @@ package com.laguipemo.nefroped.features.auth.components
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -30,6 +32,18 @@ fun EmailTextField(
                 imageVector = Icons.Outlined.Email,
                 contentDescription = null
             )
-        }
+        },
+        trailingIcon = {
+            IconButton(
+                onClick = {
+                    onValueChange("")
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = null
+                )
+            }
+        },
     )
 }

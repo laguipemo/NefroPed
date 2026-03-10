@@ -1,6 +1,5 @@
 package com.laguipemo.nefroped.di
 
-import android.system.Os.bind
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.laguipemo.nefroped.core.data.repository.SupabaseAuthRepositoryImpl
@@ -27,6 +26,8 @@ import com.laguipemo.nefroped.core.domain.usecase.onboarding.CompleteOnboardingU
 import com.laguipemo.nefroped.core.domain.usecase.onboarding.CompleteOnboardingUseCaseImpl
 import com.laguipemo.nefroped.core.domain.usecase.register.RegisterUseCase
 import com.laguipemo.nefroped.core.domain.usecase.register.RegisterUseCaseImpl
+import com.laguipemo.nefroped.core.domain.usecase.recoverpassword.RecoverPasswordUseCase
+import com.laguipemo.nefroped.core.domain.usecase.recoverpassword.RecoverPasswordUseCaseImpl
 import com.laguipemo.nefroped.core.domain.usecase.session.ObserveSessionStateUseCase
 import com.laguipemo.nefroped.core.local.datastore.DataStoreModule.dataStore
 import com.laguipemo.nefroped.core.local.datastore.DatastoreAppEntryRepositoryImpl
@@ -77,6 +78,9 @@ val koinAppModule = module {
     }
     factoryOf(::ObserveMessagesUseCaseImpl) {
         bind<ObserveMessagesUseCase>()
+    }
+    factoryOf(::RecoverPasswordUseCaseImpl){
+        bind<RecoverPasswordUseCase>()
     }
     factoryOf(::ObserveAuthStateUseCase)
     factoryOf(::ObserveOnboardingCompleteUseCase)

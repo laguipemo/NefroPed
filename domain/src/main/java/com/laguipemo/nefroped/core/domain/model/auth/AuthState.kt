@@ -12,7 +12,8 @@ sealed interface AuthState {
     data object Unauthenticated : AuthState
     data class Authenticated(
         val user: User,
-        val isAnonymous: Boolean
+        val isAnonymous: Boolean,
+        val isResetPasswordFlow: Boolean = false
     ) : AuthState
 
     // estado de fallo del sistema

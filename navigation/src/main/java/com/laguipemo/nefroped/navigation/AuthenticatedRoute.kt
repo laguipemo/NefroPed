@@ -10,4 +10,7 @@ sealed interface AuthenticatedRoute {
 
     @Serializable
     data class Chat(val conversationId: String) : AuthenticatedRoute
+
+    @Serializable
+    data object ResetPassword : AuthenticatedRoute
 }
