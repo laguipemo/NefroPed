@@ -1,4 +1,4 @@
-package com.laguipemo.nefroped.features.auth.util
+package com.laguipemo.nefroped.core.domain.util
 
 object ValidationConstants {
 
