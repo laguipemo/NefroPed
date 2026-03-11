@@ -5,4 +5,5 @@ sealed interface LoginUserEvent {
     data class PasswordChanged(val value: String): LoginUserEvent
     data object Submit: LoginUserEvent
     data object ContinueAsGuest: LoginUserEvent
+    data class LoginWithGoogle(val idToken: String): LoginUserEvent
 }

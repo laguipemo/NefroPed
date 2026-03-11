@@ -10,7 +10,9 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
+import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -59,7 +61,6 @@ class SupabaseAuthRepositoryImpl(
             supabase.auth.signInAnonymously()
             NefroResult.Success(Unit)
         } catch (e: Exception) {
-            Log.i("CHACHY::: nononymoues()", e.stackTraceToString())
             NefroResult.Error(e.toAuthError())
         }
     }
@@ -81,13 +82,21 @@ class SupabaseAuthRepositoryImpl(
             supabase.auth.updateUser {
                 password = newPassword
             }
-            
-            // 1. Cerramos sesión para que AppRoot cambie el estado y nos mande al Login
             supabase.auth.signOut()
-            
             NefroResult.Success(Unit)
         } catch (e: Exception) {
-            Log.e("CHACHY::: Error updatePassword", e.stackTraceToString())
+            NefroResult.Error(e.toAuthError())
+        }
+    }
+
+    override suspend fun loginWithGoogle(idToken: String): NefroResult<Unit, AuthError> {
+        return try {
+            supabase.auth.signInWith(IDToken) {
+                this.idToken = idToken
+                provider = Google
+            }
+            NefroResult.Success(Unit)
+        } catch (e: Exception) {
             NefroResult.Error(e.toAuthError())
         }
     }
@@ -104,8 +113,6 @@ class SupabaseAuthRepositoryImpl(
             is SessionStatus.Authenticated -> {
                 val user = session.user ?: return AuthState.Unauthenticated
                 val isAnonymous = user.identities.isNullOrEmpty()
-
-                // Mantenemos la solución que funciona
                 val isResetFlow = session.type == "recovery"
 
                 AuthState.Authenticated(
@@ -124,7 +131,6 @@ class SupabaseAuthRepositoryImpl(
     private fun Throwable.toAuthError(): AuthError =
         when (this) {
             is AuthRestException -> {
-                // Detectamos el error de misma contraseña
                 if (this.error == "same_password" || this.message?.contains("same_password", ignoreCase = true) == true) {
                     AuthError.SamePassword
                 } else {

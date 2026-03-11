@@ -20,13 +20,17 @@ fun UnauthenticatedNavGraph(
         composable<UnauthenticatedRoute.Login> {
             LoginScreen(
                 onLoginSuccess = {
-
+                    // El cambio de estado en AppRoot debería ser suficiente, 
+                    // pero podemos forzar una navegación si fuera necesario.
                 },
                 onRegister = {
                     navController.navigate(UnauthenticatedRoute.Register)
                 },
                 onRecoverPassword = {
                     navController.navigate(UnauthenticatedRoute.RecoverPassword)
+                },
+                onContinueWithGoogle = {
+                    navController.navigate(AuthenticatedRoute.Profile)
                 }
             )
         }
