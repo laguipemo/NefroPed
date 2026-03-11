@@ -44,11 +44,11 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
+import com.laguipemo.nefroped.designsystem.components.EmailTextField
+import com.laguipemo.nefroped.designsystem.components.HeaderAuth
+import com.laguipemo.nefroped.designsystem.components.PasswordTextField
 import com.laguipemo.nefroped.designsystem.components.SocialMediaButton
-import com.laguipemo.nefroped.features.auth.components.EmailTextField
-import com.laguipemo.nefroped.features.auth.components.HeaderAuth
-import com.laguipemo.nefroped.features.auth.components.PasswordTextField
-import com.laguipemo.nefroped.features.auth.util.toMessage
+import com.laguipemo.nefroped.designsystem.util.toMessage
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 

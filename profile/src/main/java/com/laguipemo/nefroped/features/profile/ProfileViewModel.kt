@@ -2,11 +2,15 @@ package com.laguipemo.nefroped.features.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.laguipemo.nefroped.core.domain.model.session.SessionState
 import com.laguipemo.nefroped.core.domain.model.result.NefroResult
+import com.laguipemo.nefroped.core.domain.model.session.SessionState
+import com.laguipemo.nefroped.core.domain.model.util.ValidationError
+import com.laguipemo.nefroped.core.domain.usecase.login.LinkEmailPasswordUseCase
+import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCase
 import com.laguipemo.nefroped.core.domain.usecase.logout.LogoutUseCase
 import com.laguipemo.nefroped.core.domain.usecase.session.ObserveSessionStateUseCase
-import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCase
+import com.laguipemo.nefroped.core.domain.util.ValidationConstants.MINIMAL_PASS_LENGTH
+import com.laguipemo.nefroped.core.domain.util.ValidationConstants.isValidEmail
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,33 +22,82 @@ import kotlinx.coroutines.launch
 class ProfileViewModel(
     private val observeSessionState: ObserveSessionStateUseCase,
     private val logoutUseCase: LogoutUseCase,
-    private val loginWithGoogleUseCase: LoginWithGoogleUseCase
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
+    private val linkEmailPasswordUseCase: LinkEmailPasswordUseCase
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
+    private val _email = MutableStateFlow("")
+    private val _password = MutableStateFlow("")
+    private val _emailError = MutableStateFlow<ValidationError?>(null)
+    private val _passwordError = MutableStateFlow<ValidationError?>(null)
+    private val _showBottomSheet = MutableStateFlow(false)
 
     val uiState: StateFlow<ProfileUiState> =
-        combine(observeSessionState(), _isLoading) { sessionState, isLoading ->
-            when(sessionState) {
+        combine(
+            observeSessionState(),
+            _isLoading,
+            _email,
+            _password,
+            _emailError,
+            _passwordError,
+            _showBottomSheet
+        ) { args ->
+            val sessionState = args[0] as SessionState
+            val isLoading = args[1] as Boolean
+            val email = args[2] as String
+            val password = args[3] as String
+            val emailError = args[4] as ValidationError?
+            val passwordError = args[5] as ValidationError?
+            val showBottomSheet = args[6] as Boolean
+
+            when (sessionState) {
                 SessionState.Initializing -> ProfileUiState.Loading
                 is SessionState.User ->
                     ProfileUiState.Content(
-                        greeting = "Hola ${if(sessionState.isAnonymous) "Invitado" else sessionState.user.email}",
+                        greeting = "Hola ${if (sessionState.isAnonymous) "Invitado" else sessionState.user.email}",
                         isGuest = sessionState.isAnonymous,
-                        isLoading = isLoading
+                        isLoading = isLoading,
+                        email = email,
+                        password = password,
+                        emailError = emailError,
+                        passwordError = passwordError,
+                        showBottomSheet = showBottomSheet
                     )
+
                 else -> ProfileUiState.Loading
             }
         }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            ProfileUiState.Loading
-        )
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                ProfileUiState.Loading
+            )
 
     fun onLogoutClicked() {
         viewModelScope.launch {
             logoutUseCase()
+        }
+    }
+
+    fun onEmailChanged(value: String) {
+        _email.update { value }
+        _emailError.update { validateEmail(value) }
+    }
+
+    fun onPasswordChanged(value: String) {
+        _password.update { value }
+        _passwordError.update { validatePassword(value) }
+    }
+
+    fun onShowBottomSheet(show: Boolean) {
+        _showBottomSheet.update { show }
+        if (!show) {
+            // Reset form when closing
+            _email.update { "" }
+            _password.update { "" }
+            _emailError.update { null }
+            _passwordError.update { null }
         }
     }
 
@@ -53,14 +106,59 @@ class ProfileViewModel(
             _isLoading.update { true }
             when (val result = loginWithGoogleUseCase(idToken)) {
                 is NefroResult.Success -> {
-                    // El estado cambiará automáticamente a través de observeSessionState
+                    onShowBottomSheet(false)
                 }
+
                 is NefroResult.Error -> {
-                    // Manejar error (podríamos añadir un efecto de error si fuera necesario)
+                    // Handle error
                 }
             }
             _isLoading.update { false }
         }
     }
+
+    fun onLinkWithEmailPassword() {
+        val email = _email.value
+        val password = _password.value
+
+        val emailError = validateEmail(email)
+        val passwordError = validatePassword(password)
+
+        if (emailError != null || passwordError != null) {
+            _emailError.update { emailError }
+            _passwordError.update { passwordError }
+            return
+        }
+
+        viewModelScope.launch {
+            _isLoading.update { true }
+            when (val result = linkEmailPasswordUseCase(email, password)) {
+                is NefroResult.Success -> {
+                    onShowBottomSheet(false)
+                }
+
+                is NefroResult.Error -> {
+                    // Handle error
+                }
+            }
+            _isLoading.update { false }
+        }
+    }
+
+    private fun validateEmail(email: String): ValidationError? =
+        when {
+            email.isBlank() -> ValidationError.EmptyEmail
+            !email.isValidEmail() -> ValidationError.InvalidEmailFormat
+            else -> null
+        }
+
+    private fun validatePassword(password: String): ValidationError? =
+        when {
+            password.isBlank() -> ValidationError.EmptyPassword
+            password.length < MINIMAL_PASS_LENGTH ->
+                ValidationError.PasswordTooShort(MINIMAL_PASS_LENGTH)
+
+            else -> null
+        }
 
 }

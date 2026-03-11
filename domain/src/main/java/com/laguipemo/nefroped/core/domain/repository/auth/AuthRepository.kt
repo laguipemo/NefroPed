@@ -18,4 +18,9 @@ interface AuthRepository {
     suspend fun updatePassword(newPassword: String): NefroResult<Unit, AuthError>
     suspend fun loginWithGoogle(idToken: String): NefroResult<Unit, AuthError>
     suspend fun logout()
+    
+    /**
+     * Links an anonymous account with an email and password, converting it to a permanent account.
+     */
+    suspend fun linkEmailPassword(email: String, password: String): NefroResult<Unit, AuthError>
 }

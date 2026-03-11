@@ -26,10 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
-import com.laguipemo.nefroped.features.auth.components.EmailTextField
-import com.laguipemo.nefroped.features.auth.components.HeaderAuth
-import com.laguipemo.nefroped.features.auth.components.PasswordTextField
-import com.laguipemo.nefroped.features.auth.util.toMessage
+import com.laguipemo.nefroped.designsystem.components.EmailTextField
+import com.laguipemo.nefroped.designsystem.components.HeaderAuth
+import com.laguipemo.nefroped.designsystem.components.PasswordTextField
+import com.laguipemo.nefroped.designsystem.util.toMessage
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

@@ -100,6 +100,18 @@ class SupabaseAuthRepositoryImpl(
             NefroResult.Error(e.toAuthError())
         }
     }
+    
+    override suspend fun linkEmailPassword(email: String, password: String): NefroResult<Unit, AuthError> {
+        return try {
+            supabase.auth.updateUser {
+                this.email = email
+                this.password = password
+            }
+            NefroResult.Success(Unit)
+        } catch (e: Exception) {
+            NefroResult.Error(e.toAuthError())
+        }
+    }
 
 
     override suspend fun logout() {

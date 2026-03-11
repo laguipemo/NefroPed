@@ -8,8 +8,8 @@ import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.core.domain.usecase.login.ContinueAsGuestUseCase
 import com.laguipemo.nefroped.core.domain.usecase.login.LoginUseCase
 import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCase
-import com.laguipemo.nefroped.features.auth.util.ValidationConstants.MINIMAL_PASS_LENGTH
-import com.laguipemo.nefroped.features.auth.util.ValidationConstants.isValidEmail
+import com.laguipemo.nefroped.core.domain.util.ValidationConstants.MINIMAL_PASS_LENGTH
+import com.laguipemo.nefroped.core.domain.util.ValidationConstants.isValidEmail
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -68,7 +68,8 @@ class LoginViewModel(
                 viewModelScope.launch {
                     _uiState.update { it.copy(isLoading = true) }
                     try {
-                        when (val result = loginWithGoogleUseCase(event.idToken)) {
+                        when (val result =
+                            loginWithGoogleUseCase(event.idToken)) {
                             is NefroResult.Success -> emitEffect(LoginUiEffect.LoginSuccess)
                             is NefroResult.Error -> emitError(result.error)
                         }
@@ -132,6 +133,7 @@ class LoginViewModel(
             password.isBlank() -> ValidationError.EmptyPassword
             password.length < MINIMAL_PASS_LENGTH ->
                 ValidationError.PasswordTooShort(MINIMAL_PASS_LENGTH)
+
             else -> null
         }
 }
