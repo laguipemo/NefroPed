@@ -39,10 +39,14 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":local"))
 
+    // Koin
+    implementation(libs.koin.android)
+
     // Supabase
     implementation(libs.supabase.auth)
     implementation(libs.supabase.realtime)
     implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.storage)
 
     // Ktor (para fallback GitHub/markdown)
     implementation(libs.ktor.client.core)

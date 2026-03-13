@@ -11,10 +11,16 @@ interface AuthRepository {
     suspend fun login(email: String, password: String): NefroResult<Unit, AuthError>
     suspend fun register(
         email: String,
-        password: String
+        password: String,
+        fullName: String
     ): NefroResult<Unit, AuthError>
     suspend fun anonymous(): NefroResult<Unit, AuthError>
     suspend fun recoverPassword(email: String): NefroResult<Unit, AuthError>
     suspend fun updatePassword(newPassword: String): NefroResult<Unit, AuthError>
+    suspend fun loginWithGoogle(idToken: String): NefroResult<Unit, AuthError>
     suspend fun logout()
+    
+    suspend fun linkEmailPassword(email: String, password: String): NefroResult<Unit, AuthError>
+    
+    suspend fun updateAvatar(byteArray: ByteArray, fileName: String): NefroResult<String, AuthError>
 }

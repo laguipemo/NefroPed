@@ -1,4 +1,4 @@
-package com.laguipemo.nefroped.features.auth.components
+package com.laguipemo.nefroped.designsystem.components
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -34,15 +34,17 @@ fun EmailTextField(
             )
         },
         trailingIcon = {
-            IconButton(
-                onClick = {
-                    onValueChange("")
+            if (value.isNotEmpty()) {
+                IconButton(
+                    onClick = {
+                        onValueChange("")
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = null
+                    )
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Clear,
-                    contentDescription = null
-                )
             }
         },
     )

@@ -3,6 +3,7 @@ import com.android.build.api.dsl.LibraryExtension
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 configure<LibraryExtension> {
@@ -40,9 +41,7 @@ configure<LibraryExtension> {
 
 dependencies {
     implementation(project(":domain"))
-    implementation(project(":data"))
     implementation(project(":designsystem"))
-    implementation(project(":navigation"))
 
     // Koin
     implementation(libs.koin.android)
@@ -51,14 +50,17 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
 
-    implementation(libs.androidx.navigation.compose)
-
-    // Compose base
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.activity.compose)
+    
+    // Credential Manager
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

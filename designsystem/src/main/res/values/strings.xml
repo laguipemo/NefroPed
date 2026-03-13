@@ -35,4 +35,26 @@
     <string name="auth_error_password_too_short">El password debe tener al menos %1$d caracteres</string>
     <string name="auth_error_passwords_do_not_match">Las contraseñas no coinciden</string>
 
+    <!-- Profile -->
+    <string name="profile_title">Mi Perfil</string>
+    <string name="profile_section_account">Cuenta</string>
+    <string name="profile_section_assistance">Asistencia</string>
+    <string name="profile_section_about">Sobre NefroPed</string>
+
+    <string name="profile_action_link_account">Vincular cuenta</string>
+    <string name="profile_action_link_account_desc">No pierdas tu progreso</string>
+    <string name="profile_action_logout">Cerrar sesión</string>
+    <string name="profile_action_chat">Abrir Chat de ayuda</string>
+    <string name="profile_action_chat_desc">Consulta tus dudas</string>
+    <string name="profile_app_version">Versión de la app</string>
+
+    <string name="profile_guest_mode">Modo Invitado</string>
+    <string name="profile_guest_warning">Estás usando una cuenta de invitado. Vincula tu cuenta para no perder tu progreso.</string>
+
+    <string name="profile_link_sheet_title">Vincular cuenta</string>
+    <string name="profile_link_sheet_subtitle">Elige cómo quieres guardar tu progreso</string>
+    <string name="profile_link_google">Continuar con Google</string>
+    <string name="profile_link_email">Vincular con Email</string>
+    <string name="profile_link_or">o</string>
+
 </resources>

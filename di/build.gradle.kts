@@ -39,15 +39,12 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
     implementation(project(":local"))
-
-    // Supabase (needed for SupabaseClient type)
-    implementation(libs.supabase.auth)
-    implementation(libs.supabase.realtime)
-    implementation(libs.supabase.postgrest)
+    implementation(project(":auth"))
+    implementation(project(":chat"))
+    implementation(project(":onboarding"))
+    implementation(project(":profile"))
 
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
-
-    implementation(libs.androidx.datastore.preferences)
 }

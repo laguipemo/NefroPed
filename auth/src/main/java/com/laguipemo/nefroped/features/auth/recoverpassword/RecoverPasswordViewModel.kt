@@ -6,7 +6,7 @@ import com.laguipemo.nefroped.core.domain.model.auth.AuthError
 import com.laguipemo.nefroped.core.domain.model.result.NefroResult
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.core.domain.usecase.recoverpassword.RecoverPasswordUseCase
-import com.laguipemo.nefroped.features.auth.util.ValidationConstants.isValidEmail
+import com.laguipemo.nefroped.core.domain.util.ValidationConstants.isValidEmail
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow

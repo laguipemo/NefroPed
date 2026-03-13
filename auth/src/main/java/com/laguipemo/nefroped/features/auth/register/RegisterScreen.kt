@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -26,10 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
-import com.laguipemo.nefroped.features.auth.components.EmailTextField
-import com.laguipemo.nefroped.features.auth.components.HeaderAuth
-import com.laguipemo.nefroped.features.auth.components.PasswordTextField
-import com.laguipemo.nefroped.features.auth.util.toMessage
+import com.laguipemo.nefroped.designsystem.components.AuthTextField
+import com.laguipemo.nefroped.designsystem.components.EmailTextField
+import com.laguipemo.nefroped.designsystem.components.HeaderAuth
+import com.laguipemo.nefroped.designsystem.components.PasswordTextField
+import com.laguipemo.nefroped.designsystem.util.toMessage
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -101,6 +105,21 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                AuthTextField(
+                    value = uiState.fullName,
+                    onValueChange = {
+                        viewModel.onEvent(RegisterUserEvent.FullNameChanged(it))
+                    },
+                    label = "Nombre completo",
+                    isError = uiState.fullNameError != null,
+                    supportingText = if (uiState.fullNameError is ValidationError.EmptyFullName) "El nombre es obligatorio" else null,
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Outlined.Person, contentDescription = null)
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(spaceS))
+
                 EmailTextField(
                     value = uiState.email,
                     onValueChange = {
@@ -155,15 +174,12 @@ fun RegisterScreen(
                         )
                     },
                     isError = uiState.confirmPasswordError != null,
-                    supportingText = when (val error = uiState.passwordError) {
+                    supportingText = when (uiState.confirmPasswordError) {
                         is ValidationError.EmptyPassword ->
                             stringResource(R.string.auth_error_password_required)
 
-                        is ValidationError.PasswordTooShort ->
-                            stringResource(
-                                R.string.auth_error_password_too_short,
-                                error.minLength
-                            )
+                        is ValidationError.PasswordsDoNotMatch ->
+                            stringResource(R.string.auth_error_passwords_do_not_match)
 
                         else -> null
                     },

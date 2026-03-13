@@ -1,4 +1,4 @@
-package com.laguipemo.nefroped.features.auth.util
+package com.laguipemo.nefroped.designsystem.util
 
 import com.laguipemo.nefroped.core.domain.model.auth.AuthError
 

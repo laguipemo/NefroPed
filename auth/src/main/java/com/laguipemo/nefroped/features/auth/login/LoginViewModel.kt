@@ -7,8 +7,9 @@ import com.laguipemo.nefroped.core.domain.model.result.NefroResult
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.core.domain.usecase.login.ContinueAsGuestUseCase
 import com.laguipemo.nefroped.core.domain.usecase.login.LoginUseCase
-import com.laguipemo.nefroped.features.auth.util.ValidationConstants.MINIMAL_PASS_LENGTH
-import com.laguipemo.nefroped.features.auth.util.ValidationConstants.isValidEmail
+import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCase
+import com.laguipemo.nefroped.core.domain.util.ValidationConstants.MINIMAL_PASS_LENGTH
+import com.laguipemo.nefroped.core.domain.util.ValidationConstants.isValidEmail
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val loginUseCase: LoginUseCase,
-    private val continueAsGuestUseCase: ContinueAsGuestUseCase
+    private val continueAsGuestUseCase: ContinueAsGuestUseCase,
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -50,24 +52,32 @@ class LoginViewModel(
             LoginUserEvent.Submit -> submit()
 
             LoginUserEvent.ContinueAsGuest -> {
-//                viewModelScope.launch {
-//                    continueAsGuestUseCase()
-//                }
                 viewModelScope.launch {
                     _uiState.update {
                         it.copy(isLoading = true)
                     }
                     when (val result = continueAsGuestUseCase()) {
                         is NefroResult.Success -> emitEffect(LoginUiEffect.LoginSuccess)
-
-                        is NefroResult.Error ->
-                            emitError(result.error)
-
+                        is NefroResult.Error -> emitError(result.error)
                     }
                     _uiState.update { it.copy(isLoading = false) }
                 }
             }
 
+            is LoginUserEvent.LoginWithGoogle -> {
+                viewModelScope.launch {
+                    _uiState.update { it.copy(isLoading = true) }
+                    try {
+                        when (val result =
+                            loginWithGoogleUseCase(event.idToken)) {
+                            is NefroResult.Success -> emitEffect(LoginUiEffect.LoginSuccess)
+                            is NefroResult.Error -> emitError(result.error)
+                        }
+                    } finally {
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                }
+            }
         }
     }
 
@@ -93,10 +103,7 @@ class LoginViewModel(
             }
             when (val result = loginUseCase(state.email, state.password)) {
                 is NefroResult.Success -> emitEffect(LoginUiEffect.LoginSuccess)
-
-                is NefroResult.Error ->
-                    emitError(result.error)
-
+                is NefroResult.Error -> emitError(result.error)
             }
             _uiState.update { it.copy(isLoading = false) }
         }

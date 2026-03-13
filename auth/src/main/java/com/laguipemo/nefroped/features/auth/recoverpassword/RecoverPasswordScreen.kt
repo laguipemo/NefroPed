@@ -26,9 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
-import com.laguipemo.nefroped.features.auth.components.EmailTextField
-import com.laguipemo.nefroped.features.auth.components.HeaderAuth
-import com.laguipemo.nefroped.features.auth.util.toMessage
+import com.laguipemo.nefroped.designsystem.components.EmailTextField
+import com.laguipemo.nefroped.designsystem.components.HeaderAuth
+import com.laguipemo.nefroped.designsystem.util.toMessage
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -45,7 +45,7 @@ fun RecoverPasswordScreen(
     val verticalPadding = dimensionResource(
         R.dimen.screen_vertical_padding
     )
-    val spaceS = dimensionResource(R.dimen.space_s)
+    dimensionResource(R.dimen.space_s)
     val spaceM = dimensionResource(R.dimen.space_m)
     val spaceXL = dimensionResource(R.dimen.space_xl)
     dimensionResource(R.dimen.space_l)

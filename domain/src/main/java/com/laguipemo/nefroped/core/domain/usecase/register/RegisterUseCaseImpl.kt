@@ -9,8 +9,9 @@ class RegisterUseCaseImpl(
 ): RegisterUseCase {
     override suspend fun invoke(
         email: String,
-        password: String
+        password: String,
+        fullName: String
     ): NefroResult<Unit, AuthError> {
-        return repository.register(email, password)
+        return repository.register(email, password, fullName)
     }
 }

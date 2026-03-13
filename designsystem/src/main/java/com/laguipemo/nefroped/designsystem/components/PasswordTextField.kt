@@ -1,4 +1,4 @@
-package com.laguipemo.nefroped.features.auth.components
+package com.laguipemo.nefroped.designsystem.components
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions

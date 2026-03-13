@@ -1,4 +1,4 @@
-package com.laguipemo.nefroped.features.auth.components
+package com.laguipemo.nefroped.designsystem.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import com.laguipemo.nefroped.designsystem.R
 
 @Composable
@@ -39,7 +38,6 @@ fun SocialMediaButton(
 
     val spaceS = dimensionResource(R.dimen.space_s)
     val spaceM = dimensionResource(R.dimen.space_m)
-    val spaceL = dimensionResource(R.dimen.space_l)
     val btnIconSize = dimensionResource(R.dimen.button_icon_size)
 
     Surface(

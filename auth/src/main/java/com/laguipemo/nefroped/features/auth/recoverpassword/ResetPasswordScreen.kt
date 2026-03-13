@@ -14,9 +14,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
-import com.laguipemo.nefroped.features.auth.components.HeaderAuth
-import com.laguipemo.nefroped.features.auth.components.PasswordTextField
-import com.laguipemo.nefroped.features.auth.util.toMessage
+import com.laguipemo.nefroped.designsystem.components.HeaderAuth
+import com.laguipemo.nefroped.designsystem.components.PasswordTextField
+import com.laguipemo.nefroped.designsystem.util.toMessage
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

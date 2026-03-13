@@ -1,4 +1,4 @@
-package com.laguipemo.nefroped.features.auth.components
+package com.laguipemo.nefroped.designsystem.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image

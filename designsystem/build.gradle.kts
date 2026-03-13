@@ -1,5 +1,4 @@
 import com.android.build.api.dsl.LibraryExtension
-import shadow.bundletool.com.android.tools.r8.internal.bu
 
 plugins {
     alias(libs.plugins.android.library)
@@ -40,6 +39,7 @@ configure<LibraryExtension> {
 }
 
 dependencies {
+    implementation(project(":domain"))
 
     // Compose base
     implementation(platform(libs.androidx.compose.bom))
