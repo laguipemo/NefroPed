@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -33,9 +32,7 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
@@ -81,6 +78,7 @@ fun LoginScreen(
                 is LoginUiEffect.ShowError -> {
                     snackbarHostState.showSnackbar(effect.error.toMessage())
                 }
+
                 LoginUiEffect.LoginSuccess -> {
                     onLoginSuccess()
                 }
@@ -103,7 +101,10 @@ fun LoginScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(horizontal = horizontalPadding, vertical = verticalPadding),
+                .padding(
+                    horizontal = horizontalPadding,
+                    vertical = verticalPadding
+                ),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -116,22 +117,42 @@ fun LoginScreen(
                 ) {
                     EmailTextField(
                         value = uiState.email,
-                        onValueChange = { viewModel.onEvent(LoginUserEvent.EmailChanged(it)) },
+                        onValueChange = {
+                            viewModel.onEvent(
+                                LoginUserEvent.EmailChanged(
+                                    it
+                                )
+                            )
+                        },
                         isError = uiState.emailError != null,
                         supportingText = when (uiState.emailError) {
                             ValidationError.EmptyEmail -> stringResource(R.string.auth_error_email_required)
-                            ValidationError.InvalidEmailFormat -> stringResource(R.string.auth_error_email_invalid)
+                            ValidationError.InvalidEmailFormat -> stringResource(
+                                R.string.auth_error_email_invalid
+                            )
+
                             else -> null
                         }
                     )
                     Spacer(modifier = Modifier.height(spaceS))
                     PasswordTextField(
                         value = uiState.password,
-                        onValueChange = { viewModel.onEvent(LoginUserEvent.PasswordChanged(it)) },
+                        onValueChange = {
+                            viewModel.onEvent(
+                                LoginUserEvent.PasswordChanged(
+                                    it
+                                )
+                            )
+                        },
                         isError = uiState.passwordError != null,
-                        supportingText = when (val error = uiState.passwordError) {
+                        supportingText = when (val error =
+                            uiState.passwordError) {
                             ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
-                            is ValidationError.PasswordTooShort -> stringResource(R.string.auth_error_password_too_short, error.minLength)
+                            is ValidationError.PasswordTooShort -> stringResource(
+                                R.string.auth_error_password_too_short,
+                                error.minLength
+                            )
+
                             else -> null
                         },
                         onImeDone = { viewModel.onEvent(LoginUserEvent.Submit) }
@@ -142,15 +163,20 @@ fun LoginScreen(
                         horizontalArrangement = Arrangement.End
                     ) {
                         val recoverText = buildAnnotatedString {
-                            append(stringResource(com.laguipemo.nefroped.designsystem.R.string.auth_forgot_password_question) + " ")
+                            append(stringResource(R.string.auth_forgot_password_question) + " ")
                             pushLink(
                                 LinkAnnotation.Clickable(
                                     tag = "recover_password",
-                                    styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)),
+                                    styles = TextLinkStyles(
+                                        style = SpanStyle(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            textDecoration = TextDecoration.Underline
+                                        )
+                                    ),
                                     linkInteractionListener = { onRecoverPassword() }
                                 )
                             )
-                            append(stringResource(com.laguipemo.nefroped.designsystem.R.string.auth_forgot_password_action))
+                            append(stringResource(R.string.auth_forgot_password_action))
                             pop()
                         }
                         Text(text = recoverText)
@@ -190,15 +216,20 @@ fun LoginScreen(
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 val createAccount = buildAnnotatedString {
-                    append(stringResource(com.laguipemo.nefroped.designsystem.R.string.auth_no_account_question) + " ")
+                    append(stringResource(R.string.auth_no_account_question) + " ")
                     pushLink(
                         LinkAnnotation.Clickable(
                             tag = "create_account",
-                            styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)),
+                            styles = TextLinkStyles(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ),
                             linkInteractionListener = { onRegister() }
                         )
                     )
-                    append(stringResource(com.laguipemo.nefroped.designsystem.R.string.auth_register_action))
+                    append(stringResource(R.string.auth_register_action))
                     pop()
                 }
                 Text(text = createAccount)
@@ -211,7 +242,10 @@ fun LoginScreen(
     }
 }
 
-private suspend fun handleGoogleLogin(context: Context, viewModel: LoginViewModel) {
+private suspend fun handleGoogleLogin(
+    context: Context,
+    viewModel: LoginViewModel
+) {
     val credentialManager = CredentialManager.create(context)
     val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
         .setFilterByAuthorizedAccounts(false)
@@ -223,24 +257,32 @@ private suspend fun handleGoogleLogin(context: Context, viewModel: LoginViewMode
         .build()
 
     try {
-        val result = credentialManager.getCredential(context = context, request = request)
+        val result = credentialManager.getCredential(
+            context = context,
+            request = request
+        )
         handleCredential(result, viewModel)
-    } catch (e: GetCredentialException) {
-        // Manejar error (cancelado por usuario, etc.)
-    } catch (e: Exception) {
-        // Manejar error inesperado
+    } catch (_: GetCredentialException) {
+    } catch (_: Exception) {
     }
 }
 
-private fun handleCredential(result: GetCredentialResponse, viewModel: LoginViewModel) {
+private fun handleCredential(
+    result: GetCredentialResponse,
+    viewModel: LoginViewModel
+) {
     val credential = result.credential
-    
-    // Usamos el chequeo por tipo String y extracción manual por ser el método más robusto
-    // contra errores de carga de clases o versiones de librerías.
+
     if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
         try {
-            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-            viewModel.onEvent(LoginUserEvent.LoginWithGoogle(googleIdTokenCredential.idToken))
-        } catch (_: Exception) { }
+            val googleIdTokenCredential =
+                GoogleIdTokenCredential.createFrom(credential.data)
+            viewModel.onEvent(
+                LoginUserEvent.LoginWithGoogle(
+                    googleIdTokenCredential.idToken
+                )
+            )
+        } catch (_: Exception) {
+        }
     }
 }

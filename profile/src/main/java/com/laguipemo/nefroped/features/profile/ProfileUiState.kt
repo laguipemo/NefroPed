@@ -10,6 +10,7 @@ sealed interface ProfileUiState {
         val avatarUrl: String? = null,
         val isGuest: Boolean = false,
         val isLoading: Boolean = false,
+        val appVersion: String = "",
         // Campos del formulario de vinculación
         val formEmail: String = "",
         val formPassword: String = "",

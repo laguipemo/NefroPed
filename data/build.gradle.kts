@@ -39,6 +39,9 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":local"))
 
+    // Koin
+    implementation(libs.koin.android)
+
     // Supabase
     implementation(libs.supabase.auth)
     implementation(libs.supabase.realtime)

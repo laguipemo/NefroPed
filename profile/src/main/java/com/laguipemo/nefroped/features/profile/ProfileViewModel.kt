@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.laguipemo.nefroped.core.domain.model.result.NefroResult
 import com.laguipemo.nefroped.core.domain.model.session.SessionState
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
+import com.laguipemo.nefroped.core.domain.usecase.app.GetAppVersionUseCase
 import com.laguipemo.nefroped.core.domain.usecase.login.LinkEmailPasswordUseCase
 import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCase
 import com.laguipemo.nefroped.core.domain.usecase.logout.LogoutUseCase
@@ -25,7 +26,8 @@ class ProfileViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
     private val linkEmailPasswordUseCase: LinkEmailPasswordUseCase,
-    private val updateAvatarUseCase: UpdateAvatarUseCase
+    private val updateAvatarUseCase: UpdateAvatarUseCase,
+    getAppVersionUseCase: GetAppVersionUseCase
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -34,6 +36,7 @@ class ProfileViewModel(
     private val _emailError = MutableStateFlow<ValidationError?>(null)
     private val _passwordError = MutableStateFlow<ValidationError?>(null)
     private val _showBottomSheet = MutableStateFlow(false)
+    private val appVersion = getAppVersionUseCase()
 
     val uiState: StateFlow<ProfileUiState> =
         combine(
@@ -67,7 +70,8 @@ class ProfileViewModel(
                         formPassword = formPassword,
                         emailError = emailError,
                         passwordError = passwordError,
-                        showBottomSheet = showBottomSheet
+                        showBottomSheet = showBottomSheet,
+                        appVersion = appVersion
                     )
                 }
 
