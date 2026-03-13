@@ -37,6 +37,33 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
+## [0.3.0] - 2026-03-13
+
+## Added
+
+- Completado todo el flujo de autenticación:
+  - Autenticación email/contraseña completa, incluyendo nombre completo
+  - Autenticación con cuenta google completa, se utiliza el nombre, el avatar, etc
+  - Autenticación anónimo (invitado) completa, implementado su transformación a una
+    cuenta normal vinculándola a cuenta de google o a una con email y contraseña.
+  - Enriquecido el flujo del registro, ahora incluye nombre completo
+- Enriquecida al pantalla Profile:
+  - Muestra foto de perfil, nombre completo, email
+  - Separa en secciones:
+    - Cuenta: Vincular la cuenta actual si es de invitado y opción de cerrar sessión
+    - Asitencia: Abrir el chat de ayuda
+    - Sobre NefroPed: Información de la versión de la app
+
+## Refactor
+
+- Restructura modularmente todos las definiciones referentes a la inyección de dependencias
+  con Koin:
+  - Modulo koin para los casos de uso vive ahora en :domain
+  - Modulo koin para los repositorios ahora viven en :data
+  - Modulo koin para los viewmodels ahora viven cada uno en su correspondiente feature 
+  - El módulo que incluye todos los módulos sigue viviendo en :di
+
+
 ## [0.2.1] - 2026-03-10
 
 ## Added
