@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Spacing global -->
-    <dimen name="space_zero">0.dp</dimen>
+    <dimen name="space_zero">0dp</dimen>
     <dimen name="space_xs">4dp</dimen>
     <dimen name="space_s">8dp</dimen>
     <dimen name="space_m">16dp</dimen>
     <dimen name="space_l">24dp</dimen>
     <dimen name="space_xl">32dp</dimen>
-    <dimen name="space_48">48.dp</dimen>
+    <dimen name="space_48">48dp</dimen>
     <dimen name="space_64">64dp</dimen>
     <dimen name="space_80">80dp</dimen>
     <dimen name="space_96">96dp</dimen>
@@ -16,14 +16,16 @@
     <dimen name="screen_horizontal_padding">24dp</dimen>
     <dimen name="screen_vertical_padding">16dp</dimen>
 
-    <!-- Logo en el header -->
+    <!-- Logo y Avatar -->
     <dimen name="logo_header_size">112dp</dimen>
+    <dimen name="avatar_profile_size">100dp</dimen>
+    <dimen name="avatar_icon_size">60dp</dimen>
 
     <!-- Botones -->
     <dimen name="button_height">40dp</dimen>
     <dimen name="button_corner_radius">24dp</dimen>
     <dimen name="button_icon_size">24dp</dimen>
 
-    <dimen name="border_stroke_width">1.dp</dimen>
+    <dimen name="border_stroke_width">1dp</dimen>
 
 </resources>

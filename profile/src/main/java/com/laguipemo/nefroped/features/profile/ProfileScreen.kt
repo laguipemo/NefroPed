@@ -2,7 +2,6 @@ package com.laguipemo.nefroped.features.profile
 
 import android.content.Context
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -11,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -21,10 +19,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,9 +35,7 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
-import com.laguipemo.nefroped.designsystem.components.EmailTextField
-import com.laguipemo.nefroped.designsystem.components.PasswordTextField
-import com.laguipemo.nefroped.designsystem.components.SocialMediaButton
+import com.laguipemo.nefroped.designsystem.components.*
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -57,7 +53,7 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Mi Perfil", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.profile_title), fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -80,62 +76,57 @@ fun ProfileScreen(
                 }
 
                 is ProfileUiState.Content -> {
-                    // 1. Header con Avatar
                     UserHeader(state)
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 
-                    // 2. Sección de Cuenta
-                    ProfileSection(title = "Cuenta") {
+                    ProfileSection(title = stringResource(R.string.profile_section_account)) {
                         if (state.isGuest) {
                             ProfileOptionItem(
                                 icon = Icons.Default.Link,
-                                title = "Vincular cuenta",
-                                subtitle = "No pierdas tu progreso",
+                                title = stringResource(R.string.profile_action_link_account),
+                                subtitle = stringResource(R.string.profile_action_link_account_desc),
                                 onClick = { viewModel.onShowBottomSheet(true) },
                                 iconColor = MaterialTheme.colorScheme.primary
                             )
                         }
                         ProfileOptionItem(
                             icon = Icons.AutoMirrored.Filled.Logout,
-                            title = "Cerrar sesión",
+                            title = stringResource(R.string.profile_action_logout),
                             onClick = { viewModel.onLogoutClicked() },
                             iconColor = MaterialTheme.colorScheme.error,
                             showChevron = false
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
 
-                    // 3. Sección de App
-                    ProfileSection(title = "Asistencia") {
+                    ProfileSection(title = stringResource(R.string.profile_section_assistance)) {
                         ProfileOptionItem(
                             icon = Icons.AutoMirrored.Filled.Chat,
-                            title = "Abrir Chat de ayuda",
-                            subtitle = "Consulta tus dudas",
+                            title = stringResource(R.string.profile_action_chat),
+                            subtitle = stringResource(R.string.profile_action_chat_desc),
                             onClick = onOpenChat
                         )
                     }
 
-                    // 4. Sección de Información
-                    Spacer(modifier = Modifier.height(16.dp))
-                    ProfileSection(title = "Sobre NefroPed") {
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                    ProfileSection(title = stringResource(R.string.profile_section_about)) {
                         ProfileOptionItem(
                             icon = Icons.Default.AccountCircle,
-                            title = "Versión de la app",
+                            title = stringResource(R.string.profile_app_version),
                             subtitle = "1.0.0 (BETA)",
                             showChevron = false,
                             onClick = {}
                         )
                     }
 
-                    // Bottom Sheet para vinculación
                     if (state.showBottomSheet) {
                         ModalBottomSheet(
                             onDismissRequest = { viewModel.onShowBottomSheet(false) },
                             sheetState = sheetState
                         ) {
-                            LinkAccountContent(
+                            LinkAccountSheetContent(
                                 state = state,
                                 onEmailChanged = viewModel::onEmailChanged,
                                 onPasswordChanged = viewModel::onPasswordChanged,
@@ -159,12 +150,12 @@ fun UserHeader(state: ProfileUiState.Content) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp),
+            .padding(vertical = dimensionResource(R.dimen.space_l)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(dimensionResource(R.dimen.avatar_profile_size))
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
@@ -172,11 +163,11 @@ fun UserHeader(state: ProfileUiState.Content) {
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(dimensionResource(R.dimen.avatar_icon_size)),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
         Text(
             text = state.greeting,
             style = MaterialTheme.typography.headlineSmall,
@@ -186,10 +177,10 @@ fun UserHeader(state: ProfileUiState.Content) {
             Surface(
                 color = MaterialTheme.colorScheme.tertiaryContainer,
                 shape = CircleShape,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = dimensionResource(R.dimen.space_s))
             ) {
                 Text(
-                    text = "Modo Invitado",
+                    text = stringResource(R.string.profile_guest_mode),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -200,79 +191,7 @@ fun UserHeader(state: ProfileUiState.Content) {
 }
 
 @Composable
-fun ProfileSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-        )
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Column(content = content)
-        }
-    }
-}
-
-@Composable
-fun ProfileOptionItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String? = null,
-    onClick: () -> Unit,
-    iconColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    showChevron: Boolean = true
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = iconColor,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        if (showChevron) {
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun LinkAccountContent(
+fun LinkAccountSheetContent(
     state: ProfileUiState.Content,
     onEmailChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
@@ -282,34 +201,34 @@ fun LinkAccountContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = dimensionResource(R.dimen.space_l))
             .padding(bottom = 48.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Vincular cuenta",
+            text = stringResource(R.string.profile_link_sheet_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Elige cómo quieres guardar tu progreso",
+            text = stringResource(R.string.profile_link_sheet_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
 
         SocialMediaButton(
             onClick = onLinkGoogle,
-            text = "Continuar con Google",
+            text = stringResource(R.string.profile_link_google),
             icon = R.drawable.ic_google,
             color = colorResource(R.color.bg_btn_google)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
         
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -317,42 +236,42 @@ fun LinkAccountContent(
         ) {
             HorizontalDivider(modifier = Modifier.weight(1f))
             Text(
-                text = " o ",
+                text = " " + stringResource(R.string.profile_link_or) + " ",
                 modifier = Modifier.padding(horizontal = 8.dp),
                 style = MaterialTheme.typography.bodySmall
             )
             HorizontalDivider(modifier = Modifier.weight(1f))
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 
         EmailTextField(
             value = state.email,
             onValueChange = onEmailChanged,
             isError = state.emailError != null,
             supportingText = when (state.emailError) {
-                ValidationError.EmptyEmail -> "El email es obligatorio"
-                ValidationError.InvalidEmailFormat -> "Formato de email no válido"
+                ValidationError.EmptyEmail -> stringResource(R.string.auth_error_email_required)
+                ValidationError.InvalidEmailFormat -> stringResource(R.string.auth_error_email_invalid)
                 else -> null
             }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
 
         PasswordTextField(
             value = state.password,
             onValueChange = onPasswordChanged,
             isError = state.passwordError != null,
             supportingText = when (val error = state.passwordError) {
-                ValidationError.EmptyPassword -> "La contraseña es obligatoria"
-                is ValidationError.PasswordTooShort -> "Mínimo ${error.minLength} caracteres"
+                ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
+                is ValidationError.PasswordTooShort -> stringResource(R.string.auth_error_password_too_short, error.minLength)
                 else -> null
             },
             onImeDone = onLinkEmailPassword,
-            label = "Nueva contraseña"
+            label = stringResource(R.string.auth_new_password_label)
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
 
         Button(
             onClick = onLinkEmailPassword,
@@ -366,7 +285,7 @@ fun LinkAccountContent(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Vincular con Email")
+                Text(stringResource(R.string.profile_link_email))
             }
         }
     }
