@@ -1,30 +1,28 @@
 package com.laguipemo.nefroped.features.profile
 
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -56,63 +54,79 @@ fun ProfileScreen(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
 
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Mi Perfil", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (val state = uiState) {
                 ProfileUiState.Loading -> {
-                    CircularProgressIndicator()
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
 
                 is ProfileUiState.Content -> {
-                    Text(
-                        text = state.greeting,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
+                    // 1. Header con Avatar
+                    UserHeader(state)
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    if (state.isGuest) {
-                        Text(
-                            text = "Estás usando una cuenta de invitado. Vincula tu cuenta para no perder tu progreso.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = { viewModel.onShowBottomSheet(true) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Vincular cuenta")
+                    // 2. Sección de Cuenta
+                    ProfileSection(title = "Cuenta") {
+                        if (state.isGuest) {
+                            ProfileOptionItem(
+                                icon = Icons.Default.Link,
+                                title = "Vincular cuenta",
+                                subtitle = "No pierdas tu progreso",
+                                onClick = { viewModel.onShowBottomSheet(true) },
+                                iconColor = MaterialTheme.colorScheme.primary
+                            )
                         }
-
-                        Spacer(modifier = Modifier.height(32.dp))
-                        HorizontalDivider()
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
-
-                    Button(
-                        onClick = { onOpenChat() },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Abrir Chat")
+                        ProfileOptionItem(
+                            icon = Icons.AutoMirrored.Filled.Logout,
+                            title = "Cerrar sesión",
+                            onClick = { viewModel.onLogoutClicked() },
+                            iconColor = MaterialTheme.colorScheme.error,
+                            showChevron = false
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = { viewModel.onLogoutClicked() },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Cerrar sesión")
+                    // 3. Sección de App
+                    ProfileSection(title = "Asistencia") {
+                        ProfileOptionItem(
+                            icon = Icons.AutoMirrored.Filled.Chat,
+                            title = "Abrir Chat de ayuda",
+                            subtitle = "Consulta tus dudas",
+                            onClick = onOpenChat
+                        )
+                    }
+
+                    // 4. Sección de Información
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ProfileSection(title = "Sobre NefroPed") {
+                        ProfileOptionItem(
+                            icon = Icons.Default.AccountCircle,
+                            title = "Versión de la app",
+                            subtitle = "1.0.0 (BETA)",
+                            showChevron = false,
+                            onClick = {}
+                        )
                     }
 
                     // Bottom Sheet para vinculación
@@ -136,6 +150,123 @@ fun ProfileScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun UserHeader(state: ProfileUiState.Content) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                modifier = Modifier.size(60.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = state.greeting,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        if (state.isGuest) {
+            Surface(
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                shape = CircleShape,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text(
+                    text = "Modo Invitado",
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfileSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+        )
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(content = content)
+        }
+    }
+}
+
+@Composable
+fun ProfileOptionItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String? = null,
+    onClick: () -> Unit,
+    iconColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    showChevron: Boolean = true
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        if (showChevron) {
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -165,7 +296,8 @@ fun LinkAccountContent(
         Text(
             text = "Elige cómo quieres guardar tu progreso",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(32.dp))
