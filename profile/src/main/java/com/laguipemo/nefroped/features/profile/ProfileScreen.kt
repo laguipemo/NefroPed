@@ -234,19 +234,8 @@ fun LinkAccountSheetContent(
         )
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
-        
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            HorizontalDivider(modifier = Modifier.weight(1f))
-            Text(
-                text = " " + stringResource(R.string.profile_link_or) + " ",
-                modifier = Modifier.padding(horizontal = 8.dp),
-                style = MaterialTheme.typography.bodySmall
-            )
-            HorizontalDivider(modifier = Modifier.weight(1f))
-        }
+
+        HorizontalDiv()
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 
@@ -280,7 +269,9 @@ fun LinkAccountSheetContent(
 
         Button(
             onClick = onLinkEmailPassword,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .padding(horizontal = dimensionResource(R.dimen.space_m))
+                .fillMaxWidth(),
             enabled = !state.isLoading
         ) {
             if (state.isLoading) {
