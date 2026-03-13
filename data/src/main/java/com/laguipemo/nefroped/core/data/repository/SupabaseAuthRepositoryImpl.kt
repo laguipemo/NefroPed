@@ -14,8 +14,11 @@ import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class SupabaseAuthRepositoryImpl(
     private val supabase: SupabaseClient
@@ -43,12 +46,16 @@ class SupabaseAuthRepositoryImpl(
 
     override suspend fun register(
         email: String,
-        password: String
+        password: String,
+        fullName: String
     ): NefroResult<Unit, AuthError> {
         return try {
             supabase.auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
+                data = buildJsonObject {
+                    put("full_name", fullName)
+                }
             }
             NefroResult.Success(Unit)
         } catch (e: Exception) {
@@ -61,6 +68,7 @@ class SupabaseAuthRepositoryImpl(
             supabase.auth.signInAnonymously()
             NefroResult.Success(Unit)
         } catch (e: Exception) {
+            Log.i("CHACHY::: nononymoues()", e.stackTraceToString())
             NefroResult.Error(e.toAuthError())
         }
     }
@@ -108,6 +116,27 @@ class SupabaseAuthRepositoryImpl(
                 this.password = password
             }
             NefroResult.Success(Unit)
+        } catch (e: Exception) {
+            NefroResult.Error(e.toAuthError())
+        }
+    }
+
+    override suspend fun updateAvatar(byteArray: ByteArray, fileName: String): NefroResult<String, AuthError> {
+        return try {
+            val user = supabase.auth.currentUserOrNull() ?: throw Exception("User not found")
+            val bucket = supabase.storage.from("avatars")
+            val path = "${user.id}/$fileName"
+            bucket.upload(path, byteArray) {
+                upsert = true
+            }
+            val publicUrl = bucket.publicUrl(path)
+            
+            supabase.auth.updateUser {
+                data = buildJsonObject {
+                    put("avatar_url", publicUrl)
+                }
+            }
+            NefroResult.Success(publicUrl)
         } catch (e: Exception) {
             NefroResult.Error(e.toAuthError())
         }

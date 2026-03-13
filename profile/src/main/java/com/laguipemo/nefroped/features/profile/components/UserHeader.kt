@@ -1,9 +1,11 @@
 package com.laguipemo.nefroped.features.profile.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -13,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -25,6 +28,7 @@ import com.laguipemo.nefroped.features.profile.ProfileUiState
 @Composable
 fun UserHeader(
     state: ProfileUiState.Content,
+    onAvatarClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -33,11 +37,13 @@ fun UserHeader(
             .padding(vertical = dimensionResource(R.dimen.space_l)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Avatar circular con botón de edición
         Box(
             modifier = Modifier
                 .size(dimensionResource(R.dimen.avatar_profile_size))
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .clickable(enabled = !state.isGuest, onClick = onAvatarClick),
             contentAlignment = Alignment.Center
         ) {
             if (state.avatarUrl != null) {
@@ -54,6 +60,25 @@ fun UserHeader(
                     modifier = Modifier.size(dimensionResource(R.dimen.avatar_icon_size)),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
+            }
+
+            // Overlay de edición (solo si no es invitado)
+            if (!state.isGuest) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = "Cambiar foto",
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .size(20.dp)
+                    )
+                }
             }
         }
         

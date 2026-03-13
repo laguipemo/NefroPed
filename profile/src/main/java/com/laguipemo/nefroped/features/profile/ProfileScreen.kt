@@ -1,6 +1,9 @@
 package com.laguipemo.nefroped.features.profile
 
 import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -46,6 +48,22 @@ fun ProfileScreen(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
 
+    // Launcher para seleccionar imagen de la galería
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            uri?.let {
+                // Convertir URI a ByteArray y llamar al ViewModel
+                val inputStream = context.contentResolver.openInputStream(it)
+                val bytes = inputStream?.readBytes()
+                inputStream?.close()
+                bytes?.let { b ->
+                    viewModel.onUpdateAvatar(b, "avatar_${System.currentTimeMillis()}.jpg")
+                }
+            }
+        }
+    )
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -72,8 +90,15 @@ fun ProfileScreen(
                 }
 
                 is ProfileUiState.Content -> {
-                    // 1. Cabecera con Avatar (Imagen real si existe)
-                    UserHeader(state)
+                    // 1. Cabecera con Avatar
+                    UserHeader(
+                        state = state,
+                        onAvatarClick = {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
+                    )
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 
@@ -111,12 +136,12 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
 
-                    // 4. Sección Informativa
+                    // 4. Sección Informativa - AHORA DINÁMICA
                     ProfileSection(title = stringResource(R.string.profile_section_about)) {
                         ProfileOptionItem(
                             icon = Icons.Default.AccountCircle,
                             title = stringResource(R.string.profile_app_version),
-                            subtitle = "1.0.0 (BETA)",
+                            subtitle = state.appVersion,
                             showChevron = false,
                             onClick = {}
                         )

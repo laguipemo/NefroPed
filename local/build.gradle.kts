@@ -35,6 +35,9 @@ configure<LibraryExtension> {
 dependencies {
     implementation(project(":domain"))
 
+    // Koin
+    implementation(libs.koin.android)
+
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 

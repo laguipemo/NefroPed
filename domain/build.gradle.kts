@@ -13,6 +13,9 @@ kotlin {
 }
 
 dependencies {
+    // Koin core
+    implementation(libs.koin.core)
+
     // Coroutines para Flow y suspend functions
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.datetime)
