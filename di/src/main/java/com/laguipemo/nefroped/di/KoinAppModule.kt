@@ -20,6 +20,8 @@ import com.laguipemo.nefroped.core.domain.usecase.login.ContinueAsGuestUseCase
 import com.laguipemo.nefroped.core.domain.usecase.login.ContinueAsGuestUseCaseImpl
 import com.laguipemo.nefroped.core.domain.usecase.login.LoginUseCase
 import com.laguipemo.nefroped.core.domain.usecase.login.LoginUseCaseImpl
+import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCase
+import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCaseImpl
 import com.laguipemo.nefroped.core.domain.usecase.logout.LogoutUseCase
 import com.laguipemo.nefroped.core.domain.usecase.logout.LogoutUseCaseImpl
 import com.laguipemo.nefroped.core.domain.usecase.onboarding.CompleteOnboardingUseCase
@@ -28,6 +30,8 @@ import com.laguipemo.nefroped.core.domain.usecase.register.RegisterUseCase
 import com.laguipemo.nefroped.core.domain.usecase.register.RegisterUseCaseImpl
 import com.laguipemo.nefroped.core.domain.usecase.recoverpassword.RecoverPasswordUseCase
 import com.laguipemo.nefroped.core.domain.usecase.recoverpassword.RecoverPasswordUseCaseImpl
+import com.laguipemo.nefroped.core.domain.usecase.profile.UpdateAvatarUseCase
+import com.laguipemo.nefroped.core.domain.usecase.profile.UpdateAvatarUseCaseImpl
 import com.laguipemo.nefroped.core.domain.usecase.session.ObserveSessionStateUseCase
 import com.laguipemo.nefroped.core.local.datastore.DataStoreModule.dataStore
 import com.laguipemo.nefroped.core.local.datastore.DatastoreAppEntryRepositoryImpl
@@ -81,6 +85,12 @@ val koinAppModule = module {
     }
     factoryOf(::RecoverPasswordUseCaseImpl){
         bind<RecoverPasswordUseCase>()
+    }
+    factoryOf(::LoginWithGoogleUseCaseImpl) {
+        bind<LoginWithGoogleUseCase>()
+    }
+    factoryOf(::UpdateAvatarUseCaseImpl) {
+        bind<UpdateAvatarUseCase>()
     }
     factoryOf(::ObserveAuthStateUseCase)
     factoryOf(::ObserveOnboardingCompleteUseCase)

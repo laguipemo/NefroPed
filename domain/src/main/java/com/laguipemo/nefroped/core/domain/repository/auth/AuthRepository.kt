@@ -11,7 +11,8 @@ interface AuthRepository {
     suspend fun login(email: String, password: String): NefroResult<Unit, AuthError>
     suspend fun register(
         email: String,
-        password: String
+        password: String,
+        fullName: String
     ): NefroResult<Unit, AuthError>
     suspend fun anonymous(): NefroResult<Unit, AuthError>
     suspend fun recoverPassword(email: String): NefroResult<Unit, AuthError>
@@ -19,8 +20,7 @@ interface AuthRepository {
     suspend fun loginWithGoogle(idToken: String): NefroResult<Unit, AuthError>
     suspend fun logout()
     
-    /**
-     * Links an anonymous account with an email and password, converting it to a permanent account.
-     */
     suspend fun linkEmailPassword(email: String, password: String): NefroResult<Unit, AuthError>
+    
+    suspend fun updateAvatar(byteArray: ByteArray, fileName: String): NefroResult<String, AuthError>
 }

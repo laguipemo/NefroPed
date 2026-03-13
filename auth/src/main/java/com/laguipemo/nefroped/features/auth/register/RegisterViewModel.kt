@@ -27,6 +27,15 @@ class RegisterViewModel(
 
     fun onEvent(event: RegisterUserEvent) {
         when (event) {
+            is RegisterUserEvent.FullNameChanged -> {
+                _uiState.update {
+                    it.copy(
+                        fullName = event.value,
+                        fullNameError = validateFullName(event.value)
+                    )
+                }
+            }
+
             is RegisterUserEvent.EmailChanged -> {
                 _uiState.update {
                     it.copy(
@@ -65,14 +74,16 @@ class RegisterViewModel(
     private fun submit() {
         val state = _uiState.value
 
+        val fullNameError = validateFullName(state.fullName)
         val emailError = validateEmail(state.email)
         val passwordError = validatePassword(state.password)
         val confirmPasswordError = validateConfirmPassword(
             state.password, state.confirmPassword
         )
-        if (emailError != null || passwordError != null || confirmPasswordError != null ) {
+        if (fullNameError != null || emailError != null || passwordError != null || confirmPasswordError != null ) {
             _uiState.update {
                 it.copy(
+                    fullNameError = fullNameError,
                     emailError = emailError,
                     passwordError = passwordError,
                     confirmPasswordError = confirmPasswordError
@@ -86,7 +97,7 @@ class RegisterViewModel(
                 it.copy(isLoading = true)
             }
 
-            when (val result = registerUseCase(state.email, state.password)) {
+            when (val result = registerUseCase(state.email, state.password, state.fullName)) {
                 is NefroResult.Success -> emitEffect(RegisterUiEffect.RegisterSuccess)
                 is NefroResult.Error -> emitError(result.error)
             }
@@ -108,6 +119,9 @@ class RegisterViewModel(
             _uiEffects.emit(effect)
         }
     }
+
+    private fun validateFullName(name: String): ValidationError? =
+        if (name.isBlank()) ValidationError.EmptyFullName else null
 
     private fun validateEmail(email: String): ValidationError? =
         when {

@@ -1,6 +1,10 @@
 package com.laguipemo.nefroped.features.profile
 
 import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -46,6 +50,22 @@ fun ProfileScreen(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
 
+    // Launcher para seleccionar imagen de la galería
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            uri?.let {
+                // Convertir URI a ByteArray y llamar al ViewModel
+                val inputStream = context.contentResolver.openInputStream(it)
+                val bytes = inputStream?.readBytes()
+                inputStream?.close()
+                bytes?.let { b ->
+                    viewModel.onUpdateAvatar(b, "avatar_${System.currentTimeMillis()}.jpg")
+                }
+            }
+        }
+    )
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -73,7 +93,14 @@ fun ProfileScreen(
 
                 is ProfileUiState.Content -> {
                     // 1. Cabecera con Avatar (Imagen real si existe)
-                    UserHeader(state)
+                    UserHeader(
+                        state = state,
+                        onAvatarClick = {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
+                    )
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 

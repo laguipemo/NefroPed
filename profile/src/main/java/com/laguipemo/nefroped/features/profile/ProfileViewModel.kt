@@ -9,6 +9,7 @@ import com.laguipemo.nefroped.core.domain.usecase.login.LinkEmailPasswordUseCase
 import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCase
 import com.laguipemo.nefroped.core.domain.usecase.logout.LogoutUseCase
 import com.laguipemo.nefroped.core.domain.usecase.session.ObserveSessionStateUseCase
+import com.laguipemo.nefroped.core.domain.usecase.profile.UpdateAvatarUseCase
 import com.laguipemo.nefroped.core.domain.util.ValidationConstants.MINIMAL_PASS_LENGTH
 import com.laguipemo.nefroped.core.domain.util.ValidationConstants.isValidEmail
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,8 @@ class ProfileViewModel(
     private val observeSessionState: ObserveSessionStateUseCase,
     private val logoutUseCase: LogoutUseCase,
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
-    private val linkEmailPasswordUseCase: LinkEmailPasswordUseCase
+    private val linkEmailPasswordUseCase: LinkEmailPasswordUseCase,
+    private val updateAvatarUseCase: UpdateAvatarUseCase
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
@@ -141,6 +143,21 @@ class ProfileViewModel(
                     onShowBottomSheet(false)
                 }
 
+                is NefroResult.Error -> {
+                    // Handle error
+                }
+            }
+            _isLoading.update { false }
+        }
+    }
+
+    fun onUpdateAvatar(byteArray: ByteArray, fileName: String) {
+        viewModelScope.launch {
+            _isLoading.update { true }
+            when (val result = updateAvatarUseCase(byteArray, fileName)) {
+                is NefroResult.Success -> {
+                    // The avatarUrl in User object will update via observeSessionState
+                }
                 is NefroResult.Error -> {
                     // Handle error
                 }
