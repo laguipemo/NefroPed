@@ -27,8 +27,8 @@ class ProfileViewModel(
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
-    private val _email = MutableStateFlow("")
-    private val _password = MutableStateFlow("")
+    private val _formEmail = MutableStateFlow("")
+    private val _formPassword = MutableStateFlow("")
     private val _emailError = MutableStateFlow<ValidationError?>(null)
     private val _passwordError = MutableStateFlow<ValidationError?>(null)
     private val _showBottomSheet = MutableStateFlow(false)
@@ -37,33 +37,37 @@ class ProfileViewModel(
         combine(
             observeSessionState(),
             _isLoading,
-            _email,
-            _password,
+            _formEmail,
+            _formPassword,
             _emailError,
             _passwordError,
             _showBottomSheet
         ) { args ->
             val sessionState = args[0] as SessionState
             val isLoading = args[1] as Boolean
-            val email = args[2] as String
-            val password = args[3] as String
+            val formEmail = args[2] as String
+            val formPassword = args[3] as String
             val emailError = args[4] as ValidationError?
             val passwordError = args[5] as ValidationError?
             val showBottomSheet = args[6] as Boolean
 
             when (sessionState) {
                 SessionState.Initializing -> ProfileUiState.Loading
-                is SessionState.User ->
+                is SessionState.User -> {
+                    val name = sessionState.user.displayName ?: sessionState.user.email?.substringBefore("@") ?: "Usuario"
                     ProfileUiState.Content(
-                        greeting = "Hola ${if (sessionState.isAnonymous) "Invitado" else sessionState.user.email}",
+                        userDisplayName = name,
+                        userEmail = sessionState.user.email ?: "",
+                        avatarUrl = sessionState.user.avatarUrl,
                         isGuest = sessionState.isAnonymous,
                         isLoading = isLoading,
-                        email = email,
-                        password = password,
+                        formEmail = formEmail,
+                        formPassword = formPassword,
                         emailError = emailError,
                         passwordError = passwordError,
                         showBottomSheet = showBottomSheet
                     )
+                }
 
                 else -> ProfileUiState.Loading
             }
@@ -81,12 +85,12 @@ class ProfileViewModel(
     }
 
     fun onEmailChanged(value: String) {
-        _email.update { value }
+        _formEmail.update { value }
         _emailError.update { validateEmail(value) }
     }
 
     fun onPasswordChanged(value: String) {
-        _password.update { value }
+        _formPassword.update { value }
         _passwordError.update { validatePassword(value) }
     }
 
@@ -94,8 +98,8 @@ class ProfileViewModel(
         _showBottomSheet.update { show }
         if (!show) {
             // Reset form when closing
-            _email.update { "" }
-            _password.update { "" }
+            _formEmail.update { "" }
+            _formPassword.update { "" }
             _emailError.update { null }
             _passwordError.update { null }
         }
@@ -118,8 +122,8 @@ class ProfileViewModel(
     }
 
     fun onLinkWithEmailPassword() {
-        val email = _email.value
-        val password = _password.value
+        val email = _formEmail.value
+        val password = _formPassword.value
 
         val emailError = validateEmail(email)
         val passwordError = validatePassword(password)

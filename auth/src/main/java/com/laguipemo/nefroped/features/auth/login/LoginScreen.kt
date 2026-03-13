@@ -35,6 +35,7 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
@@ -46,6 +47,7 @@ import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.EmailTextField
 import com.laguipemo.nefroped.designsystem.components.HeaderAuth
+import com.laguipemo.nefroped.designsystem.components.HorizontalDiv
 import com.laguipemo.nefroped.designsystem.components.PasswordTextField
 import com.laguipemo.nefroped.designsystem.components.SocialMediaButton
 import com.laguipemo.nefroped.designsystem.util.toMessage
@@ -157,12 +159,15 @@ fun LoginScreen(
                     Button(
                         onClick = { viewModel.onEvent(LoginUserEvent.Submit) },
                         enabled = !uiState.isLoading,
-                        modifier = Modifier.padding(horizontal = spaceM).fillMaxWidth().height(buttonHeight)
+                        modifier = Modifier
+                            .padding(horizontal = spaceM)
+                            .fillMaxWidth()
+                            .height(buttonHeight)
                     ) {
                         Text(text = stringResource(R.string.auth_login_button))
                     }
                     Spacer(modifier = Modifier.height(spaceL))
-                    HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.space_48)))
+                    HorizontalDiv()
                     Spacer(modifier = Modifier.height(spaceL))
                     SocialMediaButton(
                         onClick = { viewModel.onEvent(LoginUserEvent.ContinueAsGuest) },

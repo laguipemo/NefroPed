@@ -1,35 +1,26 @@
 package com.laguipemo.nefroped.features.profile
 
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
@@ -37,11 +28,10 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
-import com.laguipemo.nefroped.designsystem.components.EmailTextField
-import com.laguipemo.nefroped.designsystem.components.PasswordTextField
-import com.laguipemo.nefroped.designsystem.components.SocialMediaButton
+import com.laguipemo.nefroped.designsystem.components.*
+import com.laguipemo.nefroped.features.profile.components.LinkAccountSheetContent
+import com.laguipemo.nefroped.features.profile.components.UserHeader
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -56,63 +46,80 @@ fun ProfileScreen(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
 
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(stringResource(R.string.profile_title), fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (val state = uiState) {
                 ProfileUiState.Loading -> {
-                    CircularProgressIndicator()
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
 
                 is ProfileUiState.Content -> {
-                    Text(
-                        text = state.greeting,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
+                    // 1. Cabecera con Avatar (Imagen real si existe)
+                    UserHeader(state)
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 
-                    if (state.isGuest) {
-                        Text(
-                            text = "Estás usando una cuenta de invitado. Vincula tu cuenta para no perder tu progreso.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = { viewModel.onShowBottomSheet(true) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Vincular cuenta")
+                    // 2. Sección de Cuenta
+                    ProfileSection(title = stringResource(R.string.profile_section_account)) {
+                        if (state.isGuest) {
+                            ProfileOptionItem(
+                                icon = Icons.Default.Link,
+                                title = stringResource(R.string.profile_action_link_account),
+                                subtitle = stringResource(R.string.profile_action_link_account_desc),
+                                onClick = { viewModel.onShowBottomSheet(true) },
+                                iconColor = MaterialTheme.colorScheme.primary
+                            )
                         }
-
-                        Spacer(modifier = Modifier.height(32.dp))
-                        HorizontalDivider()
-                        Spacer(modifier = Modifier.height(32.dp))
+                        ProfileOptionItem(
+                            icon = Icons.AutoMirrored.Filled.Logout,
+                            title = stringResource(R.string.profile_action_logout),
+                            onClick = { viewModel.onLogoutClicked() },
+                            iconColor = MaterialTheme.colorScheme.error,
+                            showChevron = false
+                        )
                     }
 
-                    Button(
-                        onClick = { onOpenChat() },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Abrir Chat")
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+
+                    // 3. Sección de Asistencia
+                    ProfileSection(title = stringResource(R.string.profile_section_assistance)) {
+                        ProfileOptionItem(
+                            icon = Icons.AutoMirrored.Filled.Chat,
+                            title = stringResource(R.string.profile_action_chat),
+                            subtitle = stringResource(R.string.profile_action_chat_desc),
+                            onClick = onOpenChat
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
 
-                    Button(
-                        onClick = { viewModel.onLogoutClicked() },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Cerrar sesión")
+                    // 4. Sección Informativa
+                    ProfileSection(title = stringResource(R.string.profile_section_about)) {
+                        ProfileOptionItem(
+                            icon = Icons.Default.AccountCircle,
+                            title = stringResource(R.string.profile_app_version),
+                            subtitle = "1.0.0 (BETA)",
+                            showChevron = false,
+                            onClick = {}
+                        )
                     }
 
                     // Bottom Sheet para vinculación
@@ -121,7 +128,7 @@ fun ProfileScreen(
                             onDismissRequest = { viewModel.onShowBottomSheet(false) },
                             sheetState = sheetState
                         ) {
-                            LinkAccountContent(
+                            LinkAccountSheetContent(
                                 state = state,
                                 onEmailChanged = viewModel::onEmailChanged,
                                 onPasswordChanged = viewModel::onPasswordChanged,
@@ -135,106 +142,6 @@ fun ProfileScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun LinkAccountContent(
-    state: ProfileUiState.Content,
-    onEmailChanged: (String) -> Unit,
-    onPasswordChanged: (String) -> Unit,
-    onLinkEmailPassword: () -> Unit,
-    onLinkGoogle: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .padding(bottom = 48.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Vincular cuenta",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Elige cómo quieres guardar tu progreso",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        SocialMediaButton(
-            onClick = onLinkGoogle,
-            text = "Continuar con Google",
-            icon = R.drawable.ic_google,
-            color = colorResource(R.color.bg_btn_google)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            HorizontalDivider(modifier = Modifier.weight(1f))
-            Text(
-                text = " o ",
-                modifier = Modifier.padding(horizontal = 8.dp),
-                style = MaterialTheme.typography.bodySmall
-            )
-            HorizontalDivider(modifier = Modifier.weight(1f))
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        EmailTextField(
-            value = state.email,
-            onValueChange = onEmailChanged,
-            isError = state.emailError != null,
-            supportingText = when (state.emailError) {
-                ValidationError.EmptyEmail -> "El email es obligatorio"
-                ValidationError.InvalidEmailFormat -> "Formato de email no válido"
-                else -> null
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PasswordTextField(
-            value = state.password,
-            onValueChange = onPasswordChanged,
-            isError = state.passwordError != null,
-            supportingText = when (val error = state.passwordError) {
-                ValidationError.EmptyPassword -> "La contraseña es obligatoria"
-                is ValidationError.PasswordTooShort -> "Mínimo ${error.minLength} caracteres"
-                else -> null
-            },
-            onImeDone = onLinkEmailPassword,
-            label = "Nueva contraseña"
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = onLinkEmailPassword,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isLoading
-        ) {
-            if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.padding(4.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text("Vincular con Email")
             }
         }
     }

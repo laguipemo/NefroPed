@@ -59,6 +59,10 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.activity.compose)
     
+    // Coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.ktor3)
+    
     // Credential Manager
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
