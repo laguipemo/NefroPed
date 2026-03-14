@@ -51,6 +51,7 @@ dependencies {
     implementation(project(":chat"))
     implementation(project(":onboarding"))
     implementation(project(":profile"))
+    implementation(project(":course"))
     implementation(project(":data"))
 
     implementation(libs.androidx.core.splashscreen)

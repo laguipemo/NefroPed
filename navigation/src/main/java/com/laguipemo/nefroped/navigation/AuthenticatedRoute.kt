@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 sealed interface AuthenticatedRoute {
 
     @Serializable
+    data object Course : AuthenticatedRoute
+
+    @Serializable
     data object Profile : AuthenticatedRoute
 
     @Serializable
