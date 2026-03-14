@@ -36,6 +36,8 @@ val domainKoinModule = module {
     // Course
     factoryOf(::GetTopicsUseCase)
     factoryOf(::GetLessonsUseCase)
+    factoryOf(::SyncTopicsUseCase)
+    factoryOf(::SyncLessonsUseCase)
     
     // Onboarding
     factoryOf(::CompleteOnboardingUseCaseImpl) { bind<CompleteOnboardingUseCase>() }

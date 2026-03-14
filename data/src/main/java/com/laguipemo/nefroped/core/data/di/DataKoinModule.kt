@@ -3,10 +3,12 @@ package com.laguipemo.nefroped.core.data.di
 import com.laguipemo.nefroped.core.data.repository.AppInfoRepositoryImpl
 import com.laguipemo.nefroped.core.data.repository.SupabaseAuthRepositoryImpl
 import com.laguipemo.nefroped.core.data.repository.SupabaseChatRepositoryImpl
+import com.laguipemo.nefroped.core.data.repository.SupabaseCourseRepositoryImpl
 import com.laguipemo.nefroped.core.data.supabase.createSupabaseClient
 import com.laguipemo.nefroped.core.domain.repository.app.AppInfoRepository
 import com.laguipemo.nefroped.core.domain.repository.auth.AuthRepository
 import com.laguipemo.nefroped.core.domain.repository.chat.ChatRepository
+import com.laguipemo.nefroped.core.domain.repository.course.CourseRepository
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -17,5 +19,6 @@ val dataKoinModule = module {
     
     singleOf(::SupabaseAuthRepositoryImpl) { bind<AuthRepository>() }
     singleOf(::SupabaseChatRepositoryImpl) { bind<ChatRepository>() }
+    singleOf(::SupabaseCourseRepositoryImpl) { bind<CourseRepository>() }
     single<AppInfoRepository> { AppInfoRepositoryImpl(androidContext()) }
 }

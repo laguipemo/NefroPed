@@ -9,6 +9,12 @@ sealed interface AuthenticatedRoute {
     data object Course : AuthenticatedRoute
 
     @Serializable
+    data class Lessons(val topicId: String) : AuthenticatedRoute
+
+    @Serializable
+    data class LessonDetail(val lessonId: String) : AuthenticatedRoute
+
+    @Serializable
     data object Profile : AuthenticatedRoute
 
     @Serializable

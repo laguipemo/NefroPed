@@ -5,8 +5,11 @@ data class Topic(
     val title: String,
     val description: String,
     val imageUrl: String?,
+    val imagePlaceholder: String? = null,
+    val contentUrl: String?, // URL al .md en GitHub/Supabase
+    val indexContent: String?, // El resumen #### Lecciones...
     val order: Int,
-    val conversationId: String?,
+    val conversationId: String? = null,
     val lessonsCount: Int = 0,
     val completedLessonsCount: Int = 0
 ) {

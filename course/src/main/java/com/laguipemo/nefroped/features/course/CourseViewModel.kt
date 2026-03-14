@@ -3,34 +3,46 @@ package com.laguipemo.nefroped.features.course
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.laguipemo.nefroped.core.domain.usecase.course.GetTopicsUseCase
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import com.laguipemo.nefroped.core.domain.usecase.course.SyncTopicsUseCase
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class CourseViewModel(
-    private val getTopicsUseCase: GetTopicsUseCase
+    private val getTopicsUseCase: GetTopicsUseCase,
+    private val syncTopicsUseCase: SyncTopicsUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<CourseUiState>(CourseUiState.Loading)
-    val uiState: StateFlow<CourseUiState> = _uiState.asStateFlow()
+    private val _isRefreshing = MutableStateFlow(false)
+
+    val uiState: StateFlow<CourseUiState> = getTopicsUseCase()
+        .combine(_isRefreshing) { topics, refreshing ->
+            if (topics.isEmpty() && !refreshing) {
+                CourseUiState.Loading
+            } else {
+                CourseUiState.Content(
+                    topics = topics,
+                    isRefreshing = refreshing
+                )
+            }
+        }
+        .catch { e ->
+            emit(CourseUiState.Error(e.message ?: "Error al cargar los temas"))
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = CourseUiState.Loading
+        )
 
     init {
-        loadTopics()
+        refreshTopics()
     }
 
-    fun loadTopics() {
+    fun refreshTopics() {
         viewModelScope.launch {
-            _uiState.update { 
-                if (it is CourseUiState.Content) it.copy(isRefreshing = true) else CourseUiState.Loading 
-            }
-            try {
-                val topics = getTopicsUseCase()
-                _uiState.value = CourseUiState.Content(topics = topics)
-            } catch (e: Exception) {
-                _uiState.value = CourseUiState.Error(e.message ?: "Error desconocido")
-            }
+            _isRefreshing.value = true
+            syncTopicsUseCase()
+            _isRefreshing.value = false
         }
     }
 }

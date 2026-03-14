@@ -2,9 +2,10 @@ package com.laguipemo.nefroped.core.domain.usecase.course
 
 import com.laguipemo.nefroped.core.domain.model.course.Lesson
 import com.laguipemo.nefroped.core.domain.repository.course.CourseRepository
+import kotlinx.coroutines.flow.Flow
 
 class GetLessonsUseCase(
     private val repository: CourseRepository
 ) {
-    suspend operator fun invoke(topicId: String): List<Lesson> = repository.getLessons(topicId)
+    operator fun invoke(topicId: String): Flow<List<Lesson>> = repository.observeLessons(topicId)
 }
