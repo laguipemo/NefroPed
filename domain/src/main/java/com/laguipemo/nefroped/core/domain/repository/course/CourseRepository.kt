@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface CourseRepository {
     fun observeTopics(): Flow<List<Topic>>
     fun observeLessons(topicId: String): Flow<List<Lesson>>
+    fun observeLesson(lessonId: String): Flow<Lesson?>
     
     suspend fun syncTopics(): Result<Unit>
     suspend fun syncLessons(topicId: String): Result<Unit>

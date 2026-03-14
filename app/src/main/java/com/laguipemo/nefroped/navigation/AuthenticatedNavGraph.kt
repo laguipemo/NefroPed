@@ -12,6 +12,7 @@ import com.laguipemo.nefroped.features.auth.recoverpassword.ResetPasswordScreen
 import com.laguipemo.nefroped.features.chat.ChatScreen
 import com.laguipemo.nefroped.features.course.CourseScreen
 import com.laguipemo.nefroped.features.course.lessons.LessonsListScreen
+import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
 
 @Composable
@@ -43,8 +44,12 @@ fun AuthenticatedNavGraph(
             )
         }
 
-        composable<AuthenticatedRoute.LessonDetail> {
-            // Próximamente: Detalles de la lección
+        composable<AuthenticatedRoute.LessonDetail> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.LessonDetail>()
+            LessonDetailScreen(
+                lessonId = route.lessonId,
+                onBackClick = { navController.popBackStack() }
+            )
         }
 
         composable<AuthenticatedRoute.Profile> {

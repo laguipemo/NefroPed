@@ -1,5 +1,6 @@
 package com.laguipemo.nefroped.core.data.repository
 
+import android.util.Log
 import com.laguipemo.nefroped.core.domain.model.course.Lesson
 import com.laguipemo.nefroped.core.domain.model.course.Topic
 import com.laguipemo.nefroped.core.domain.repository.course.CourseRepository
@@ -31,9 +32,16 @@ class SupabaseCourseRepositoryImpl(
         }
     }
 
+    override fun observeLesson(lessonId: String): Flow<Lesson?> {
+        return courseDao.observeLessonById(lessonId).map { entity ->
+            entity?.toDomain()
+        }
+    }
+
     override suspend fun syncTopics(): Result<Unit> {
         return try {
             val topicsDto = supabase.postgrest["topics"].select().decodeList<TopicDto>()
+            Log.d("CourseRepo", "Synced ${topicsDto.size} topics from Supabase")
             
             val entities = topicsDto.map { dto ->
                 val lessons = supabase.postgrest["lessons"]
@@ -47,6 +55,7 @@ class SupabaseCourseRepositoryImpl(
             courseDao.insertTopics(entities)
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("CourseRepo", "Error syncing topics", e)
             Result.failure(e)
         }
     }
@@ -57,9 +66,12 @@ class SupabaseCourseRepositoryImpl(
                 filter { eq("topic_id", topicId) }
             }.decodeList<LessonDto>()
             
+            Log.d("CourseRepo", "Synced ${lessonsDto.size} lessons for topic $topicId from Supabase")
+            
             courseDao.insertLessons(lessonsDto.map { it.toEntity() })
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("CourseRepo", "Error syncing lessons for topic $topicId", e)
             Result.failure(e)
         }
     }

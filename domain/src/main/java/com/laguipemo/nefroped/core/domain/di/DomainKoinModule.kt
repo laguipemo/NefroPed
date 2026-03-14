@@ -36,6 +36,7 @@ val domainKoinModule = module {
     // Course
     factoryOf(::GetTopicsUseCase)
     factoryOf(::GetLessonsUseCase)
+    factoryOf(::GetLessonUseCase) // ← Faltaba este registro
     factoryOf(::SyncTopicsUseCase)
     factoryOf(::SyncLessonsUseCase)
     

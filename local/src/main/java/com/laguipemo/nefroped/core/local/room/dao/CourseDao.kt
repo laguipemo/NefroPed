@@ -19,6 +19,9 @@ interface CourseDao {
     @Query("SELECT * FROM lessons WHERE topicId = :topicId ORDER BY `order` ASC")
     fun observeLessonsByTopic(topicId: String): Flow<List<LessonEntity>>
 
+    @Query("SELECT * FROM lessons WHERE id = :lessonId")
+    fun observeLessonById(lessonId: String): Flow<LessonEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLessons(lessons: List<LessonEntity>)
 

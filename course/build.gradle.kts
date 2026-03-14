@@ -56,9 +56,15 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
     
+    // Ktor OkHttp Engine
+    implementation(libs.ktor.client.okhttp)
+    
     // Coil for images
     implementation(libs.coil.compose)
     implementation(libs.coil.network.ktor3)
+
+    // Markdown
+    implementation(libs.compose.markdown)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
