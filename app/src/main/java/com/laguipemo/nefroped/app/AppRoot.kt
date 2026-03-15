@@ -10,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.app.AppEntryState
 import com.laguipemo.nefroped.features.auth.recoverpassword.ResetPasswordScreen
-import com.laguipemo.nefroped.navigation.AuthenticatedNavGraph
 import com.laguipemo.nefroped.navigation.OnboardingNavGraph
 import com.laguipemo.nefroped.navigation.UnauthenticatedNavGraph
 import org.koin.androidx.compose.koinViewModel
@@ -21,7 +20,6 @@ fun AppRoot(
 ) {
     val appEntryState: AppEntryState by viewModel.appEntryState.collectAsStateWithLifecycle()
 
-    // Usamos AnimatedContent para que la transición entre estados de la app sea fluida
     AnimatedContent(
         targetState = appEntryState,
         transitionSpec = {
@@ -31,7 +29,7 @@ fun AppRoot(
     ) { state ->
         when (state) {
             AppEntryState.Loading -> {
-                // Pantalla de carga persistente mientras se decide el estado
+                // Pantalla de carga
             }
 
             AppEntryState.RequireLogin -> {
@@ -45,13 +43,13 @@ fun AppRoot(
             AppEntryState.ResetPassword -> {
                 ResetPasswordScreen(
                     onResetSuccess = {
-                        // El estado cambiará automáticamente por el signOut del repositorio
+                        // El estado cambiará automáticamente
                     }
                 )
             }
 
             AppEntryState.Ready -> {
-                AuthenticatedNavGraph()
+                MainScreen()
             }
 
             AppEntryState.Error -> {

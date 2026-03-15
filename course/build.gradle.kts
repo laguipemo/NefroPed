@@ -1,13 +1,12 @@
-import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
 
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlinx.serialization)
 }
 
-configure<ApplicationExtension> {
-    namespace = "com.laguipemo.nefroped"
+configure<LibraryExtension> {
+    namespace = "com.laguipemo.nefroped.features.course"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -15,13 +14,10 @@ configure<ApplicationExtension> {
     }
 
     defaultConfig {
-        applicationId = "com.laguipemo.nefroped"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 1
-        versionName = "0.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -43,26 +39,12 @@ configure<ApplicationExtension> {
 }
 
 dependencies {
-    implementation(project(":designsystem"))
     implementation(project(":domain"))
-    implementation(project(":di"))
-    implementation(project(":navigation"))
-    implementation(project(":auth"))
-    implementation(project(":chat"))
-    implementation(project(":onboarding"))
-    implementation(project(":profile"))
-    implementation(project(":course"))
-    implementation(project(":data"))
-
-    implementation(libs.androidx.core.splashscreen)
+    implementation(project(":designsystem"))
 
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
-
-    implementation(libs.androidx.navigation.compose)
-
-    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
@@ -72,18 +54,19 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     
-    // Supabase needed for handleDeeplinks in MainActivity
-    implementation(libs.supabase.auth)
+    // Ktor OkHttp Engine
+    implementation(libs.ktor.client.okhttp)
+    
+    // Coil for images
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.ktor3)
+
+    // Markdown
+    implementation(libs.compose.markdown)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

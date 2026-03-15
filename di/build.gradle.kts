@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":chat"))
     implementation(project(":onboarding"))
     implementation(project(":profile"))
+    implementation(project(":course"))
 
     // Koin
     implementation(libs.koin.android)
