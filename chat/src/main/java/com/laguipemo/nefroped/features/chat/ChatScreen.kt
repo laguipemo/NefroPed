@@ -46,12 +46,8 @@ fun ChatScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    // Lógica para mostrar el FAB de "bajar al final"
-    // Aparece si podemos hacer scroll hacia adelante (hacia abajo)
     val showScrollToBottom by remember {
-        derivedStateOf {
-            listState.canScrollForward
-        }
+        derivedStateOf { listState.canScrollForward }
     }
 
     SystemBarsController(
@@ -63,141 +59,150 @@ fun ChatScreen(
         if (uiState is ChatUiState.Active) {
             val messages = (uiState as ChatUiState.Active).messages
             if (messages.isNotEmpty() && !listState.isScrollInProgress) {
-                // Solo auto-scroll si no estamos navegando manualmente
                 listState.animateScrollToItem(messages.size - 1)
             }
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Transparent)
-            .statusBarsPadding()
-            .imePadding()
-    ) {
-        CenterAlignedTopAppBar(
-            title = { Text("Consultas", fontWeight = FontWeight.Bold, color = Color.White) },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = Color.Transparent
+    // Usamos Scaffold interno para que la TopAppBar se quede anclada arriba
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = Color.Transparent,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Consultas", fontWeight = FontWeight.Bold, color = Color.White) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent
+                ),
+                // WindowInsets.statusBars asegura que la barra se quede debajo de los iconos del sistema
+                windowInsets = WindowInsets.statusBars
             )
-        )
+        },
+        // Esto es clave: El Scaffold gestionará el teclado (ime) y las barras del sistema
+        contentWindowInsets = WindowInsets.systemBars.union(WindowInsets.ime)
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding) // Aplica el espacio de la TopBar y del Teclado automáticamente
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                when (val state = uiState) {
+                    ChatUiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.White)
+                    is ChatUiState.Active -> {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            itemsIndexed(state.messages, key = { _, m -> m.clientId }) { index, message ->
+                                val showHeader = index == 0 || 
+                                    message.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date != 
+                                    state.messages[index-1].createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                
+                                Column(modifier = Modifier.fillMaxWidth().animateItem()) {
+                                    if (showHeader) DateSeparator(formatDateHeader(message.createdAt))
+                                    MessageItem(message = message, isMine = message.userId == state.currentUserId)
+                                }
+                            }
+                        }
 
-        Box(modifier = Modifier.weight(1f)) {
-            when (val state = uiState) {
-                ChatUiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.White)
-                is ChatUiState.Active -> {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        itemsIndexed(state.messages, key = { _, m -> m.clientId }) { index, message ->
-                            val showHeader = index == 0 || 
-                                message.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date != 
-                                state.messages[index-1].createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
-                            
-                            Column(modifier = Modifier.fillMaxWidth().animateItem()) {
-                                if (showHeader) DateSeparator(formatDateHeader(message.createdAt))
-                                MessageItem(message = message, isMine = message.userId == state.currentUserId)
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = showScrollToBottom,
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                            enter = fadeIn() + scaleIn(),
+                            exit = fadeOut() + scaleOut()
+                        ) {
+                            SmallFloatingActionButton(
+                                onClick = { 
+                                    scope.launch { 
+                                        if (state.messages.isNotEmpty()) {
+                                            listState.animateScrollToItem(state.messages.size - 1) 
+                                        }
+                                    } 
+                                },
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
+                                shape = CircleShape
+                            ) {
+                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar al final")
                             }
                         }
                     }
-
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = showScrollToBottom,
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-                        enter = fadeIn() + scaleIn(),
-                        exit = fadeOut() + scaleOut()
-                    ) {
-                        SmallFloatingActionButton(
-                            onClick = { 
-                                scope.launch { 
-                                    if (state.messages.isNotEmpty()) {
-                                        listState.animateScrollToItem(state.messages.size - 1) 
-                                    }
-                                } 
-                            },
-                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
-                            shape = CircleShape
-                        ) {
-                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar al final")
-                        }
+                    is ChatUiState.Error -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        Text(state.message, color = MaterialTheme.colorScheme.error)
                     }
-                }
-                is ChatUiState.Error -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    Text(state.message, color = MaterialTheme.colorScheme.error)
                 }
             }
-        }
 
-        if (uiState is ChatUiState.Active) {
-            val state = uiState as ChatUiState.Active
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                    tonalElevation = 3.dp
+            if (uiState is ChatUiState.Active) {
+                val state = uiState as ChatUiState.Active
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Surface(
+                        shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                        tonalElevation = 3.dp
                     ) {
-                        OutlinedTextField(
-                            value = content,
-                            onValueChange = { content = it },
-                            modifier = Modifier.weight(1f),
-                            placeholder = { Text("Escribe un mensaje...", style = MaterialTheme.typography.bodyMedium) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.Transparent,
-                                unfocusedBorderColor = Color.Transparent
-                            ),
-                            maxLines = 4
-                        )
-                        
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 4.dp)
-                                .size(32.dp)
-                                .background(
-                                    color = if (content.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                    shape = CircleShape
-                                )
-                                .clickable(enabled = content.isNotBlank() && state.canSendMessage) {
-                                    viewModel.sendMessage("default", content)
-                                    content = ""
-                                    focusManager.clearFocus()
-                                    keyboardController?.hide()
-                                },
-                            contentAlignment = Alignment.Center
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "Enviar",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                            OutlinedTextField(
+                                value = content,
+                                onValueChange = { content = it },
+                                modifier = Modifier.weight(1f),
+                                placeholder = { Text("Escribe un mensaje...", style = MaterialTheme.typography.bodyMedium) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedBorderColor = Color.Transparent
+                                ),
+                                maxLines = 4
                             )
+                            
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 4.dp)
+                                    .size(32.dp)
+                                    .background(
+                                        color = if (content.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                        shape = CircleShape
+                                    )
+                                    .clickable(enabled = content.isNotBlank() && state.canSendMessage) {
+                                        viewModel.sendMessage("default", content)
+                                        content = ""
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Send,
+                                    contentDescription = "Enviar",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
                         }
                     }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    state.remainingMessages?.let {
+                        Text(
+                            "Mensajes restantes: $it",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    
+                    // Reducimos el spacer final ya que el Scaffold ya está añadiendo el padding del teclado
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                state.remainingMessages?.let {
-                    Text(
-                        "Mensajes restantes: $it",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
