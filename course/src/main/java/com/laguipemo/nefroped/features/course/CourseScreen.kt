@@ -192,7 +192,7 @@ fun TopicCard(
     ElevatedCard(
         modifier = Modifier
             .width(320.dp)
-            .height(620.dp) // Aumentado para ver más contenido
+            .height(680.dp) // Aumentado para ver más contenido
             .padding(vertical = 4.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(28.dp),
@@ -223,7 +223,7 @@ fun TopicCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = topic.description,
@@ -234,7 +234,7 @@ fun TopicCard(
                     lineHeight = 20.sp
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 val scrollState = rememberScrollState()
                 val canScrollDown by remember { 
@@ -277,7 +277,7 @@ fun TopicCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -294,7 +294,7 @@ fun TopicCard(
                             alpha = 0.1f
                         ),
                     )
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${(topic.progress * 100).toInt()}%",
                         style = MaterialTheme.typography.titleMedium,
