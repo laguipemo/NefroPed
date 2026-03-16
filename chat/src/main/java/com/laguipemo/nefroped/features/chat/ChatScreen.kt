@@ -20,9 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import com.laguipemo.nefroped.features.chat.components.DateSeparator
 import com.laguipemo.nefroped.features.chat.components.MessageItem
@@ -46,12 +49,10 @@ fun ChatScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    // Preparamos la lista invertida para el reverseLayout
     val reversedMessages = remember(uiState) {
         (uiState as? ChatUiState.Active)?.messages?.asReversed() ?: emptyList()
     }
 
-    // En reverseLayout, "canScrollBackward" indica si hay mensajes nuevos (abajo) que no estamos viendo
     val showScrollToBottom by remember {
         derivedStateOf { listState.canScrollBackward }
     }
@@ -66,7 +67,7 @@ fun ChatScreen(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Consultas", fontWeight = FontWeight.Bold, color = Color.White) },
+                title = { Text(stringResource(R.string.chat_title), fontWeight = FontWeight.Bold, color = Color.White) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.Transparent
                 ),
@@ -75,7 +76,6 @@ fun ChatScreen(
         },
         contentWindowInsets = WindowInsets.systemBars.union(WindowInsets.ime)
     ) { innerPadding ->
-        // Envolvemos todo en un Box para manejar estados de carga y error centrados en TODA la pantalla disponible
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -104,7 +104,12 @@ fun ChatScreen(
                                 state = listState,
                                 reverseLayout = true,
                                 modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                                contentPadding = PaddingValues(
+                                    start = dimensionResource(R.dimen.space_m),
+                                    end = dimensionResource(R.dimen.space_m),
+                                    top = dimensionResource(R.dimen.space_m),
+                                    bottom = dimensionResource(R.dimen.space_s)
+                                ),
                                 verticalArrangement = Arrangement.Top
                             ) {
                                 itemsIndexed(reversedMessages, key = { _, m -> m.clientId }) { index, message ->
@@ -121,7 +126,7 @@ fun ChatScreen(
 
                             androidx.compose.animation.AnimatedVisibility(
                                 visible = showScrollToBottom,
-                                modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                                modifier = Modifier.align(Alignment.BottomEnd).padding(dimensionResource(R.dimen.space_m)),
                                 enter = fadeIn() + scaleIn(),
                                 exit = fadeOut() + scaleOut()
                             ) {
@@ -134,16 +139,15 @@ fun ChatScreen(
                                     containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
                                     shape = CircleShape
                                 ) {
-                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar al final")
+                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = stringResource(R.string.chat_scroll_to_bottom))
                                 }
                             }
                         }
 
-                        // Caja de entrada de texto
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
+                                .padding(horizontal = dimensionResource(R.dimen.space_m)),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Surface(
@@ -152,14 +156,14 @@ fun ChatScreen(
                                 tonalElevation = 3.dp
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.space_s), vertical = dimensionResource(R.dimen.space_xs)),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     OutlinedTextField(
                                         value = content,
                                         onValueChange = { content = it },
                                         modifier = Modifier.weight(1f),
-                                        placeholder = { Text("Escribe un mensaje...", style = MaterialTheme.typography.bodyMedium) },
+                                        placeholder = { Text(stringResource(R.string.chat_input_placeholder), style = MaterialTheme.typography.bodyMedium) },
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = Color.Transparent,
                                             unfocusedBorderColor = Color.Transparent
@@ -169,8 +173,8 @@ fun ChatScreen(
                                     
                                     Box(
                                         modifier = Modifier
-                                            .padding(end = 4.dp)
-                                            .size(32.dp)
+                                            .padding(end = dimensionResource(R.dimen.space_xs))
+                                            .size(dimensionResource(R.dimen.space_xl))
                                             .background(
                                                 color = if (content.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                                 shape = CircleShape
@@ -183,25 +187,25 @@ fun ChatScreen(
                                     ) {
                                         Icon(
                                             imageVector = Icons.AutoMirrored.Filled.Send,
-                                            contentDescription = "Enviar",
+                                            contentDescription = stringResource(R.string.chat_send_description),
                                             tint = Color.White,
-                                            modifier = Modifier.size(16.dp)
+                                            modifier = Modifier.size(dimensionResource(R.dimen.space_m))
                                         )
                                     }
                                 }
                             }
                             
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_s)))
                             
                             state.remainingMessages?.let {
                                 Text(
-                                    "Mensajes restantes: $it",
+                                    stringResource(R.string.chat_remaining_messages, it),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
                             
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_s)))
                         }
                     }
                 }

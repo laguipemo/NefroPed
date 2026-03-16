@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -80,7 +81,7 @@ fun CourseScreen(
                 IconButton(onClick = { viewModel.onSearchActiveChange(!isSearchActive) }) {
                     Icon(
                         imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                        contentDescription = "Buscar",
+                        contentDescription = stringResource(R.string.course_search_placeholder),
                         tint = Color.White
                     )
                 }
@@ -98,7 +99,7 @@ fun CourseScreen(
                 onValueChange = viewModel::onSearchQueryChange,
                 placeholder = {
                     Text(
-                        "buscar tema...",
+                        stringResource(R.string.course_search_placeholder),
                         color = Color.White.copy(alpha = 0.6f)
                     )
                 },
@@ -111,10 +112,10 @@ fun CourseScreen(
                     focusedContainerColor = Color.White.copy(alpha = 0.1f),
                     unfocusedContainerColor = Color.White.copy(alpha = 0.1f),
                 ),
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding), vertical = dimensionResource(R.dimen.space_s)),
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
@@ -145,13 +146,13 @@ fun CourseScreen(
                 is CourseUiState.Content -> {
                     Column(modifier = Modifier.fillMaxSize()) {
                         Text(
-                            text = "Temas de Nefrología Pediátrica",
+                            text = stringResource(R.string.course_topics_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier.padding(
-                                horizontal = 24.dp,
-                                vertical = 16.dp
+                                horizontal = dimensionResource(R.dimen.screen_horizontal_padding),
+                                vertical = dimensionResource(R.dimen.screen_vertical_padding)
                             )
                         )
 
@@ -159,8 +160,8 @@ fun CourseScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f),
-                            contentPadding = PaddingValues(horizontal = 24.dp),
-                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                            contentPadding = PaddingValues(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_l)),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             itemsIndexed(state.topics) { index, topic ->
@@ -171,7 +172,7 @@ fun CourseScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
                     }
                 }
 
@@ -192,14 +193,14 @@ fun TopicCard(
     ElevatedCard(
         modifier = Modifier
             .width(320.dp)
-            .height(680.dp) // Aumentado para ver más contenido
-            .padding(vertical = 4.dp)
+            .height(680.dp)
+            .padding(vertical = dimensionResource(R.dimen.space_xs))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = dimensionResource(R.dimen.space_s))
     ) {
         Column {
             AsyncImage(
@@ -213,7 +214,7 @@ fun TopicCard(
             )
 
             Column(modifier = Modifier
-                .padding(24.dp)
+                .padding(dimensionResource(R.dimen.space_l))
                 .fillMaxSize()) {
                 Text(
                     text = topic.title,
@@ -223,7 +224,7 @@ fun TopicCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_s)))
 
                 Text(
                     text = topic.description,
@@ -234,7 +235,7 @@ fun TopicCard(
                     lineHeight = 20.sp
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_s)))
 
                 val scrollState = rememberScrollState()
                 val canScrollDown by remember { 
@@ -245,13 +246,13 @@ fun TopicCard(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(dimensionResource(R.dimen.space_m)))
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant.copy(
                                 alpha = 0.5f
                             )
                         )
-                        .padding(16.dp)
+                        .padding(dimensionResource(R.dimen.space_m))
                 ) {
                     Column(
                         modifier = Modifier.verticalScroll(scrollState)
@@ -271,13 +272,13 @@ fun TopicCard(
                             contentDescription = null,
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .size(16.dp),
+                                .size(dimensionResource(R.dimen.space_m)),
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_s)))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -294,7 +295,7 @@ fun TopicCard(
                             alpha = 0.1f
                         ),
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.space_s)))
                     Text(
                         text = "${(topic.progress * 100).toInt()}%",
                         style = MaterialTheme.typography.titleMedium,
@@ -304,10 +305,10 @@ fun TopicCard(
                 }
 
                 Text(
-                    text = "${topic.completedLessonsCount}/${topic.lessonsCount} lecciones",
+                    text = stringResource(R.string.course_lessons_count, topic.completedLessonsCount, topic.lessonsCount),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = dimensionResource(R.dimen.space_s))
                 )
             }
         }
