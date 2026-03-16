@@ -40,16 +40,30 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun syncTopics(): Result<Unit> {
         return try {
+            val userId = supabase.auth.currentUserOrNull()?.id ?: ""
             val topicsDto = supabase.postgrest["topics"].select().decodeList<TopicDto>()
-            Log.d("CourseRepo", "Synced ${topicsDto.size} topics from Supabase")
             
+            // Obtenemos todo el progreso del usuario para este curso
+            val userProgress = if (userId.isNotEmpty()) {
+                supabase.postgrest["user_progress"]
+                    .select { filter { eq("user_id", userId) } }
+                    .decodeList<UserProgressDto>()
+                    .map { it.lesson_id }
+                    .toSet()
+            } else emptySet()
+
             val entities = topicsDto.map { dto ->
                 val lessons = supabase.postgrest["lessons"]
-                    .select {
-                        filter { eq("topic_id", dto.id) }
-                    }.decodeList<LessonDto>()
+                    .select { filter { eq("topic_id", dto.id) } }
+                    .decodeList<LessonDto>()
                 
-                dto.toEntity(lessonsCount = lessons.size)
+                // Contamos cuántas lecciones de este tema están completadas localmente
+                val completedCount = lessons.count { it.id in userProgress }
+                
+                dto.toEntity(
+                    lessonsCount = lessons.size,
+                    completedCount = completedCount
+                )
             }
             
             courseDao.insertTopics(entities)
@@ -62,13 +76,25 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun syncLessons(topicId: String): Result<Unit> {
         return try {
+            val userId = supabase.auth.currentUserOrNull()?.id ?: ""
             val lessonsDto = supabase.postgrest["lessons"].select {
                 filter { eq("topic_id", topicId) }
             }.decodeList<LessonDto>()
             
-            Log.d("CourseRepo", "Synced ${lessonsDto.size} lessons for topic $topicId from Supabase")
+            // Obtenemos progreso específico
+            val userProgress = if (userId.isNotEmpty()) {
+                supabase.postgrest["user_progress"]
+                    .select { filter { eq("user_id", userId) } }
+                    .decodeList<UserProgressDto>()
+                    .map { it.lesson_id }
+                    .toSet()
+            } else emptySet()
             
-            courseDao.insertLessons(lessonsDto.map { it.toEntity() })
+            courseDao.insertLessons(lessonsDto.map { it.toEntity(isCompleted = it.id in userProgress) })
+            
+            // Actualizar el conteo en el tema después de insertar lecciones (por si el sync de temas fue incompleto)
+            courseDao.refreshTopicProgress(topicId)
+            
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("CourseRepo", "Error syncing lessons for topic $topicId", e)
@@ -79,12 +105,25 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun markLessonAsCompleted(lessonId: String): Boolean {
         val userId = supabase.auth.currentUserOrNull()?.id ?: return false
         return try {
-            supabase.postgrest["user_progress"].insert(
+            // 1. Persistir en Supabase
+            supabase.postgrest["user_progress"].upsert(
                 UserProgressDto(userId, lessonId)
             )
+            
+            // 2. Obtener la lección para saber a qué tema pertenece antes de actualizar
+            val lesson = courseDao.getLessonById(lessonId)
+            
+            // 3. Actualizar la lección localmente
             courseDao.updateLessonCompletion(lessonId, true)
+            
+            // 4. Recalcular el progreso del tema localmente
+            lesson?.topicId?.let { topicId ->
+                courseDao.refreshTopicProgress(topicId)
+            }
+            
             true
         } catch (e: Exception) {
+            Log.e("CourseRepo", "Error marking lesson as completed", e)
             false
         }
     }
@@ -103,7 +142,7 @@ internal data class TopicDto(
     @SerialName("conversation_id") val conversationId: String? = null
 )
 
-internal fun TopicDto.toEntity(lessonsCount: Int) = TopicEntity(
+internal fun TopicDto.toEntity(lessonsCount: Int, completedCount: Int) = TopicEntity(
     id = id,
     title = title,
     description = description,
@@ -114,7 +153,7 @@ internal fun TopicDto.toEntity(lessonsCount: Int) = TopicEntity(
     order = order,
     conversationId = conversationId,
     lessonsCount = lessonsCount,
-    completedLessonsCount = 0
+    completedLessonsCount = completedCount
 )
 
 internal fun TopicEntity.toDomain() = Topic(
@@ -146,7 +185,7 @@ internal data class LessonDto(
     val order: Int
 )
 
-internal fun LessonDto.toEntity() = LessonEntity(
+internal fun LessonDto.toEntity(isCompleted: Boolean) = LessonEntity(
     id = id,
     topicId = topicId,
     title = title,
@@ -158,7 +197,7 @@ internal fun LessonDto.toEntity() = LessonEntity(
     audioUrl = audioUrl,
     pdfUrl = pdfUrl,
     order = order,
-    isCompleted = false
+    isCompleted = isCompleted
 )
 
 internal fun LessonEntity.toDomain() = Lesson(

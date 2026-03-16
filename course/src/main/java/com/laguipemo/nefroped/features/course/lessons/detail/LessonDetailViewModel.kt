@@ -3,6 +3,7 @@ package com.laguipemo.nefroped.features.course.lessons.detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.laguipemo.nefroped.core.domain.usecase.course.GetLessonUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.MarkLessonAsCompletedUseCase
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -12,11 +13,15 @@ import kotlinx.coroutines.launch
 class LessonDetailViewModel(
     private val lessonId: String,
     private val getLessonUseCase: GetLessonUseCase,
+    private val markLessonAsCompletedUseCase: MarkLessonAsCompletedUseCase,
     private val httpClient: HttpClient
 ) : ViewModel() {
 
     private val _markdownContent = MutableStateFlow("")
     private val _isMarkdownLoading = MutableStateFlow(false)
+    
+    private val _uiEffect = MutableSharedFlow<LessonDetailUiEffect>()
+    val uiEffect = _uiEffect.asSharedFlow()
 
     val uiState: StateFlow<LessonDetailUiState> = getLessonUseCase(lessonId)
         .combine(_markdownContent) { lesson, markdown ->
@@ -49,6 +54,15 @@ class LessonDetailViewModel(
         loadMarkdown()
     }
 
+    fun markAsCompleted() {
+        viewModelScope.launch {
+            val success = markLessonAsCompletedUseCase(lessonId)
+            if (success) {
+                _uiEffect.emit(LessonDetailUiEffect.NavigateBack)
+            }
+        }
+    }
+
     private fun loadMarkdown() {
         viewModelScope.launch {
             val currentState = uiState.value
@@ -60,13 +74,11 @@ class LessonDetailViewModel(
                         val response = httpClient.get(url)
                         _markdownContent.value = response.bodyAsText()
                     } catch (e: Exception) {
-                        // Manejar error de descarga
                     } finally {
                         _isMarkdownLoading.value = false
                     }
                 }
             } else {
-                // Si el estado aún no es Content, esperamos a que el Flow emita la lección
                 getLessonUseCase(lessonId).filterNotNull().firstOrNull()?.let { lesson ->
                     _isMarkdownLoading.value = true
                     try {
@@ -80,4 +92,8 @@ class LessonDetailViewModel(
             }
         }
     }
+}
+
+sealed interface LessonDetailUiEffect {
+    data object NavigateBack : LessonDetailUiEffect
 }

@@ -13,29 +13,56 @@ class CourseViewModel(
 ) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
+    
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
 
-    val uiState: StateFlow<CourseUiState> = getTopicsUseCase()
-        .combine(_isRefreshing) { topics, refreshing ->
-            if (topics.isEmpty() && !refreshing) {
-                CourseUiState.Loading
-            } else {
-                CourseUiState.Content(
-                    topics = topics,
-                    isRefreshing = refreshing
-                )
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive = _isSearchActive.asStateFlow()
+
+    val uiState: StateFlow<CourseUiState> = combine(
+        getTopicsUseCase(),
+        _isRefreshing,
+        _searchQuery
+    ) { topics, refreshing, query ->
+        val filteredTopics = if (query.isBlank()) {
+            topics
+        } else {
+            topics.filter { 
+                it.title.contains(query, ignoreCase = true) || 
+                it.description.contains(query, ignoreCase = true) 
             }
         }
-        .catch { e ->
-            emit(CourseUiState.Error(e.message ?: "Error al cargar los temas"))
+
+        if (topics.isEmpty() && refreshing) {
+            CourseUiState.Loading
+        } else {
+            CourseUiState.Content(
+                topics = filteredTopics,
+                isRefreshing = refreshing
+            )
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = CourseUiState.Loading
-        )
+    }
+    .catch { e ->
+        emit(CourseUiState.Error(e.message ?: "Error al cargar los temas"))
+    }
+    .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = CourseUiState.Loading
+    )
 
     init {
         refreshTopics()
+    }
+
+    fun onSearchQueryChange(newQuery: String) {
+        _searchQuery.value = newQuery
+    }
+
+    fun onSearchActiveChange(active: Boolean) {
+        _isSearchActive.value = active
+        if (!active) _searchQuery.value = ""
     }
 
     fun refreshTopics() {

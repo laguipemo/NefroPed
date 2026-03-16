@@ -15,12 +15,18 @@ interface CourseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTopics(topics: List<TopicEntity>)
 
+    @Query("UPDATE topics SET completedLessonsCount = (SELECT COUNT(*) FROM lessons WHERE topicId = :topicId AND isCompleted = 1) WHERE id = :topicId")
+    suspend fun refreshTopicProgress(topicId: String)
+
     // Lecciones
     @Query("SELECT * FROM lessons WHERE topicId = :topicId ORDER BY `order` ASC")
     fun observeLessonsByTopic(topicId: String): Flow<List<LessonEntity>>
 
     @Query("SELECT * FROM lessons WHERE id = :lessonId")
     fun observeLessonById(lessonId: String): Flow<LessonEntity?>
+
+    @Query("SELECT * FROM lessons WHERE id = :lessonId")
+    suspend fun getLessonById(lessonId: String): LessonEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLessons(lessons: List<LessonEntity>)
