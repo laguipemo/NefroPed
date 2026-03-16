@@ -46,8 +46,14 @@ fun ChatScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
+    // Preparamos la lista invertida para el reverseLayout
+    val reversedMessages = remember(uiState) {
+        (uiState as? ChatUiState.Active)?.messages?.asReversed() ?: emptyList()
+    }
+
+    // En reverseLayout, "canScrollBackward" indica si hay mensajes nuevos (abajo) que no estamos viendo
     val showScrollToBottom by remember {
-        derivedStateOf { listState.canScrollForward }
+        derivedStateOf { listState.canScrollBackward }
     }
 
     SystemBarsController(
@@ -55,16 +61,6 @@ fun ChatScreen(
         useNavigationDarkIcons = !darkTheme
     )
 
-    LaunchedEffect(uiState) {
-        if (uiState is ChatUiState.Active) {
-            val messages = (uiState as ChatUiState.Active).messages
-            if (messages.isNotEmpty() && !listState.isScrollInProgress) {
-                listState.animateScrollToItem(messages.size - 1)
-            }
-        }
-    }
-
-    // Usamos Scaffold interno para que la TopAppBar se quede anclada arriba
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
@@ -74,17 +70,15 @@ fun ChatScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.Transparent
                 ),
-                // WindowInsets.statusBars asegura que la barra se quede debajo de los iconos del sistema
                 windowInsets = WindowInsets.statusBars
             )
         },
-        // Esto es clave: El Scaffold gestionará el teclado (ime) y las barras del sistema
         contentWindowInsets = WindowInsets.systemBars.union(WindowInsets.ime)
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding) // Aplica el espacio de la TopBar y del Teclado automáticamente
+                .padding(innerPadding)
         ) {
             Box(modifier = Modifier.weight(1f)) {
                 when (val state = uiState) {
@@ -92,14 +86,17 @@ fun ChatScreen(
                     is ChatUiState.Active -> {
                         LazyColumn(
                             state = listState,
+                            reverseLayout = true, // La lista se ancla al fondo
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            // Invertimos paddings para que el respiro esté en el lugar correcto
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                            verticalArrangement = Arrangement.Top // En reverseLayout esto significa "hacia el fondo"
                         ) {
-                            itemsIndexed(state.messages, key = { _, m -> m.clientId }) { index, message ->
-                                val showHeader = index == 0 || 
+                            itemsIndexed(reversedMessages, key = { _, m -> m.clientId }) { index, message ->
+                                // Lógica de cabecera ajustada para lista invertida
+                                val showHeader = index == reversedMessages.size - 1 || 
                                     message.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date != 
-                                    state.messages[index-1].createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                    reversedMessages[index + 1].createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
                                 
                                 Column(modifier = Modifier.fillMaxWidth().animateItem()) {
                                     if (showHeader) DateSeparator(formatDateHeader(message.createdAt))
@@ -117,9 +114,7 @@ fun ChatScreen(
                             SmallFloatingActionButton(
                                 onClick = { 
                                     scope.launch { 
-                                        if (state.messages.isNotEmpty()) {
-                                            listState.animateScrollToItem(state.messages.size - 1) 
-                                        }
+                                        listState.animateScrollToItem(0) // 0 es el fondo en reverseLayout
                                     } 
                                 },
                                 containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
@@ -175,8 +170,9 @@ fun ChatScreen(
                                     .clickable(enabled = content.isNotBlank() && state.canSendMessage) {
                                         viewModel.sendMessage("default", content)
                                         content = ""
-                                        focusManager.clearFocus()
-                                        keyboardController?.hide()
+                                        // No ocultamos el teclado aquí para permitir seguir escribiendo rápido
+                                        // focusManager.clearFocus() 
+                                        // keyboardController?.hide()
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -200,7 +196,6 @@ fun ChatScreen(
                         )
                     }
                     
-                    // Reducimos el spacer final ya que el Scaffold ya está añadiendo el padding del teclado
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
