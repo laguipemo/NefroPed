@@ -75,128 +75,135 @@ fun ChatScreen(
         },
         contentWindowInsets = WindowInsets.systemBars.union(WindowInsets.ime)
     ) { innerPadding ->
-        Column(
+        // Envolvemos todo en un Box para manejar estados de carga y error centrados en TODA la pantalla disponible
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Box(modifier = Modifier.weight(1f)) {
-                when (val state = uiState) {
-                    ChatUiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.White)
-                    is ChatUiState.Active -> {
-                        LazyColumn(
-                            state = listState,
-                            reverseLayout = true, // La lista se ancla al fondo
-                            modifier = Modifier.fillMaxSize(),
-                            // Invertimos paddings para que el respiro esté en el lugar correcto
-                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-                            verticalArrangement = Arrangement.Top // En reverseLayout esto significa "hacia el fondo"
-                        ) {
-                            itemsIndexed(reversedMessages, key = { _, m -> m.clientId }) { index, message ->
-                                // Lógica de cabecera ajustada para lista invertida
-                                val showHeader = index == reversedMessages.size - 1 || 
-                                    message.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date != 
-                                    reversedMessages[index + 1].createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
-                                
-                                Column(modifier = Modifier.fillMaxWidth().animateItem()) {
-                                    if (showHeader) DateSeparator(formatDateHeader(message.createdAt))
-                                    MessageItem(message = message, isMine = message.userId == state.currentUserId)
+            when (val state = uiState) {
+                ChatUiState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color.White
+                    )
+                }
+
+                is ChatUiState.Error -> {
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                is ChatUiState.Active -> {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            LazyColumn(
+                                state = listState,
+                                reverseLayout = true,
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                                verticalArrangement = Arrangement.Top
+                            ) {
+                                itemsIndexed(reversedMessages, key = { _, m -> m.clientId }) { index, message ->
+                                    val showHeader = index == reversedMessages.size - 1 || 
+                                        message.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date != 
+                                        reversedMessages[index + 1].createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                    
+                                    Column(modifier = Modifier.fillMaxWidth().animateItem()) {
+                                        if (showHeader) DateSeparator(formatDateHeader(message.createdAt))
+                                        MessageItem(message = message, isMine = message.userId == state.currentUserId)
+                                    }
+                                }
+                            }
+
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = showScrollToBottom,
+                                modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                                enter = fadeIn() + scaleIn(),
+                                exit = fadeOut() + scaleOut()
+                            ) {
+                                SmallFloatingActionButton(
+                                    onClick = { 
+                                        scope.launch { 
+                                            listState.animateScrollToItem(0) 
+                                        } 
+                                    },
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
+                                    shape = CircleShape
+                                ) {
+                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar al final")
                                 }
                             }
                         }
 
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = showScrollToBottom,
-                            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-                            enter = fadeIn() + scaleIn(),
-                            exit = fadeOut() + scaleOut()
+                        // Caja de entrada de texto
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            SmallFloatingActionButton(
-                                onClick = { 
-                                    scope.launch { 
-                                        listState.animateScrollToItem(0) // 0 es el fondo en reverseLayout
-                                    } 
-                                },
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
-                                shape = CircleShape
+                            Surface(
+                                shape = RoundedCornerShape(28.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                                tonalElevation = 3.dp
                             ) {
-                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar al final")
-                            }
-                        }
-                    }
-                    is ChatUiState.Error -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        Text(state.message, color = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
-
-            if (uiState is ChatUiState.Active) {
-                val state = uiState as ChatUiState.Active
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                        tonalElevation = 3.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(
-                                value = content,
-                                onValueChange = { content = it },
-                                modifier = Modifier.weight(1f),
-                                placeholder = { Text("Escribe un mensaje...", style = MaterialTheme.typography.bodyMedium) },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color.Transparent,
-                                    unfocusedBorderColor = Color.Transparent
-                                ),
-                                maxLines = 4
-                            )
-                            
-                            Box(
-                                modifier = Modifier
-                                    .padding(end = 4.dp)
-                                    .size(32.dp)
-                                    .background(
-                                        color = if (content.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                                        shape = CircleShape
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    OutlinedTextField(
+                                        value = content,
+                                        onValueChange = { content = it },
+                                        modifier = Modifier.weight(1f),
+                                        placeholder = { Text("Escribe un mensaje...", style = MaterialTheme.typography.bodyMedium) },
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color.Transparent,
+                                            unfocusedBorderColor = Color.Transparent
+                                        ),
+                                        maxLines = 4
                                     )
-                                    .clickable(enabled = content.isNotBlank() && state.canSendMessage) {
-                                        viewModel.sendMessage("default", content)
-                                        content = ""
-                                        // No ocultamos el teclado aquí para permitir seguir escribiendo rápido
-                                        // focusManager.clearFocus() 
-                                        // keyboardController?.hide()
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Send,
-                                    contentDescription = "Enviar",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
+                                    
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(end = 4.dp)
+                                            .size(32.dp)
+                                            .background(
+                                                color = if (content.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                                shape = CircleShape
+                                            )
+                                            .clickable(enabled = content.isNotBlank() && state.canSendMessage) {
+                                                viewModel.sendMessage("default", content)
+                                                content = ""
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.Send,
+                                            contentDescription = "Enviar",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            state.remainingMessages?.let {
+                                Text(
+                                    "Mensajes restantes: $it",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    state.remainingMessages?.let {
-                        Text(
-                            "Mensajes restantes: $it",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
