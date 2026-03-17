@@ -6,14 +6,17 @@
 
     <application
         android:name=".NefroPedApp"
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        tools:replace="android:allowBackup"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.NefroPed">
+
+        <!-- Nota: allowBackup="false" forzado para desarrollo para evitar restauración de onboarding -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
