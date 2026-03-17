@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NefroPed</string>
 
@@ -56,5 +57,19 @@
     <string name="profile_link_google">Continuar con Google</string>
     <string name="profile_link_email">Vincular con Email</string>
     <string name="profile_link_or">o</string>
+
+    <!-- Course -->
+    <string name="course_search_placeholder">buscar tema...</string>
+    <string name="course_topics_title">Temas de Nefrología Pediátrica</string>
+    <string name="course_lessons_count">%1$d/%2$d lecciones</string>
+    <string name="course_lesson_completed_button">Completada</string>
+    <string name="course_lesson_error_not_found">Lección no encontrada</string>
+
+    <!-- Chat -->
+    <string name="chat_title">Consultas</string>
+    <string name="chat_input_placeholder">Escribe un mensaje...</string>
+    <string name="chat_remaining_messages">Mensajes restantes: %1$d</string>
+    <string name="chat_scroll_to_bottom">Bajar al final</string>
+    <string name="chat_send_description">Enviar</string>
 
 </resources>

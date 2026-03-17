@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,19 +20,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialException
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.*
+import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import com.laguipemo.nefroped.features.profile.components.LinkAccountSheetContent
 import com.laguipemo.nefroped.features.profile.components.UserHeader
 import kotlinx.coroutines.launch
@@ -47,13 +45,18 @@ fun ProfileScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
+    val darkTheme = isSystemInDarkTheme()
 
-    // Launcher para seleccionar imagen de la galería
+    // Sincronizamos iconos del sistema
+    SystemBarsController(
+        useStatusDarkIcons = false,
+        useNavigationDarkIcons = !darkTheme
+    )
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             uri?.let {
-                // Convertir URI a ByteArray y llamar al ViewModel
                 val inputStream = context.contentResolver.openInputStream(it)
                 val bytes = inputStream?.readBytes()
                 inputStream?.close()
@@ -65,11 +68,16 @@ fun ProfileScreen(
     )
 
     Scaffold(
+        containerColor = Color.Transparent, 
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.profile_title), fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                title = { Text(stringResource(R.string.profile_title), fontWeight = FontWeight.Bold, color = Color.White) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Unspecified,
+                    navigationIconContentColor = Color.Unspecified,
+                    titleContentColor = Color.Unspecified,
+                    actionIconContentColor = Color.Unspecified
                 )
             )
         }
@@ -78,19 +86,17 @@ fun ProfileScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (val state = uiState) {
                 ProfileUiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = Color.White)
                     }
                 }
 
                 is ProfileUiState.Content -> {
-                    // 1. Cabecera con Avatar
                     UserHeader(
                         state = state,
                         onAvatarClick = {
@@ -102,7 +108,6 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 
-                    // 2. Sección de Cuenta
                     ProfileSection(title = stringResource(R.string.profile_section_account)) {
                         if (state.isGuest) {
                             ProfileOptionItem(
@@ -124,7 +129,6 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
 
-                    // 3. Sección de Asistencia
                     ProfileSection(title = stringResource(R.string.profile_section_assistance)) {
                         ProfileOptionItem(
                             icon = Icons.AutoMirrored.Filled.Chat,
@@ -135,8 +139,6 @@ fun ProfileScreen(
                     }
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
-
-                    // 4. Sección Informativa - AHORA DINÁMICA
                     ProfileSection(title = stringResource(R.string.profile_section_about)) {
                         ProfileOptionItem(
                             icon = Icons.Default.AccountCircle,
@@ -147,7 +149,6 @@ fun ProfileScreen(
                         )
                     }
 
-                    // Bottom Sheet para vinculación
                     if (state.showBottomSheet) {
                         ModalBottomSheet(
                             onDismissRequest = { viewModel.onShowBottomSheet(false) },
@@ -160,7 +161,7 @@ fun ProfileScreen(
                                 onLinkEmailPassword = viewModel::onLinkWithEmailPassword,
                                 onLinkGoogle = {
                                     scope.launch {
-                                        handleGoogleLink(context, viewModel)
+                                        // Aquí implementaremos el handleGoogleLink centralizado
                                     }
                                 }
                             )
@@ -168,46 +169,8 @@ fun ProfileScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-private suspend fun handleGoogleLink(
-    context: Context,
-    viewModel: ProfileViewModel
-) {
-    val credentialManager = CredentialManager.create(context)
-    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(false)
-        .setServerClientId("439824105960-rto1l6vlrkp59kplrm243dlvamf1ek4v.apps.googleusercontent.com")
-        .build()
-
-    val request = GetCredentialRequest.Builder()
-        .addCredentialOption(googleIdOption)
-        .build()
-
-    try {
-        val result = credentialManager.getCredential(
-            context = context,
-            request = request
-        )
-        handleCredential(result, viewModel)
-    } catch (_: GetCredentialException) {
-    } catch (_: Exception) {
-    }
-}
-
-private fun handleCredential(
-    result: GetCredentialResponse,
-    viewModel: ProfileViewModel
-) {
-    val credential = result.credential
-    if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-        try {
-            val googleIdTokenCredential =
-                GoogleIdTokenCredential.createFrom(credential.data)
-            viewModel.onLinkWithGoogle(googleIdTokenCredential.idToken)
-        } catch (_: Exception) {
+            // Añadimos un espaciador final para que el último elemento respire con la BottomBar
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

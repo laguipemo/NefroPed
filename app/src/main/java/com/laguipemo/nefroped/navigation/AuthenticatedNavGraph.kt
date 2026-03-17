@@ -1,5 +1,7 @@
 package com.laguipemo.nefroped.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -23,7 +25,11 @@ fun AuthenticatedNavGraph(
     NavHost(
         navController = navController,
         startDestination = AuthenticatedRoute.Course,
-        modifier = modifier
+        modifier = modifier,
+        enterTransition = { fadeIn() },
+        exitTransition = { fadeOut() },
+        popEnterTransition = { fadeIn() },
+        popExitTransition = { fadeOut() }
     ) {
         composable<AuthenticatedRoute.Course> {
             CourseScreen(
@@ -39,6 +45,7 @@ fun AuthenticatedNavGraph(
                 topicId = route.topicId,
                 onBackClick = { navController.popBackStack() },
                 onLessonClick = { lessonId ->
+                    // Siempre permitimos navegar al detalle, esté completada o no
                     navController.navigate(AuthenticatedRoute.LessonDetail(lessonId))
                 }
             )
