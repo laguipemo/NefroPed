@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
@@ -49,7 +50,8 @@ import org.koin.androidx.compose.koinViewModel
 fun CourseScreen(
     modifier: Modifier = Modifier,
     viewModel: CourseViewModel = koinViewModel(),
-    onTopicClick: (String) -> Unit
+    onTopicClick: (String) -> Unit,
+    onChatClick: (String) -> Unit // Nuevo parámetro para navegar al chat del tema
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery: String by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -167,7 +169,8 @@ fun CourseScreen(
                             itemsIndexed(state.topics) { index, topic ->
                                 TopicCard(
                                     topic = topic,
-                                    onClick = { onTopicClick(topic.id) }
+                                    onClick = { onTopicClick(topic.id) },
+                                    onChatClick = { topic.conversationId?.let { onChatClick(it) } }
                                 )
                             }
                         }
@@ -188,7 +191,8 @@ fun CourseScreen(
 @Composable
 fun TopicCard(
     topic: Topic,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onChatClick: () -> Unit
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -203,15 +207,36 @@ fun TopicCard(
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = dimensionResource(R.dimen.space_s))
     ) {
         Column {
-            AsyncImage(
-                model = topic.imageUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
-                contentScale = ContentScale.Crop
-            )
+            Box {
+                AsyncImage(
+                    model = topic.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                
+                // Botón flotante de Chat sobre la imagen
+                if (topic.conversationId != null) {
+                    FilledTonalIconButton(
+                        onClick = onChatClick,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Chat,
+                            contentDescription = "Chat del tema",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
 
             Column(modifier = Modifier
                 .padding(dimensionResource(R.dimen.space_l))

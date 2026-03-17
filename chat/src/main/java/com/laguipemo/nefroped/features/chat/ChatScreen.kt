@@ -24,6 +24,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
@@ -57,6 +58,7 @@ fun ChatScreen(
         derivedStateOf { listState.canScrollBackward }
     }
 
+    // El chat ahora hereda el degradado de MainScreen, por lo que el fondo es claro abajo
     SystemBarsController(
         useStatusDarkIcons = false,
         useNavigationDarkIcons = !darkTheme
@@ -68,8 +70,9 @@ fun ChatScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.chat_title), fontWeight = FontWeight.Bold, color = Color.White) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = Color.White
                 ),
                 windowInsets = WindowInsets.statusBars
             )
@@ -180,7 +183,7 @@ fun ChatScreen(
                                                 shape = CircleShape
                                             )
                                             .clickable(enabled = content.isNotBlank() && state.canSendMessage) {
-                                                viewModel.sendMessage("default", content)
+                                                viewModel.sendMessage("", content)
                                                 content = ""
                                             },
                                         contentAlignment = Alignment.Center

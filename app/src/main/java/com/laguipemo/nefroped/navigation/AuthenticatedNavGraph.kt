@@ -35,6 +35,9 @@ fun AuthenticatedNavGraph(
             CourseScreen(
                 onTopicClick = { topicId ->
                     navController.navigate(AuthenticatedRoute.Lessons(topicId))
+                },
+                onChatClick = { conversationId ->
+                    navController.navigate(AuthenticatedRoute.Chat(conversationId))
                 }
             )
         }
@@ -45,7 +48,6 @@ fun AuthenticatedNavGraph(
                 topicId = route.topicId,
                 onBackClick = { navController.popBackStack() },
                 onLessonClick = { lessonId ->
-                    // Siempre permitimos navegar al detalle, esté completada o no
                     navController.navigate(AuthenticatedRoute.LessonDetail(lessonId))
                 }
             )
