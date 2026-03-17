@@ -5,8 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.laguipemo.nefroped.features.onboarding.OnboardingPermissionsScreen
-import com.laguipemo.nefroped.features.onboarding.OnboardingWelcomeScreen
+import com.laguipemo.nefroped.features.onboarding.OnboardingScreen
 
 @Composable
 fun OnboardingNavGraph(
@@ -14,18 +13,10 @@ fun OnboardingNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "onboarding_welcome"
+        startDestination = "onboarding_main"
     ) {
-        composable("onboarding_welcome") {
-            OnboardingWelcomeScreen(
-                onContinue = {
-                    navController.navigate("onboarding_permissions")
-                }
-            )
-        }
-
-        composable("onboarding_permissions") {
-            OnboardingPermissionsScreen()
+        composable("onboarding_main") {
+            OnboardingScreen()
         }
     }
 }
