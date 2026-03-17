@@ -72,4 +72,21 @@
     <string name="chat_scroll_to_bottom">Bajar al final</string>
     <string name="chat_send_description">Enviar</string>
 
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Saltar</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_start">Empezar</string>
+
+    <string name="onboarding_title_1">Domina la Nefrología Pediátrica</string>
+    <string name="onboarding_desc_1">Accede a contenido actualizado, lecciones interactivas y casos clínicos diseñados por expertos.</string>
+
+    <string name="onboarding_title_2">Nunca aprendas solo</string>
+    <string name="onboarding_desc_2">Resuelve tus dudas en tiempo real con nuestro chat integrado para cada tema del curso.</string>
+
+    <string name="onboarding_title_3">Mide tu crecimiento</string>
+    <string name="onboarding_desc_3">Sigue tu avance lección por lección y visualiza tu progreso en tiempo real.</string>
+
+    <string name="onboarding_title_4">Mantente al día</string>
+    <string name="onboarding_desc_4">Activa las notificaciones para no perderte nuevas lecciones o respuestas a tus consultas.</string>
+
 </resources>
