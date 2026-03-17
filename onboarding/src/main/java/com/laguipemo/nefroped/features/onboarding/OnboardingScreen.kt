@@ -66,7 +66,6 @@ fun OnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
 
-    // Controlamos las barras del sistema para que los iconos sean visibles sobre el degradado
     SystemBarsController(
         useStatusDarkIcons = false,
         useNavigationDarkIcons = false
@@ -77,7 +76,6 @@ fun OnboardingScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Fondo con degradado real ocupando toda la pantalla
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -94,9 +92,8 @@ fun OnboardingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding() // Aire para botones virtuales del sistema
+                .navigationBarsPadding()
         ) {
-            // Botón Saltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -112,7 +109,6 @@ fun OnboardingScreen(
                 }
             }
 
-            // Pager con el contenido
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
@@ -122,15 +118,13 @@ fun OnboardingScreen(
                 OnboardingPageContent(page = pages[position])
             }
 
-            // Footer con Indicador y Botón
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = dimensionResource(R.dimen.space_xl))
-                    .padding(bottom = 32.dp), // Aire extra inferior
+                    .padding(bottom = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Dots Indicator
                 Row(
                     modifier = Modifier.padding(bottom = 32.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -147,7 +141,6 @@ fun OnboardingScreen(
                     }
                 }
 
-                // Botón más discreto y con aire
                 Button(
                     onClick = {
                         if (pagerState.currentPage < pages.size - 1) {
@@ -157,9 +150,9 @@ fun OnboardingScreen(
                         }
                     },
                     modifier = Modifier
-                        .fillMaxWidth(0.8f) // Botón un poco más discreto (no ocupa todo el ancho)
+                        .fillMaxWidth(0.8f)
                         .height(56.dp),
-                    shape = RoundedCornerShape(28.dp), // Más redondeado
+                    shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
                         contentColor = MaterialTheme.colorScheme.primary
