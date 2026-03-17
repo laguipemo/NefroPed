@@ -4,7 +4,8 @@ import com.laguipemo.nefroped.core.domain.model.chat.ChatCapabilities
 import com.laguipemo.nefroped.core.domain.model.chat.Message
 
 sealed interface ChatUiState {
-    object Loading : ChatUiState
+    data object Loading : ChatUiState
+    
     data class Active(
         val messages: List<Message>,
         val capabilities: ChatCapabilities,
@@ -12,4 +13,6 @@ sealed interface ChatUiState {
         val canSendMessage: Boolean,
         val currentUserId: String? = null
     ) : ChatUiState
+
+    data class Error(val message: String) : ChatUiState
 }

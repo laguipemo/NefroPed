@@ -19,7 +19,7 @@ configure<ApplicationExtension> {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "0.3.0"
+        versionName = "0.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -51,6 +51,7 @@ dependencies {
     implementation(project(":chat"))
     implementation(project(":onboarding"))
     implementation(project(":profile"))
+    implementation(project(":course"))
     implementation(project(":data"))
 
     implementation(libs.androidx.core.splashscreen)

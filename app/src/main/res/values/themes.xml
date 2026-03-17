@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.NefroPed" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- tu tema normal -->
+        <!-- Configuramos que el fondo del sistema sea transparente para evitar parpadeos -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
     </style>
 
-    <!-- Splash de inicio -->
+    <!-- Splash de inicio inmersiva -->
     <style name="Theme.NefroPed.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/black</item> <!-- o tu color -->
+        <!-- Usamos el color primario para que coincida con el tope del degradado -->
+        <item name="windowSplashScreenBackground">#415F91</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_nefroped_logo</item>
         <item name="postSplashScreenTheme">@style/Theme.NefroPed</item>
     </style>

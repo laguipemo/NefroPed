@@ -2,6 +2,7 @@ package com.laguipemo.nefroped.core.domain.di
 
 import com.laguipemo.nefroped.core.domain.usecase.app.*
 import com.laguipemo.nefroped.core.domain.usecase.chat.*
+import com.laguipemo.nefroped.core.domain.usecase.course.*
 import com.laguipemo.nefroped.core.domain.usecase.login.*
 import com.laguipemo.nefroped.core.domain.usecase.logout.*
 import com.laguipemo.nefroped.core.domain.usecase.onboarding.*
@@ -31,6 +32,14 @@ val domainKoinModule = module {
     factoryOf(::SendMessageUseCaseImpl) { bind<SendMessageUseCase>() }
     factoryOf(::ObserveMessagesUseCaseImpl) { bind<ObserveMessagesUseCase>() }
     factoryOf(::ResolveChatCapabilitiesUseCase)
+    
+    // Course
+    factoryOf(::GetTopicsUseCase)
+    factoryOf(::GetLessonsUseCase)
+    factoryOf(::GetLessonUseCase)
+    factoryOf(::SyncTopicsUseCase)
+    factoryOf(::SyncLessonsUseCase)
+    factoryOf(::MarkLessonAsCompletedUseCase) // ← Añadido este registro
     
     // Onboarding
     factoryOf(::CompleteOnboardingUseCaseImpl) { bind<CompleteOnboardingUseCase>() }

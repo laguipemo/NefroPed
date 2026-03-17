@@ -20,15 +20,8 @@ Cada versión debería:
 
 ### Added
 
-- Completar el ciclo de autenticación:
-  - En el registro solicitar nombre de usuario como encajar esto en un anónimo
-    para que se difrencie de otros anónimos.
-  - Recuperar contraseña
-  - Utilizar cuenta de google
-  - Mejorar la interfaz gráfica parecida a NefroPediatra
-
-- Implementar el feature Curso como está en NefroPediatra pero
-  utilizando Supabase y aplicando CLEAN a profundidad.
+- Implementar las autoevaluaciones para cada tema y su calificación para 
+  brindarle la nota de la autoevaluación al usuario.
 
 ### Fix 
 
@@ -36,6 +29,23 @@ Cada versión debería:
   del token. En principio era un bug del ChannelFlow en Supabase 3.3.0 que debería estar
   corregido en la versión actual 3.4.1
 
+
+## [0.4.0] - 2026-03-17
+
+## Added
+
+- Implementa la feature Curso:
+  - Lista de temas con su imagen, título, descripción, índice de 
+    lecciones y avance 
+
+## Change
+
+- Extraidas las dimensiones y las cadenas hardcodeadas a los recuerso 
+  de módulo :designsystem
+
+## Fixed
+
+- Eliminados deprecados en todo el proyecto
 
 ## [0.3.0] - 2026-03-13
 
