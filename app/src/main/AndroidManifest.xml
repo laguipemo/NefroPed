@@ -31,12 +31,17 @@
             </intent-filter>
 
             <!-- Deep Link para Recuperación de Contraseña -->
-            <intent-filter android:autoVerify="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="nefroped" android:host="reset-password" />
+
+                <data
+                    android:host="reset-password"
+                    android:scheme="nefroped" />
             </intent-filter>
+
         </activity>
     </application>
 

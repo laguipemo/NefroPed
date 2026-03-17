@@ -8,8 +8,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.*
@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,15 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.laguipemo.nefroped.designsystem.R
+import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-
-data class OnboardingPage(
-    val title: String,
-    val description: String,
-    val icon: ImageVector,
-    val color: Color
-)
 
 @Composable
 fun OnboardingScreen(
@@ -53,7 +46,7 @@ fun OnboardingScreen(
         OnboardingPage(
             title = stringResource(R.string.onboarding_title_2),
             description = stringResource(R.string.onboarding_desc_2),
-            icon = Icons.Default.Chat,
+            icon = Icons.AutoMirrored.Filled.Chat,
             color = MaterialTheme.colorScheme.secondary
         ),
         OnboardingPage(
@@ -73,38 +66,48 @@ fun OnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
 
+    // Controlamos las barras del sistema para que los iconos sean visibles sobre el degradado
+    SystemBarsController(
+        useStatusDarkIcons = false,
+        useNavigationDarkIcons = false
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Fondo con degradado sutil
+        // Fondo con degradado real ocupando toda la pantalla
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            MaterialTheme.colorScheme.background
-                        )
+                        0.0f to MaterialTheme.colorScheme.primary,
+                        0.5f to MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        1.0f to MaterialTheme.colorScheme.background
                     )
                 )
         )
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding() // Aire para botones virtuales del sistema
+        ) {
             // Botón Saltar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(dimensionResource(R.dimen.space_m)),
+                    .padding(horizontal = dimensionResource(R.dimen.space_m)),
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = { viewModel.onOnboardingFinished() }) {
                     Text(
                         text = stringResource(R.string.onboarding_skip),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -123,7 +126,8 @@ fun OnboardingScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(dimensionResource(R.dimen.space_xl)),
+                    .padding(horizontal = dimensionResource(R.dimen.space_xl))
+                    .padding(bottom = 32.dp), // Aire extra inferior
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Dots Indicator
@@ -133,22 +137,17 @@ fun OnboardingScreen(
                 ) {
                     repeat(pages.size) { iteration ->
                         val isSelected = pagerState.currentPage == iteration
-                        val color = if (isSelected) 
-                            MaterialTheme.colorScheme.primary 
-                        else 
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                        
                         Box(
                             modifier = Modifier
                                 .height(8.dp)
                                 .width(if (isSelected) 24.dp else 8.dp)
                                 .clip(CircleShape)
-                                .background(color)
+                                .background(if (isSelected) Color.White else Color.White.copy(alpha = 0.3f))
                         )
                     }
                 }
 
-                // Botón Dinámico
+                // Botón más discreto y con aire
                 Button(
                     onClick = {
                         if (pagerState.currentPage < pages.size - 1) {
@@ -158,19 +157,21 @@ fun OnboardingScreen(
                         }
                     },
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(0.8f) // Botón un poco más discreto (no ocupa todo el ancho)
                         .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(28.dp), // Más redondeado
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+                        containerColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
                     Text(
                         text = if (pagerState.currentPage < pages.size - 1) 
                             stringResource(R.string.onboarding_next) 
                         else 
                             stringResource(R.string.onboarding_start),
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp
                     )
                 }
@@ -190,17 +191,17 @@ fun OnboardingPageContent(page: OnboardingPage) {
     ) {
         Surface(
             modifier = Modifier
-                .size(240.dp)
-                .padding(bottom = 48.dp),
+                .size(200.dp)
+                .padding(bottom = 32.dp),
             shape = CircleShape,
-            color = page.color.copy(alpha = 0.15f)
+            color = Color.White.copy(alpha = 0.2f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = page.icon,
                     contentDescription = null,
-                    modifier = Modifier.size(100.dp),
-                    tint = page.color
+                    modifier = Modifier.size(80.dp),
+                    tint = Color.White
                 )
             }
         }
@@ -210,7 +211,7 @@ fun OnboardingPageContent(page: OnboardingPage) {
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onBackground
+            color = Color.White
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -219,7 +220,7 @@ fun OnboardingPageContent(page: OnboardingPage) {
             text = page.description,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(alpha = 0.9f),
             lineHeight = 24.sp
         )
     }
