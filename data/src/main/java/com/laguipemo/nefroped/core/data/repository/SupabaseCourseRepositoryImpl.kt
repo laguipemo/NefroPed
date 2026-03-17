@@ -1,12 +1,10 @@
 package com.laguipemo.nefroped.core.data.repository
 
 import android.util.Log
-import com.laguipemo.nefroped.core.domain.model.course.Lesson
-import com.laguipemo.nefroped.core.domain.model.course.Topic
+import com.laguipemo.nefroped.core.domain.model.course.*
 import com.laguipemo.nefroped.core.domain.repository.course.CourseRepository
 import com.laguipemo.nefroped.core.local.room.dao.CourseDao
-import com.laguipemo.nefroped.core.local.room.entity.LessonEntity
-import com.laguipemo.nefroped.core.local.room.entity.TopicEntity
+import com.laguipemo.nefroped.core.local.room.entity.*
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
@@ -14,6 +12,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 
 class SupabaseCourseRepositoryImpl(
     private val supabase: SupabaseClient,
@@ -38,12 +38,19 @@ class SupabaseCourseRepositoryImpl(
         }
     }
 
+    override fun observeQuizByTopic(topicId: String): Flow<Quiz?> {
+        return courseDao.observeQuizWithQuestionsByTopic(topicId).map { it?.toDomain() }
+    }
+
+    override fun observeQuizResult(quizId: String): Flow<QuizResult?> {
+        return courseDao.observeQuizResult(quizId).map { it?.toDomain() }
+    }
+
     override suspend fun syncTopics(): Result<Unit> {
         return try {
             val userId = supabase.auth.currentUserOrNull()?.id ?: ""
             val topicsDto = supabase.postgrest["topics"].select().decodeList<TopicDto>()
             
-            // Obtenemos todo el progreso del usuario para este curso
             val userProgress = if (userId.isNotEmpty()) {
                 supabase.postgrest["user_progress"]
                     .select { filter { eq("user_id", userId) } }
@@ -57,7 +64,6 @@ class SupabaseCourseRepositoryImpl(
                     .select { filter { eq("topic_id", dto.id) } }
                     .decodeList<LessonDto>()
                 
-                // Contamos cuántas lecciones de este tema están completadas localmente
                 val completedCount = lessons.count { it.id in userProgress }
                 
                 dto.toEntity(
@@ -81,7 +87,6 @@ class SupabaseCourseRepositoryImpl(
                 filter { eq("topic_id", topicId) }
             }.decodeList<LessonDto>()
             
-            // Obtenemos progreso específico
             val userProgress = if (userId.isNotEmpty()) {
                 supabase.postgrest["user_progress"]
                     .select { filter { eq("user_id", userId) } }
@@ -91,8 +96,6 @@ class SupabaseCourseRepositoryImpl(
             } else emptySet()
             
             courseDao.insertLessons(lessonsDto.map { it.toEntity(isCompleted = it.id in userProgress) })
-            
-            // Actualizar el conteo en el tema después de insertar lecciones (por si el sync de temas fue incompleto)
             courseDao.refreshTopicProgress(topicId)
             
             Result.success(Unit)
@@ -102,32 +105,88 @@ class SupabaseCourseRepositoryImpl(
         }
     }
 
+    override suspend fun syncQuiz(topicId: String): Result<Unit> {
+        return try {
+            // 1. Obtener el Quiz de Supabase
+            val quizDto = supabase.postgrest["quizzes"]
+                .select { filter { eq("topic_id", topicId) } }
+                .decodeSingleOrNull<QuizDto>() ?: return Result.failure(Exception("Quiz not found"))
+
+            // 2. Obtener las preguntas del Quiz
+            val questionsDto = supabase.postgrest["questions"]
+                .select { filter { eq("quiz_id", quizDto.id) } }
+                .decodeList<QuestionDto>()
+
+            // 3. Guardar en Room
+            courseDao.insertQuiz(quizDto.toEntity())
+            courseDao.insertQuestions(questionsDto.map { it.toEntity() })
+
+            // 4. Intentar sincronizar el resultado previo si existe
+            val userId = supabase.auth.currentUserOrNull()?.id
+            if (userId != null) {
+                val resultDto = supabase.postgrest["quiz_results"]
+                    .select {
+                        filter { 
+                            eq("quiz_id", quizDto.id)
+                            eq("user_id", userId)
+                        }
+                    }
+                    .decodeSingleOrNull<QuizResultDto>()
+                
+                resultDto?.let { courseDao.insertQuizResult(it.toEntity()) }
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("CourseRepo", "Error syncing quiz for topic $topicId", e)
+            Result.failure(e)
+        }
+    }
+
     override suspend fun markLessonAsCompleted(lessonId: String): Boolean {
         val userId = supabase.auth.currentUserOrNull()?.id ?: return false
         return try {
-            // 1. Persistir en Supabase
             supabase.postgrest["user_progress"].upsert(
                 UserProgressDto(userId, lessonId)
             )
-            
-            // 2. Obtener la lección para saber a qué tema pertenece antes de actualizar
             val lesson = courseDao.getLessonById(lessonId)
-            
-            // 3. Actualizar la lección localmente
             courseDao.updateLessonCompletion(lessonId, true)
-            
-            // 4. Recalcular el progreso del tema localmente
             lesson?.topicId?.let { topicId ->
                 courseDao.refreshTopicProgress(topicId)
             }
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override suspend fun saveQuizResult(result: QuizResult): Boolean {
+        val userId = supabase.auth.currentUserOrNull()?.id ?: return false
+        return try {
+            val dto = QuizResultDto(
+                userId = userId,
+                quizId = result.quizId,
+                score = result.score,
+                correctAnswers = result.correctAnswers,
+                totalQuestions = result.totalQuestions,
+                completedAt = result.completedAt
+            )
+            
+            // 1. Guardar en Supabase
+            supabase.postgrest["quiz_results"].upsert(dto)
+            
+            // 2. Guardar en Room
+            courseDao.insertQuizResult(dto.toEntity())
             
             true
         } catch (e: Exception) {
-            Log.e("CourseRepo", "Error marking lesson as completed", e)
+            Log.e("CourseRepo", "Error saving quiz result", e)
             false
         }
     }
 }
+
+// --- DTOs ---
 
 @Serializable
 internal data class TopicDto(
@@ -140,34 +199,6 @@ internal data class TopicDto(
     val content: String? = null, 
     val order: Int,
     @SerialName("conversation_id") val conversationId: String? = null
-)
-
-internal fun TopicDto.toEntity(lessonsCount: Int, completedCount: Int) = TopicEntity(
-    id = id,
-    title = title,
-    description = description,
-    imageUrl = imageUrl,
-    imagePlaceholder = imagePlaceholder,
-    contentUrl = contentUrl,
-    indexContent = content,
-    order = order,
-    conversationId = conversationId,
-    lessonsCount = lessonsCount,
-    completedLessonsCount = completedCount
-)
-
-internal fun TopicEntity.toDomain() = Topic(
-    id = id,
-    title = title,
-    description = description,
-    imageUrl = imageUrl,
-    imagePlaceholder = imagePlaceholder,
-    contentUrl = contentUrl,
-    indexContent = indexContent,
-    order = order,
-    conversationId = conversationId,
-    lessonsCount = lessonsCount,
-    completedLessonsCount = completedLessonsCount
 )
 
 @Serializable
@@ -185,38 +216,97 @@ internal data class LessonDto(
     val order: Int
 )
 
-internal fun LessonDto.toEntity(isCompleted: Boolean) = LessonEntity(
-    id = id,
-    topicId = topicId,
-    title = title,
-    imageUrl = imageUrl,
-    imagePlaceholder = imagePlaceholder,
-    description = description,
-    content = contentUrl,
-    videoUrl = videoUrl,
-    audioUrl = audioUrl,
-    pdfUrl = pdfUrl,
-    order = order,
-    isCompleted = isCompleted
+@Serializable
+internal data class QuizDto(
+    val id: String,
+    @SerialName("topic_id") val topicId: String,
+    val title: String
 )
 
-internal fun LessonEntity.toDomain() = Lesson(
-    id = id,
-    topicId = topicId,
-    title = title,
-    imageUrl = imageUrl,
-    imagePlaceholder = imagePlaceholder,
-    description = description,
-    contentUrl = content,
-    videoUrl = videoUrl,
-    audioUrl = audioUrl,
-    pdfUrl = pdfUrl,
-    order = order,
-    isCompleted = isCompleted
+@Serializable
+internal data class QuestionDto(
+    val id: String,
+    @SerialName("quiz_id") val quizId: String,
+    val text: String,
+    val options: List<String>,
+    @SerialName("correct_answer_index") val correctAnswerIndex: Int,
+    val explanation: String? = null
+)
+
+@Serializable
+internal data class QuizResultDto(
+    @SerialName("user_id") val userId: String,
+    @SerialName("quiz_id") val quizId: String,
+    val score: Float,
+    @SerialName("correct_answers") val correctAnswers: Int,
+    @SerialName("total_questions") val totalQuestions: Int,
+    @SerialName("completed_at") val completedAt: Long
 )
 
 @Serializable
 internal data class UserProgressDto(
     val user_id: String,
     val lesson_id: String
+)
+
+// --- Mappers ---
+
+internal fun TopicDto.toEntity(lessonsCount: Int, completedCount: Int) = TopicEntity(
+    id = id, title = title, description = description, imageUrl = imageUrl,
+    imagePlaceholder = imagePlaceholder, contentUrl = contentUrl, indexContent = content,
+    order = order, conversationId = conversationId, lessonsCount = lessonsCount,
+    completedLessonsCount = completedCount
+)
+
+internal fun TopicEntity.toDomain() = Topic(
+    id = id, title = title, description = description, imageUrl = imageUrl,
+    imagePlaceholder = imagePlaceholder, contentUrl = contentUrl, indexContent = indexContent,
+    order = order, conversationId = conversationId, lessonsCount = lessonsCount,
+    completedLessonsCount = completedLessonsCount
+)
+
+internal fun LessonDto.toEntity(isCompleted: Boolean) = LessonEntity(
+    id = id, topicId = topicId, title = title, imageUrl = imageUrl,
+    imagePlaceholder = imagePlaceholder, description = description, content = contentUrl,
+    videoUrl = videoUrl, audioUrl = audioUrl, pdfUrl = pdfUrl, order = order, isCompleted = isCompleted
+)
+
+internal fun LessonEntity.toDomain() = Lesson(
+    id = id, topicId = topicId, title = title, imageUrl = imageUrl,
+    imagePlaceholder = imagePlaceholder, description = description, contentUrl = content,
+    videoUrl = videoUrl, audioUrl = audioUrl, pdfUrl = pdfUrl, order = order, isCompleted = isCompleted
+)
+
+internal fun QuizDto.toEntity() = QuizEntity(id = id, topicId = topicId, title = title)
+
+internal fun QuestionDto.toEntity() = QuestionEntity(
+    id = id, quizId = quizId, text = text, 
+    optionsJson = Json.encodeToString(options),
+    correctAnswerIndex = correctAnswerIndex, explanation = explanation
+)
+
+internal fun QuizResultDto.toEntity() = QuizResultEntity(
+    quizId = quizId, score = score, correctAnswers = correctAnswers,
+    totalQuestions = totalQuestions, completedAt = completedAt
+)
+
+internal fun QuizWithQuestions.toDomain() = Quiz(
+    id = quiz.id,
+    topicId = quiz.topicId,
+    title = quiz.title,
+    questions = questions.map { it.toDomain() }
+)
+
+internal fun QuestionEntity.toDomain() = Question(
+    id = id,
+    quizId = quizId,
+    text = text,
+    options = Json.decodeFromString<List<String>>(optionsJson).mapIndexed { index, s -> QuestionOption(index.toString(), s) },
+    correctAnswerIndex = correctAnswerIndex,
+    explanation = explanation
+)
+
+internal fun QuizResultEntity.toDomain() = QuizResult(
+    quizId = quizId, score = score, correctAnswers = correctAnswers,
+    totalQuestions = totalQuestions, completedAt = completedAt
 )
