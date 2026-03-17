@@ -30,6 +30,16 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
+## [0.6.0] - 2026-03-17
+
+## Added
+
+- Implementa separación de chat según el tema:
+  - Mantiene chat general
+  - Cada TopicCard cuenta con un botón flotante que conduce al chat específico del
+    tema.
+
+
 ## [0.5.0] - 2026-03-17
 
 ## Added
