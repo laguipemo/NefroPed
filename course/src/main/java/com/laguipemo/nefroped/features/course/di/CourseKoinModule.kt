@@ -3,6 +3,7 @@ package com.laguipemo.nefroped.features.course.di
 import com.laguipemo.nefroped.features.course.CourseViewModel
 import com.laguipemo.nefroped.features.course.lessons.LessonsViewModel
 import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailViewModel
+import com.laguipemo.nefroped.features.course.quiz.QuizViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import org.koin.core.module.dsl.viewModel
@@ -15,7 +16,7 @@ val courseKoinModule = module {
 
     viewModelOf(::CourseViewModel)
     viewModel { (topicId: String) -> LessonsViewModel(topicId, get(), get()) }
-    // Corregido: Ahora pasamos los 4 parámetros (lessonId, GetLesson, MarkAsCompleted, HttpClient)
+    
     viewModel { (lessonId: String) ->
         LessonDetailViewModel(
             lessonId,
@@ -24,4 +25,6 @@ val courseKoinModule = module {
             get()
         )
     }
+
+    viewModelOf(::QuizViewModel)
 }
