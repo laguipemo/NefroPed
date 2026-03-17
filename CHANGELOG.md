@@ -30,6 +30,21 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
+## [0.5.0] - 2026-03-17
+
+## Added
+
+- Implementa Onboarding profesional:
+  - Fondo degradado.
+  - Una única pantalla per que hace uso de un Horizontal Pager para moverse de una pantalla
+    a otra del onboarding con un simple swap
+  - Elimina las pantallas previas que ya no son necesarias.
+
+## Fix
+
+- Elimina duplicidad del label con el nombre de la app en el manifest y además
+  mejora el Deep Link en este fichero para eliminar los warnings que mostraba.
+
 ## [0.4.0] - 2026-03-17
 
 ## Added
