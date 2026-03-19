@@ -15,6 +15,7 @@ import com.laguipemo.nefroped.features.chat.ChatScreen
 import com.laguipemo.nefroped.features.course.CourseScreen
 import com.laguipemo.nefroped.features.course.lessons.LessonsListScreen
 import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailScreen
+import com.laguipemo.nefroped.features.course.quiz.QuizScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
 
 @Composable
@@ -49,6 +50,9 @@ fun AuthenticatedNavGraph(
                 onBackClick = { navController.popBackStack() },
                 onLessonClick = { lessonId ->
                     navController.navigate(AuthenticatedRoute.LessonDetail(lessonId))
+                },
+                onQuizClick = { topicId ->
+                    navController.navigate(AuthenticatedRoute.Quiz(topicId))
                 }
             )
         }
@@ -57,6 +61,13 @@ fun AuthenticatedNavGraph(
             val route = backStackEntry.toRoute<AuthenticatedRoute.LessonDetail>()
             LessonDetailScreen(
                 lessonId = route.lessonId,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable<AuthenticatedRoute.Quiz> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.Quiz>()
+            QuizScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }

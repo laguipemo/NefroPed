@@ -1,8 +1,7 @@
 package com.laguipemo.nefroped.core.local.room.dao
 
 import androidx.room.*
-import com.laguipemo.nefroped.core.local.room.entity.LessonEntity
-import com.laguipemo.nefroped.core.local.room.entity.TopicEntity
+import com.laguipemo.nefroped.core.local.room.entity.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -34,10 +33,34 @@ interface CourseDao {
     @Query("UPDATE lessons SET isCompleted = :completed WHERE id = :lessonId")
     suspend fun updateLessonCompletion(lessonId: String, completed: Boolean)
 
+    // Quizzes
+    @Transaction
+    @Query("SELECT * FROM quizzes WHERE topicId = :topicId")
+    fun observeQuizWithQuestionsByTopic(topicId: String): Flow<QuizWithQuestions?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertQuiz(quiz: QuizEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertQuestions(questions: List<QuestionEntity>)
+
+    @Query("DELETE FROM questions WHERE quizId = :quizId")
+    suspend fun deleteQuestionsForQuiz(quizId: String)
+
+    // Quiz Results
+    @Query("SELECT * FROM quiz_results WHERE quizId = :quizId")
+    fun observeQuizResult(quizId: String): Flow<QuizResultEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertQuizResult(result: QuizResultEntity)
+
     // Limpieza
     @Query("DELETE FROM topics")
     suspend fun clearTopics()
 
     @Query("DELETE FROM lessons")
     suspend fun clearLessons()
+
+    @Query("DELETE FROM quizzes")
+    suspend fun clearQuizzes()
 }
