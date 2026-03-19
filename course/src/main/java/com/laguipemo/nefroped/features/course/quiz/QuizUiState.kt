@@ -10,8 +10,8 @@ sealed interface QuizUiState {
     data class Content(
         val quiz: Quiz,
         val currentQuestionIndex: Int = 0,
-        val selectedOptionIndex: Int? = null,
-        val answers: Map<Int, Int> = emptyMap(), // QuestionIndex -> OptionIndex
+        val currentSelection: UserSelection = UserSelection.None,
+        val answers: Map<Int, UserSelection> = emptyMap(),
         val isFinished: Boolean = false,
         val quizResult: QuizResult? = null,
         val isSubmitting: Boolean = false
@@ -19,5 +19,13 @@ sealed interface QuizUiState {
         val currentQuestion = quiz.questions.getOrNull(currentQuestionIndex)
         val progress = if (quiz.questions.isNotEmpty()) (currentQuestionIndex + 1).toFloat() / quiz.questions.size else 0f
         val isLastQuestion = currentQuestionIndex == quiz.questions.size - 1
+        val canContinue = currentSelection !is UserSelection.None
     }
+}
+
+sealed interface UserSelection {
+    data object None : UserSelection
+    data class Single(val index: Int) : UserSelection
+    data class Multiple(val indices: Set<Int>) : UserSelection
+    data class Match(val mapping: Map<Int, Int>) : UserSelection
 }

@@ -1,5 +1,9 @@
 package com.laguipemo.nefroped.core.domain.model.course
 
+enum class QuestionType {
+    TRUE_FALSE, ONE_CHOICE, MULTIPLE_CHOICE, MATCH_DEFINITION
+}
+
 data class Quiz(
     val id: String,
     val topicId: String,
@@ -11,15 +15,23 @@ data class Question(
     val id: String,
     val quizId: String,
     val text: String,
-    val options: List<QuestionOption>,
-    val correctAnswerIndex: Int,
+    val intro: String? = null, // Para el caso de MatchDefinition
+    val type: QuestionType,
+    val options: QuestionOptions,
+    val correctAnswer: QuestionAnswer,
     val explanation: String? = null
 )
 
-data class QuestionOption(
-    val id: String,
-    val text: String
-)
+sealed interface QuestionOptions {
+    data class Simple(val list: List<String>) : QuestionOptions
+    data class Match(val terms: List<String>, val definitions: List<String>) : QuestionOptions
+}
+
+sealed interface QuestionAnswer {
+    data class Single(val index: Int) : QuestionAnswer
+    data class Multiple(val indices: List<Int>) : QuestionAnswer
+    data class Match(val mapping: Map<Int, Int>) : QuestionAnswer
+}
 
 data class QuizResult(
     val quizId: String,

@@ -39,8 +39,10 @@ data class QuestionEntity(
     @PrimaryKey val id: String,
     val quizId: String,
     val text: String,
-    val optionsJson: String, // Almacenamos las opciones como JSON para simplificar
-    val correctAnswerIndex: Int,
+    val intro: String?,
+    val type: String, // TRUE_FALSE, ONE_CHOICE, MULTIPLE_CHOICE, MATCH_DEFINITION
+    val optionsJson: String,
+    val correctAnswerJson: String,
     val explanation: String?
 )
 
