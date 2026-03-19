@@ -30,52 +30,42 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
+## [0.7.0] - 2026-03-19
+### Added
+- Implementa ls autoevaluaciones para cada tema y su calificación. Muestra nota al usuario
+  en una pantalla completa que mantiene el estilo con fondo degradado,etc.
+
 ## [0.6.0] - 2026-03-17
-
-## Added
-
+### Added
 - Implementa separación de chat según el tema:
   - Mantiene chat general
   - Cada TopicCard cuenta con un botón flotante que conduce al chat específico del
     tema.
 
-
 ## [0.5.0] - 2026-03-17
-
-## Added
-
+### Added
 - Implementa Onboarding profesional:
   - Fondo degradado.
   - Una única pantalla per que hace uso de un Horizontal Pager para moverse de una pantalla
     a otra del onboarding con un simple swap
   - Elimina las pantallas previas que ya no son necesarias.
-
-## Fix
-
+### Fix
 - Elimina duplicidad del label con el nombre de la app en el manifest y además
   mejora el Deep Link en este fichero para eliminar los warnings que mostraba.
 
 ## [0.4.0] - 2026-03-17
-
-## Added
-
+### Added
 - Implementa la feature Curso:
   - Lista de temas con su imagen, título, descripción, índice de 
-    lecciones y avance 
-
-## Change
-
+    lecciones y avance
+### Change
 - Extraidas las dimensiones y las cadenas hardcodeadas a los recuerso 
   de módulo :designsystem
-
-## Fixed
-
+### Fixed
 - Eliminados deprecados en todo el proyecto
 
 ## [0.3.0] - 2026-03-13
-
-## Added
-
+### Added
 - Completado todo el flujo de autenticación:
   - Autenticación email/contraseña completa, incluyendo nombre completo
   - Autenticación con cuenta google completa, se utiliza el nombre, el avatar, etc
@@ -88,9 +78,7 @@ Cada versión debería:
     - Cuenta: Vincular la cuenta actual si es de invitado y opción de cerrar sessión
     - Asitencia: Abrir el chat de ayuda
     - Sobre NefroPed: Información de la versión de la app
-
-## Refactor
-
+### Refactor
 - Restructura modularmente todos las definiciones referentes a la inyección de dependencias
   con Koin:
   - Modulo koin para los casos de uso vive ahora en :domain
@@ -98,18 +86,13 @@ Cada versión debería:
   - Modulo koin para los viewmodels ahora viven cada uno en su correspondiente feature 
   - El módulo que incluye todos los módulos sigue viviendo en :di
 
-
 ## [0.2.1] - 2026-03-10
-
-## Added
-
+### Added
 - Implementa todo el flujo de recuperación de la contraseña en Supabase, dentro de la 
   app sin necesidad de web externa.
   - Utiliza la estrategía clásica en Supabase, envió de email con enlace (nefroped://reset-password) 
     que mediante el uso de deep link nos hace regresar a la app para indicar nueva contraseña
-
-## Fix 
-
+### Fix
 - Suaviza la transición de pantallas durante el flujo de recuperación de la contraseña
   y para ello:
   - Implementa delay en MainActivity y demora de la splashscreen para dar tiempo a que
@@ -119,19 +102,14 @@ Cada versión debería:
 - Evita la utilización de autocompletado al regreso a la pantalla de nueva contraseña.
 
 ## [0.2.0] - 2026-03-07
-
 ### Added
-
 - Splash Screen utilizando androidx-core-splashscreen
 - Ligera animación a primera pantalla que se muestre después de la splashscreen.
   En principio se aplica al navgraph del mundo en el que entre la aplicación 
   excepto la splashscreen.
 
-
 ## [0.1.0] - 2026-03-06
-
 ### Added
-
 - Migración completa del proyecto ChatCleanApp hacia una arquitectura CLEAN modular:
   - Auntenticación elementar (login email/contraseña, anonimo y registro)
   - Chat general bastante profesional desde el punto de vista visual, realtime, con diferenciación
