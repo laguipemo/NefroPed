@@ -15,6 +15,9 @@ sealed interface AuthenticatedRoute {
     data class LessonDetail(val lessonId: String) : AuthenticatedRoute
 
     @Serializable
+    data class Quiz(val topicId: String) : AuthenticatedRoute
+
+    @Serializable
     data object Profile : AuthenticatedRoute
 
     @Serializable

@@ -89,4 +89,15 @@
     <string name="onboarding_title_4">Mantente al día</string>
     <string name="onboarding_desc_4">Activa las notificaciones para no perderte nuevas lecciones o respuestas a tus consultas.</string>
 
+    <!-- Quiz -->
+    <string name="quiz_title">Autoevaluación</string>
+    <string name="quiz_question_count">Pregunta %1$d de %2$d</string>
+    <string name="quiz_submit">Finalizar Test</string>
+    <string name="quiz_next">Siguiente Pregunta</string>
+    <string name="quiz_results_title">Resultado del Test</string>
+    <string name="quiz_score_label">Tu nota</string>
+    <string name="quiz_correct_answers_label">Aciertos: %1$d de %2$d</string>
+    <string name="quiz_finish_button">Volver al curso</string>
+    <string name="quiz_retry_button">Reintentar Test</string>
+
 </resources>

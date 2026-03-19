@@ -3,15 +3,12 @@ import com.android.build.api.dsl.LibraryExtension
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 configure<LibraryExtension> {
     namespace = "com.laguipemo.nefroped.features.course"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 26
@@ -41,6 +38,7 @@ configure<LibraryExtension> {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":designsystem"))
+    implementation(project(":navigation"))
 
     // Koin
     implementation(libs.koin.android)
@@ -55,6 +53,10 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
+    
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
     
     // Ktor OkHttp Engine
     implementation(libs.ktor.client.okhttp)

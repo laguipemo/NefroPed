@@ -6,14 +6,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AudioFile
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,12 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.laguipemo.nefroped.core.domain.model.course.Lesson
+import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -38,6 +37,7 @@ fun LessonsListScreen(
     topicId: String,
     onBackClick: () -> Unit,
     onLessonClick: (String) -> Unit,
+    onQuizClick: (String) -> Unit,
     viewModel: LessonsViewModel = koinViewModel { parametersOf(topicId) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -69,12 +69,37 @@ fun LessonsListScreen(
                     actionIconContentColor = Color.White
                 )
             )
+        },
+        floatingActionButton = {
+            if (uiState is LessonsUiState.Content) {
+                val lessons = (uiState as LessonsUiState.Content).lessons
+                val allCompleted = lessons.isNotEmpty() && lessons.all { it.isCompleted }
+                
+                // Siempre habilitado para facilitar el desarrollo/testeo
+                ExtendedFloatingActionButton(
+                    onClick = { onQuizClick(topicId) },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shape = RoundedCornerShape(16.dp),
+                    icon = { 
+                        Icon(
+                            imageVector = if (allCompleted) Icons.Default.Quiz else Icons.Default.Lock, 
+                            contentDescription = null 
+                        ) 
+                    },
+                    text = { 
+                        Text(
+                            text = if (allCompleted) stringResource(R.string.quiz_title) else "Autoevaluación",
+                            style = MaterialTheme.typography.labelLarge
+                        ) 
+                    }
+                )
+            }
         }
     ) { padding ->
         Box(
             modifier = Modifier
                 .padding(top = padding.calculateTopPadding())
-                // Padding mínimo para que el conjunto BottomBar + Botones se sienta unido
                 .padding(bottom = padding.calculateBottomPadding())
                 .fillMaxSize()
         ) {
@@ -89,7 +114,7 @@ fun LessonsListScreen(
                 is LessonsUiState.Content -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 80.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.lessons) { lesson ->
@@ -188,11 +213,9 @@ fun LessonItem(
                     }
                 }
                 
-                // Espacio para que el check en la esquina no tape el texto
                 Spacer(modifier = Modifier.width(32.dp))
             }
 
-            // Indicador de completado en la esquina inferior derecha
             Icon(
                 imageVector = if (lesson.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                 contentDescription = null,
