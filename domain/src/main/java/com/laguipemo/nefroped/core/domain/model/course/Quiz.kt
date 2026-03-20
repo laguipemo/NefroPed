@@ -8,6 +8,7 @@ data class Quiz(
     val id: String,
     val topicId: String,
     val title: String,
+    val description: String? = null, // Para la historia clínica en Casos Clínicos
     val questions: List<Question> = emptyList()
 )
 
@@ -15,7 +16,7 @@ data class Question(
     val id: String,
     val quizId: String,
     val text: String,
-    val intro: String? = null, // Para el caso de MatchDefinition
+    val intro: String? = null,
     val type: QuestionType,
     val options: QuestionOptions,
     val correctAnswer: QuestionAnswer,

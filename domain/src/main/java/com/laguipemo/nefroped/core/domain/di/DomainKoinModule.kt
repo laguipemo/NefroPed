@@ -25,31 +25,33 @@ val domainKoinModule = module {
     factoryOf(::RecoverPasswordUseCaseImpl) { bind<RecoverPasswordUseCase>() }
     factoryOf(::UpdatePasswordUseCaseImpl) { bind<UpdatePasswordUseCase>() }
     
-    // Profile
     factoryOf(::UpdateAvatarUseCaseImpl) { bind<UpdateAvatarUseCase>() }
     
-    // Chat
     factoryOf(::SendMessageUseCaseImpl) { bind<SendMessageUseCase>() }
     factoryOf(::ObserveMessagesUseCaseImpl) { bind<ObserveMessagesUseCase>() }
     factoryOf(::ResolveChatCapabilitiesUseCase)
     
-    // Course
+    // Course & Quiz & Clinical Cases
     factoryOf(::GetTopicsUseCase)
     factoryOf(::GetLessonsUseCase)
     factoryOf(::GetLessonUseCase)
     factoryOf(::SyncTopicsUseCase)
     factoryOf(::SyncLessonsUseCase)
     factoryOf(::MarkLessonAsCompletedUseCase)
+    factoryOf(::ObserveClinicalCasesUseCase)
+    factoryOf(::ObserveComplementaryResourcesUseCase)
+    factoryOf(::SyncClinicalDataUseCase)
     
-    // Quiz
+    // Quiz Específicos
     factoryOf(::GetQuizUseCase)
+    factoryOf(::ObserveQuizByIdUseCase)
     factoryOf(::SubmitQuizUseCase)
     factoryOf(::SyncQuizUseCase)
+    factoryOf(::SyncQuizByIdUseCase)
     
     // Onboarding
     factoryOf(::CompleteOnboardingUseCaseImpl) { bind<CompleteOnboardingUseCase>() }
     
-    // App State & Session
     factoryOf(::ObserveAuthStateUseCase)
     factoryOf(::ObserveOnboardingCompleteUseCase)
     factoryOf(::ResolveAppEntryStateUseCase)

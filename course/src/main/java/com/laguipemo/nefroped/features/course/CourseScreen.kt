@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.laguipemo.nefroped.core.domain.model.course.Topic
+import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -51,7 +52,8 @@ fun CourseScreen(
     modifier: Modifier = Modifier,
     viewModel: CourseViewModel = koinViewModel(),
     onTopicClick: (String) -> Unit,
-    onChatClick: (String) -> Unit // Nuevo parámetro para navegar al chat del tema
+    onChatClick: (String) -> Unit,
+    onClinicalCasesClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery: String by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -169,7 +171,13 @@ fun CourseScreen(
                             itemsIndexed(state.topics) { index, topic ->
                                 TopicCard(
                                     topic = topic,
-                                    onClick = { onTopicClick(topic.id) },
+                                    onClick = { 
+                                        if (topic.type == TopicType.CLINICAL_CASES) {
+                                            onClinicalCasesClick(topic.id)
+                                        } else {
+                                            onTopicClick(topic.id)
+                                        }
+                                    },
                                     onChatClick = { topic.conversationId?.let { onChatClick(it) } }
                                 )
                             }
@@ -218,7 +226,6 @@ fun TopicCard(
                     contentScale = ContentScale.Crop
                 )
                 
-                // Botón flotante de Chat sobre la imagen
                 if (topic.conversationId != null) {
                     FilledTonalIconButton(
                         onClick = onChatClick,

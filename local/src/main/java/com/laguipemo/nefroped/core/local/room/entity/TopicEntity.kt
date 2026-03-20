@@ -13,6 +13,7 @@ data class TopicEntity(
     val contentUrl: String?,
     val indexContent: String?,
     val order: Int,
+    val type: String, // "lessons" o "clinical_cases"
     val conversationId: String?,
     val lessonsCount: Int,
     val completedLessonsCount: Int

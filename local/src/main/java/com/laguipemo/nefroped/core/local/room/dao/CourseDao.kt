@@ -38,6 +38,10 @@ interface CourseDao {
     @Query("SELECT * FROM quizzes WHERE topicId = :topicId")
     fun observeQuizWithQuestionsByTopic(topicId: String): Flow<QuizWithQuestions?>
 
+    @Transaction
+    @Query("SELECT * FROM quizzes WHERE id = :id")
+    fun observeQuizWithQuestionsById(id: String): Flow<QuizWithQuestions?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuiz(quiz: QuizEntity)
 
@@ -54,6 +58,20 @@ interface CourseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuizResult(result: QuizResultEntity)
 
+    // Clinical Cases
+    @Query("SELECT * FROM clinical_cases WHERE topicId = :topicId")
+    fun observeClinicalCases(topicId: String): Flow<List<ClinicalCaseEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertClinicalCases(cases: List<ClinicalCaseEntity>)
+
+    // Complementary Resources
+    @Query("SELECT * FROM complementary_resources WHERE topicId = :topicId")
+    fun observeComplementaryResources(topicId: String): Flow<List<ComplementaryResourceEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertComplementaryResources(resources: List<ComplementaryResourceEntity>)
+
     // Limpieza
     @Query("DELETE FROM topics")
     suspend fun clearTopics()
@@ -63,4 +81,10 @@ interface CourseDao {
 
     @Query("DELETE FROM quizzes")
     suspend fun clearQuizzes()
+
+    @Query("DELETE FROM clinical_cases")
+    suspend fun clearClinicalCases()
+
+    @Query("DELETE FROM complementary_resources")
+    suspend fun clearComplementaryResources()
 }
