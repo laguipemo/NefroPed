@@ -4,9 +4,12 @@
     <dimen name="space_zero">0dp</dimen>
     <dimen name="space_xs">4dp</dimen>
     <dimen name="space_s">8dp</dimen>
+    <dimen name="space_ms">12dp</dimen>
     <dimen name="space_m">16dp</dimen>
+    <dimen name="space_mm">20dp</dimen>
     <dimen name="space_l">24dp</dimen>
     <dimen name="space_xl">32dp</dimen>
+    <dimen name="space_44">44dp</dimen>
     <dimen name="space_48">48dp</dimen>
     <dimen name="space_64">64dp</dimen>
     <dimen name="space_80">80dp</dimen>
@@ -21,11 +24,37 @@
     <dimen name="avatar_profile_size">100dp</dimen>
     <dimen name="avatar_icon_size">60dp</dimen>
 
+    <!-- Quiz & Components -->
+    <dimen name="quiz_option_corner_radius">16dp</dimen>
+    <dimen name="quiz_card_corner_radius">24dp</dimen>
+    <dimen name="quiz_match_item_size">44dp</dimen>
+    <dimen name="quiz_match_indicator_size">28dp</dimen>
+    <dimen name="quiz_progress_height">8dp</dimen>
+    <dimen name="quiz_result_logo_size">80dp</dimen>
+    <dimen name="quiz_result_score_container_size">160dp</dimen>
+
+    <!-- Clinical Cases -->
+    <dimen name="clinical_case_image_height">180dp</dimen>
+    <dimen name="clinical_resource_item_height">56dp</dimen>
+
+    <!-- Course & Topics -->
+    <dimen name="topic_card_width">320dp</dimen>
+    <dimen name="topic_card_height">680dp</dimen>
+    <dimen name="topic_card_image_height">200dp</dimen>
+    <dimen name="topic_card_corner_radius">28dp</dimen>
+    <dimen name="topic_card_progress_height">10dp</dimen>
+
     <!-- Botones -->
     <dimen name="button_height">40dp</dimen>
     <dimen name="button_corner_radius">24dp</dimen>
     <dimen name="button_icon_size">24dp</dimen>
 
     <dimen name="border_stroke_width">1dp</dimen>
+
+    <!-- Text Sizes -->
+    <item name="text_size_body_medium" format="dimension" type="dimen">14sp</item>
+    <item name="text_size_body_large" format="dimension" type="dimen">16sp</item>
+    <item name="text_size_title_medium" format="dimension" type="dimen">18sp</item>
+    <item name="text_size_headline_medium" format="dimension" type="dimen">24sp</item>
 
 </resources>
