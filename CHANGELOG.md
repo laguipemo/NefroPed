@@ -29,6 +29,13 @@ Cada versión debería:
   del token. En principio era un bug del ChannelFlow en Supabase 3.3.0 que debería estar
   corregido en la versión actual 3.4.1
 
+## [0.8.1] - 2026-03-20
+### Refector
+- Optimiza imports
+- Realiza refactorización de la feature Chat, extrayendo strings y dimensiones a la carpeta de
+  recurso del módulo :designsystem.
+- Extrae componentes reutilizables al correspondiente paquete components haciendo los ficheros
+  más pequeños y legibles.
 
 ## [0.8.0] - 2026-03-20
 ### Added
