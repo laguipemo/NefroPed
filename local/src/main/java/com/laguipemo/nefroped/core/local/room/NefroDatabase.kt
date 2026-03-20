@@ -11,9 +11,11 @@ import com.laguipemo.nefroped.core.local.room.entity.*
         LessonEntity::class,
         QuizEntity::class,
         QuestionEntity::class,
-        QuizResultEntity::class
+        QuizResultEntity::class,
+        ClinicalCaseEntity::class,
+        ComplementaryResourceEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class NefroDatabase : RoomDatabase() {

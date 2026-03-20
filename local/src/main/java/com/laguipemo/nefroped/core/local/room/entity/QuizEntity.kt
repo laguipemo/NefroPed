@@ -20,7 +20,8 @@ import androidx.room.PrimaryKey
 data class QuizEntity(
     @PrimaryKey val id: String,
     val topicId: String,
-    val title: String
+    val title: String,
+    val description: String? = null
 )
 
 @Entity(

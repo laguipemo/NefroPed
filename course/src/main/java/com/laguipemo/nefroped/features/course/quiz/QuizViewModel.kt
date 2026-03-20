@@ -5,9 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.laguipemo.nefroped.core.domain.model.course.*
-import com.laguipemo.nefroped.core.domain.usecase.course.GetQuizUseCase
-import com.laguipemo.nefroped.core.domain.usecase.course.SubmitQuizUseCase
-import com.laguipemo.nefroped.core.domain.usecase.course.SyncQuizUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.*
 import com.laguipemo.nefroped.navigation.AuthenticatedRoute
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,11 +13,16 @@ import kotlinx.coroutines.launch
 class QuizViewModel(
     savedStateHandle: SavedStateHandle,
     private val getQuizUseCase: GetQuizUseCase,
+    private val observeQuizByIdUseCase: ObserveQuizByIdUseCase,
     private val syncQuizUseCase: SyncQuizUseCase,
+    private val syncQuizByIdUseCase: SyncQuizByIdUseCase,
     private val submitQuizUseCase: SubmitQuizUseCase
 ) : ViewModel() {
 
-    private val topicId: String = savedStateHandle.toRoute<AuthenticatedRoute.Quiz>().topicId
+    private val route = savedStateHandle.toRoute<AuthenticatedRoute.Quiz>()
+    private val quizIdArg: String = route.id
+    val isTopicId: Boolean = route.isTopicId // Ahora es público
+    private val initialTitleArg: String? = route.title
 
     private val _currentQuestionIndex = MutableStateFlow(0)
     private val _currentSelection = MutableStateFlow<UserSelection>(UserSelection.None)
@@ -47,7 +50,7 @@ class QuizViewModel(
         val result = params[6] as QuizResult?
 
         if (quiz == null) {
-            QuizUiState.Loading
+            QuizUiState.Loading(initialTitleArg)
         } else {
             QuizUiState.Content(
                 quiz = quiz,
@@ -62,14 +65,25 @@ class QuizViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = QuizUiState.Loading
+        initialValue = QuizUiState.Loading(initialTitleArg)
     )
 
     init {
+        loadQuiz()
+    }
+
+    private fun loadQuiz() {
         viewModelScope.launch {
-            syncQuizUseCase(topicId)
-            getQuizUseCase(topicId).filterNotNull().firstOrNull()?.let { quiz ->
-                _shuffledQuiz.value = shuffleQuiz(quiz)
+            if (isTopicId) {
+                syncQuizUseCase(quizIdArg)
+                getQuizUseCase(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
+                    _shuffledQuiz.value = shuffleQuiz(quiz)
+                }
+            } else {
+                syncQuizByIdUseCase(quizIdArg)
+                observeQuizByIdUseCase(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
+                    _shuffledQuiz.value = shuffleQuiz(quiz)
+                }
             }
         }
     }
@@ -82,22 +96,11 @@ class QuizViewModel(
                 val options = (question.options as? QuestionOptions.Simple)?.list ?: return@map question
                 val indexedOptions = options.withIndex().shuffled()
                 val newCorrectAnswer = when (val correct = question.correctAnswer) {
-                    is QuestionAnswer.Single -> {
-                        val newIndex = indexedOptions.indexOfFirst { it.index == correct.index }
-                        QuestionAnswer.Single(newIndex)
-                    }
-                    is QuestionAnswer.Multiple -> {
-                        val newIndices = correct.indices.map { oldIdx ->
-                            indexedOptions.indexOfFirst { it.index == oldIdx }
-                        }
-                        QuestionAnswer.Multiple(newIndices)
-                    }
+                    is QuestionAnswer.Single -> QuestionAnswer.Single(indexedOptions.indexOfFirst { it.index == correct.index })
+                    is QuestionAnswer.Multiple -> QuestionAnswer.Multiple(correct.indices.map { oldIdx -> indexedOptions.indexOfFirst { it.index == oldIdx } })
                     else -> correct
                 }
-                question.copy(
-                    options = QuestionOptions.Simple(indexedOptions.map { it.value }),
-                    correctAnswer = newCorrectAnswer
-                )
+                question.copy(options = QuestionOptions.Simple(indexedOptions.map { it.value }), correctAnswer = newCorrectAnswer)
             }
         }
         return quiz.copy(questions = shuffledQuestions)
@@ -130,11 +133,8 @@ class QuizViewModel(
 
     fun onNextQuestion() {
         val currentState = uiState.value as? QuizUiState.Content ?: return
-        if (currentState.currentSelection is UserSelection.None) return
-        
         val newAnswers = _answers.value + (currentState.currentQuestionIndex to currentState.currentSelection)
         _answers.value = newAnswers
-        
         if (currentState.isLastQuestion) {
             submitQuiz(currentState.quiz.id, newAnswers, currentState.quiz.questions.size)
         } else {
@@ -168,27 +168,13 @@ class QuizViewModel(
 
     private fun submitQuiz(quizId: String, answers: Map<Int, UserSelection>, totalQuestions: Int) {
         viewModelScope.launch {
-            val currentState = uiState.value as? QuizUiState.Content ?: return@launch
             _isSubmitting.value = true
-            
-            val correctCount = currentState.quiz.questions.indices.count { i ->
-                val question = currentState.quiz.questions[i]
-                val userAnswer = answers[i] ?: return@count false
-                validateAnswer(question, userAnswer)
+            val quiz = _shuffledQuiz.value ?: return@launch
+            val correctCount = quiz.questions.indices.count { i ->
+                validateAnswer(quiz.questions[i], answers[i] ?: return@count false)
             }
-            
-            val result = QuizResult(
-                quizId = quizId,
-                score = (correctCount.toFloat() / totalQuestions) * 10,
-                correctAnswers = correctCount,
-                totalQuestions = totalQuestions,
-                completedAt = System.currentTimeMillis()
-            )
-            
-            // Guardamos éxito o no, mostramos el resultado
+            val result = QuizResult(quizId = quizId, score = (correctCount.toFloat() / totalQuestions) * 10, correctAnswers = correctCount, totalQuestions = totalQuestions, completedAt = System.currentTimeMillis())
             submitQuizUseCase(result)
-            
-            // ACTUALIZACIÓN ATÓMICA: Cambiamos estados de fin antes de quitar el loading
             _quizResult.value = result
             _isFinished.value = true
             _isSubmitting.value = false

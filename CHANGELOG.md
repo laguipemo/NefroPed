@@ -20,8 +20,8 @@ Cada versión debería:
 
 ### Added
 
-- Implementar las autoevaluaciones para cada tema y su calificación para 
-  brindarle la nota de la autoevaluación al usuario.
+### Refactor
+- Seguir limpieza y refactorización de las features.
 
 ### Fix 
 
@@ -29,6 +29,18 @@ Cada versión debería:
   del token. En principio era un bug del ChannelFlow en Supabase 3.3.0 que debería estar
   corregido en la versión actual 3.4.1
 
+
+## [0.8.0] - 2026-03-20
+### Added
+- Implementa toda la logíca y la ui para el tema de Aplicación de Conocimientos.
+  - Implementa casos de usos con su calificación y la pantalla para mostrársela al estudiante.
+  - Implementa los enlaces externos a los recursos complementarios.
+### Refector
+- Optimiza imports
+- Realiza refactorización de la feature Course, extrayendo strings y dimensiones a la carpeta de 
+  recurso del módulo :designsystem.
+- Extrae componentes reutilizables al correspondiente paquete components haciendo los ficheros 
+  más pequeños y legibles.
 
 ## [0.7.0] - 2026-03-19
 ### Added
