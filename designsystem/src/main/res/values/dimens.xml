@@ -51,10 +51,13 @@
 
     <dimen name="border_stroke_width">1dp</dimen>
 
-    <!-- Text Sizes -->
-    <item name="text_size_body_medium" format="dimension" type="dimen">14sp</item>
-    <item name="text_size_body_large" format="dimension" type="dimen">16sp</item>
-    <item name="text_size_title_medium" format="dimension" type="dimen">18sp</item>
-    <item name="text_size_headline_medium" format="dimension" type="dimen">24sp</item>
+    <!-- Text Sizes (sp) -->
+    <dimen name="text_size_body_small">12sp</dimen>
+    <dimen name="text_size_body_medium">14sp</dimen>
+    <dimen name="text_size_body_large">16sp</dimen>
+    <dimen name="text_size_title_medium">18sp</dimen>
+    <dimen name="text_size_title_large">22sp</dimen>
+    <dimen name="text_size_headline_small">24sp</dimen>
+    <dimen name="text_size_headline_medium">28sp</dimen>
 
 </resources>
