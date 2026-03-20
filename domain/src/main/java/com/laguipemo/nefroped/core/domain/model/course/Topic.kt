@@ -6,9 +6,10 @@ data class Topic(
     val description: String,
     val imageUrl: String?,
     val imagePlaceholder: String? = null,
-    val contentUrl: String?, // URL al .md en GitHub/Supabase
-    val indexContent: String?, // El resumen #### Lecciones...
+    val contentUrl: String?,
+    val indexContent: String?,
     val order: Int,
+    val type: TopicType = TopicType.LESSONS, // Para distinguir el Tema 4
     val conversationId: String? = null,
     val lessonsCount: Int = 0,
     val completedLessonsCount: Int = 0

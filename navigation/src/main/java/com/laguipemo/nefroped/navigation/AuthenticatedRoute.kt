@@ -15,7 +15,14 @@ sealed interface AuthenticatedRoute {
     data class LessonDetail(val lessonId: String) : AuthenticatedRoute
 
     @Serializable
-    data class Quiz(val topicId: String) : AuthenticatedRoute
+    data class Quiz(
+        val id: String, 
+        val isTopicId: Boolean = true,
+        val title: String? = null // Nuevo campo para el título inmediato
+    ) : AuthenticatedRoute
+
+    @Serializable
+    data class ClinicalCaseList(val topicId: String) : AuthenticatedRoute
 
     @Serializable
     data object Profile : AuthenticatedRoute

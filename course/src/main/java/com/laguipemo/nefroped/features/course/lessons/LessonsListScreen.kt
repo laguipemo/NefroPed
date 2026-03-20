@@ -37,7 +37,7 @@ fun LessonsListScreen(
     topicId: String,
     onBackClick: () -> Unit,
     onLessonClick: (String) -> Unit,
-    onQuizClick: (String) -> Unit,
+    onQuizClick: (String, String) -> Unit,
     viewModel: LessonsViewModel = koinViewModel { parametersOf(topicId) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -75,9 +75,8 @@ fun LessonsListScreen(
                 val lessons = (uiState as LessonsUiState.Content).lessons
                 val allCompleted = lessons.isNotEmpty() && lessons.all { it.isCompleted }
                 
-                // Siempre habilitado para facilitar el desarrollo/testeo
                 ExtendedFloatingActionButton(
-                    onClick = { onQuizClick(topicId) },
+                    onClick = { onQuizClick(topicId, "Autoevaluación") },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     shape = RoundedCornerShape(16.dp),
@@ -99,9 +98,8 @@ fun LessonsListScreen(
     ) { padding ->
         Box(
             modifier = Modifier
-                .padding(top = padding.calculateTopPadding())
-                .padding(bottom = padding.calculateBottomPadding())
                 .fillMaxSize()
+                .padding(padding)
         ) {
             when (val state = uiState) {
                 LessonsUiState.Loading -> {

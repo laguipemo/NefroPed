@@ -1,6 +1,7 @@
 package com.laguipemo.nefroped.features.course.di
 
 import com.laguipemo.nefroped.features.course.CourseViewModel
+import com.laguipemo.nefroped.features.course.clinical.ClinicalCaseListViewModel
 import com.laguipemo.nefroped.features.course.lessons.LessonsViewModel
 import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailViewModel
 import com.laguipemo.nefroped.features.course.quiz.QuizViewModel
@@ -27,4 +28,5 @@ val courseKoinModule = module {
     }
 
     viewModelOf(::QuizViewModel)
+    viewModelOf(::ClinicalCaseListViewModel)
 }

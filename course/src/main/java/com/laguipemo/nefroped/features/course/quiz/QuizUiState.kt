@@ -4,7 +4,7 @@ import com.laguipemo.nefroped.core.domain.model.course.Quiz
 import com.laguipemo.nefroped.core.domain.model.course.QuizResult
 
 sealed interface QuizUiState {
-    data object Loading : QuizUiState
+    data class Loading(val initialTitle: String? = null) : QuizUiState
     data class Error(val message: String) : QuizUiState
     
     data class Content(
@@ -17,7 +17,7 @@ sealed interface QuizUiState {
         val isSubmitting: Boolean = false
     ) : QuizUiState {
         val currentQuestion = quiz.questions.getOrNull(currentQuestionIndex)
-        val progress = if (quiz.questions.isNotEmpty()) (currentQuestionIndex + 1).toFloat() / quiz.questions.size else 0f
+        val progress = if (quiz.questions.isNotEmpty()) (currentQuestionIndex).toFloat() / quiz.questions.size else 0f
         val isLastQuestion = currentQuestionIndex == quiz.questions.size - 1
         val canContinue = currentSelection !is UserSelection.None
     }

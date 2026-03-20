@@ -13,6 +13,7 @@ import androidx.navigation.toRoute
 import com.laguipemo.nefroped.features.auth.recoverpassword.ResetPasswordScreen
 import com.laguipemo.nefroped.features.chat.ChatScreen
 import com.laguipemo.nefroped.features.course.CourseScreen
+import com.laguipemo.nefroped.features.course.clinical.ClinicalCaseListScreen
 import com.laguipemo.nefroped.features.course.lessons.LessonsListScreen
 import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailScreen
 import com.laguipemo.nefroped.features.course.quiz.QuizScreen
@@ -39,6 +40,9 @@ fun AuthenticatedNavGraph(
                 },
                 onChatClick = { conversationId ->
                     navController.navigate(AuthenticatedRoute.Chat(conversationId))
+                },
+                onClinicalCasesClick = { topicId ->
+                    navController.navigate(AuthenticatedRoute.ClinicalCaseList(topicId))
                 }
             )
         }
@@ -51,8 +55,18 @@ fun AuthenticatedNavGraph(
                 onLessonClick = { lessonId ->
                     navController.navigate(AuthenticatedRoute.LessonDetail(lessonId))
                 },
-                onQuizClick = { topicId ->
-                    navController.navigate(AuthenticatedRoute.Quiz(topicId))
+                onQuizClick = { topicId, title ->
+                    navController.navigate(AuthenticatedRoute.Quiz(id = topicId, isTopicId = true, title = title))
+                }
+            )
+        }
+
+        composable<AuthenticatedRoute.ClinicalCaseList> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.ClinicalCaseList>()
+            ClinicalCaseListScreen(
+                onBackClick = { navController.popBackStack() },
+                onCaseClick = { quizId, title ->
+                    navController.navigate(AuthenticatedRoute.Quiz(id = quizId, isTopicId = false, title = title))
                 }
             )
         }
@@ -65,8 +79,7 @@ fun AuthenticatedNavGraph(
             )
         }
 
-        composable<AuthenticatedRoute.Quiz> { backStackEntry ->
-            val route = backStackEntry.toRoute<AuthenticatedRoute.Quiz>()
+        composable<AuthenticatedRoute.Quiz> {
             QuizScreen(
                 onBackClick = { navController.popBackStack() }
             )
@@ -75,9 +88,7 @@ fun AuthenticatedNavGraph(
         composable<AuthenticatedRoute.Profile> {
             ProfileScreen(
                 onOpenChat = {
-                    navController.navigate(
-                        AuthenticatedRoute.Chat("default")
-                    )
+                    navController.navigate(AuthenticatedRoute.Chat("default"))
                 }
             )
         }
@@ -87,9 +98,7 @@ fun AuthenticatedNavGraph(
         }
 
         composable<AuthenticatedRoute.ResetPassword>(
-            deepLinks = listOf(
-                navDeepLink { uriPattern = "nefroped://reset-password" }
-            )
+            deepLinks = listOf(navDeepLink { uriPattern = "nefroped://reset-password" })
         ) {
             ResetPasswordScreen(
                 onResetSuccess = {
