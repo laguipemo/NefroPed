@@ -44,11 +44,7 @@ fun MatchDefinitionContent(
                         else selectedTermIndex = if (isSelected) null else index 
                     },
                 shape = RoundedCornerShape(dimensionResource(R.dimen.space_ms)),
-                color = when {
-                    isSelected -> MaterialTheme.colorScheme.primary
-                    isUsed -> MaterialTheme.colorScheme.surfaceVariant
-                    else -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                },
+                color = if (isSelected) MaterialTheme.colorScheme.primary else if (isUsed) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
                 border = if (isSelected) null else androidx.compose.foundation.BorderStroke(
                     dimensionResource(R.dimen.border_stroke_width), 
                     MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
@@ -60,7 +56,7 @@ fun MatchDefinitionContent(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(dimensionResource(R.dimen.space_xl))
+                            .size(dimensionResource(R.dimen.quiz_match_letter_container_size))
                             .clip(CircleShape)
                             .background(if (isSelected) Color.White else MaterialTheme.colorScheme.primary),
                         contentAlignment = Alignment.Center
@@ -94,7 +90,7 @@ fun MatchDefinitionContent(
             text = instructionText, 
             style = MaterialTheme.typography.titleMedium, 
             fontWeight = FontWeight.Bold, 
-            lineHeight = 24.sp
+            lineHeight = dimensionResource(R.dimen.line_height_l).value.sp
         )
         HorizontalDivider(
             modifier = Modifier.padding(vertical = dimensionResource(R.dimen.space_s)), 
@@ -136,7 +132,7 @@ fun MatchDefinitionContent(
                                 text = ('A' + (matchedTermIndex ?: 0)).toString(), 
                                 color = Color.White, 
                                 fontWeight = FontWeight.Bold, 
-                                fontSize = 14.sp
+                                fontSize = dimensionResource(R.dimen.text_size_body_medium).value.sp
                             ) 
                         }
                     } else {

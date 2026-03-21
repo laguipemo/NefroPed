@@ -1,10 +1,8 @@
 package com.laguipemo.nefroped.features.profile
 
-import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -25,11 +23,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.*
-import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import com.laguipemo.nefroped.features.profile.components.LinkAccountSheetContent
 import com.laguipemo.nefroped.features.profile.components.UserHeader
 import kotlinx.coroutines.launch
@@ -47,7 +43,6 @@ fun ProfileScreen(
     val sheetState = rememberModalBottomSheetState()
     val darkTheme = isSystemInDarkTheme()
 
-    // Sincronizamos iconos del sistema
     SystemBarsController(
         useStatusDarkIcons = false,
         useNavigationDarkIcons = !darkTheme
@@ -72,13 +67,7 @@ fun ProfileScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.profile_title), fontWeight = FontWeight.Bold, color = Color.White) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Unspecified,
-                    navigationIconContentColor = Color.Unspecified,
-                    titleContentColor = Color.Unspecified,
-                    actionIconContentColor = Color.Unspecified
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -139,6 +128,7 @@ fun ProfileScreen(
                     }
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                    
                     ProfileSection(title = stringResource(R.string.profile_section_about)) {
                         ProfileOptionItem(
                             icon = Icons.Default.AccountCircle,
@@ -161,7 +151,7 @@ fun ProfileScreen(
                                 onLinkEmailPassword = viewModel::onLinkWithEmailPassword,
                                 onLinkGoogle = {
                                     scope.launch {
-                                        // Aquí implementaremos el handleGoogleLink centralizado
+                                        // TODO: Implementar handleGoogleLink
                                     }
                                 }
                             )
@@ -169,8 +159,7 @@ fun ProfileScreen(
                     }
                 }
             }
-            // Añadimos un espaciador final para que el último elemento respire con la BottomBar
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
         }
     }
 }

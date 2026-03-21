@@ -12,16 +12,16 @@ import kotlinx.coroutines.launch
 
 class QuizViewModel(
     savedStateHandle: SavedStateHandle,
-    private val getQuizUseCase: GetQuizUseCase,
-    private val observeQuizByIdUseCase: ObserveQuizByIdUseCase,
-    private val syncQuizUseCase: SyncQuizUseCase,
-    private val syncQuizByIdUseCase: SyncQuizByIdUseCase,
+    private val observeQuizByTopic: ObserveQuizByTopicUseCase,
+    private val observeQuizById: ObserveQuizByIdUseCase,
+    private val syncQuiz: SyncQuizUseCase,
+    private val syncQuizById: SyncQuizByIdUseCase,
     private val submitQuizUseCase: SubmitQuizUseCase
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<AuthenticatedRoute.Quiz>()
     private val quizIdArg: String = route.id
-    val isTopicId: Boolean = route.isTopicId // Ahora es público
+    val isTopicId: Boolean = route.isTopicId
     private val initialTitleArg: String? = route.title
 
     private val _currentQuestionIndex = MutableStateFlow(0)
@@ -75,13 +75,13 @@ class QuizViewModel(
     private fun loadQuiz() {
         viewModelScope.launch {
             if (isTopicId) {
-                syncQuizUseCase(quizIdArg)
-                getQuizUseCase(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
+                syncQuiz(quizIdArg)
+                observeQuizByTopic(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
                     _shuffledQuiz.value = shuffleQuiz(quiz)
                 }
             } else {
-                syncQuizByIdUseCase(quizIdArg)
-                observeQuizByIdUseCase(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
+                syncQuizById(quizIdArg)
+                observeQuizById(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
                     _shuffledQuiz.value = shuffleQuiz(quiz)
                 }
             }

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface CourseDao {
 
-    // Temas
+    // --- TEMAS (TOPICS) ---
     @Query("SELECT * FROM topics ORDER BY `order` ASC")
     fun observeTopics(): Flow<List<TopicEntity>>
 
@@ -17,7 +17,7 @@ interface CourseDao {
     @Query("UPDATE topics SET completedLessonsCount = (SELECT COUNT(*) FROM lessons WHERE topicId = :topicId AND isCompleted = 1) WHERE id = :topicId")
     suspend fun refreshTopicProgress(topicId: String)
 
-    // Lecciones
+    // --- LECCIONES (LESSONS) ---
     @Query("SELECT * FROM lessons WHERE topicId = :topicId ORDER BY `order` ASC")
     fun observeLessonsByTopic(topicId: String): Flow<List<LessonEntity>>
 
@@ -33,7 +33,7 @@ interface CourseDao {
     @Query("UPDATE lessons SET isCompleted = :completed WHERE id = :lessonId")
     suspend fun updateLessonCompletion(lessonId: String, completed: Boolean)
 
-    // Quizzes
+    // --- TESTS (QUIZZES & QUESTIONS) ---
     @Transaction
     @Query("SELECT * FROM quizzes WHERE topicId = :topicId")
     fun observeQuizWithQuestionsByTopic(topicId: String): Flow<QuizWithQuestions?>
@@ -51,28 +51,27 @@ interface CourseDao {
     @Query("DELETE FROM questions WHERE quizId = :quizId")
     suspend fun deleteQuestionsForQuiz(quizId: String)
 
-    // Quiz Results
+    // --- RESULTADOS (RESULTS) ---
     @Query("SELECT * FROM quiz_results WHERE quizId = :quizId")
     fun observeQuizResult(quizId: String): Flow<QuizResultEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuizResult(result: QuizResultEntity)
 
-    // Clinical Cases
+    // --- CASOS CLÍNICOS & RECURSOS (CLINICAL DATA) ---
     @Query("SELECT * FROM clinical_cases WHERE topicId = :topicId")
     fun observeClinicalCases(topicId: String): Flow<List<ClinicalCaseEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertClinicalCases(cases: List<ClinicalCaseEntity>)
 
-    // Complementary Resources
     @Query("SELECT * FROM complementary_resources WHERE topicId = :topicId")
     fun observeComplementaryResources(topicId: String): Flow<List<ComplementaryResourceEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertComplementaryResources(resources: List<ComplementaryResourceEntity>)
 
-    // Limpieza
+    // --- LIMPIEZA (CLEANUP) ---
     @Query("DELETE FROM topics")
     suspend fun clearTopics()
 

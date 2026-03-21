@@ -2,7 +2,7 @@ package com.laguipemo.nefroped.features.course.lessons.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.laguipemo.nefroped.core.domain.usecase.course.GetLessonUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.ObserveLessonUseCase
 import com.laguipemo.nefroped.core.domain.usecase.course.MarkLessonAsCompletedUseCase
 import io.ktor.client.*
 import io.ktor.client.request.*
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class LessonDetailViewModel(
     private val lessonId: String,
-    private val getLessonUseCase: GetLessonUseCase,
+    private val observeLessonUseCase: ObserveLessonUseCase,
     private val markLessonAsCompletedUseCase: MarkLessonAsCompletedUseCase,
     private val httpClient: HttpClient
 ) : ViewModel() {
@@ -23,7 +23,7 @@ class LessonDetailViewModel(
     private val _uiEffect = MutableSharedFlow<LessonDetailUiEffect>()
     val uiEffect = _uiEffect.asSharedFlow()
 
-    val uiState: StateFlow<LessonDetailUiState> = getLessonUseCase(lessonId)
+    val uiState: StateFlow<LessonDetailUiState> = observeLessonUseCase(lessonId)
         .combine(_markdownContent) { lesson, markdown ->
             if (lesson == null) {
                 LessonDetailUiState.Error("Lección no encontrada")
@@ -79,7 +79,7 @@ class LessonDetailViewModel(
                     }
                 }
             } else {
-                getLessonUseCase(lessonId).filterNotNull().firstOrNull()?.let { lesson ->
+                observeLessonUseCase(lessonId).filterNotNull().firstOrNull()?.let { lesson ->
                     _isMarkdownLoading.value = true
                     try {
                         val response = httpClient.get(lesson.contentUrl)
