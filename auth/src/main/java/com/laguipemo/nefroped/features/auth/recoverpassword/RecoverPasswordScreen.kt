@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
@@ -52,62 +51,75 @@ fun RecoverPasswordScreen(
         },
         containerColor = Color.Transparent
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
-
-            HeaderAuth(stringResource(R.string.auth_title_recoverpassword))
-
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
-
-            // CAPA DE CONTRASTE
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(dimensionResource(R.dimen.quiz_card_corner_radius)),
-                color = Color.White.copy(alpha = 0.15f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
+            val minHeight = maxHeight
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(
-                    modifier = Modifier.padding(dimensionResource(R.dimen.space_m)),
-                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m))
+                    modifier = Modifier.heightIn(min = minHeight),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    EmailTextField(
-                        value = uiState.email,
-                        onValueChange = { viewModel.onEvent(RecoverPasswordUserEvent.EmailChanged(it)) },
-                        isError = uiState.emailError != null,
-                        supportingText = when (uiState.emailError) {
-                            ValidationError.EmptyEmail -> stringResource(R.string.auth_error_email_required)
-                            ValidationError.InvalidEmailFormat -> stringResource(R.string.auth_error_email_invalid)
-                            else -> null
-                        }
-                    )
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
 
-                    Button(
-                        onClick = { viewModel.onEvent(RecoverPasswordUserEvent.Submit) },
-                        enabled = !uiState.isLoading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(dimensionResource(R.dimen.button_height)),
-                        shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.auth_recoverpassword_button),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    HeaderAuth(stringResource(R.string.auth_title_recoverpassword))
+
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(dimensionResource(R.dimen.quiz_card_corner_radius)),
+                        color = Color.White.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            dimensionResource(R.dimen.border_stroke_width), 
+                            Color.White.copy(alpha = 0.2f)
                         )
-                    }
-                }
-            }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(dimensionResource(R.dimen.space_m)),
+                            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m))
+                        ) {
+                            EmailTextField(
+                                value = uiState.email,
+                                onValueChange = { viewModel.onEvent(RecoverPasswordUserEvent.EmailChanged(it)) },
+                                isError = uiState.emailError != null,
+                                supportingText = when (uiState.emailError) {
+                                    ValidationError.EmptyEmail -> stringResource(R.string.auth_error_email_required)
+                                    ValidationError.InvalidEmailFormat -> stringResource(R.string.auth_error_email_invalid)
+                                    else -> null
+                                }
+                            )
 
-            if (uiState.isLoading) {
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
-                CircularProgressIndicator(color = Color.White)
+                            Button(
+                                onClick = { viewModel.onEvent(RecoverPasswordUserEvent.Submit) },
+                                enabled = !uiState.isLoading,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(dimensionResource(R.dimen.button_height)),
+                                shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.auth_recoverpassword_button),
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(color = Color.White)
+                        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                    }
+                    
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                }
             }
         }
     }

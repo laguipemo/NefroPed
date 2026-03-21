@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
@@ -52,38 +51,51 @@ fun ResetPasswordScreen(
         },
         containerColor = Color.Transparent
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
-
-            HeaderAuth(stringResource(R.string.auth_title_reset_password))
-
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
-
-            // CAPA DE CONTRASTE
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(dimensionResource(R.dimen.quiz_card_corner_radius)),
-                color = Color.White.copy(alpha = 0.15f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
+            val minHeight = maxHeight
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(modifier = Modifier.padding(dimensionResource(R.dimen.space_m))) {
-                    ResetPasswordForm(
-                        uiState = uiState,
-                        onEvent = viewModel::onEvent
-                    )
-                }
-            }
+                Column(
+                    modifier = Modifier.heightIn(min = minHeight),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
 
-            if (uiState.isLoading) {
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
-                CircularProgressIndicator(color = Color.White)
+                    HeaderAuth(stringResource(R.string.auth_title_reset_password))
+
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(dimensionResource(R.dimen.quiz_card_corner_radius)),
+                        color = Color.White.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            dimensionResource(R.dimen.border_stroke_width), 
+                            Color.White.copy(alpha = 0.2f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(dimensionResource(R.dimen.space_m))) {
+                            ResetPasswordForm(
+                                uiState = uiState,
+                                onEvent = viewModel::onEvent
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(color = Color.White)
+                        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                    }
+                    
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                }
             }
         }
     }
@@ -117,7 +129,7 @@ private fun ResetPasswordForm(
             label = stringResource(R.string.auth_confirm_password_label),
             isError = uiState.confirmPasswordError != null,
             supportingText = when (uiState.confirmPasswordError) {
-                is ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
+                ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
                 is ValidationError.PasswordsDoNotMatch -> stringResource(R.string.auth_error_passwords_do_not_match)
                 else -> null
             },
