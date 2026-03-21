@@ -25,18 +25,18 @@ class SupabaseCourseRepositoryImpl(
     override fun observeTopics(): Flow<List<Topic>> = courseDao.observeTopics().map { entities -> entities.map { it.toDomain() } }
     override fun observeLessons(topicId: String): Flow<List<Lesson>> = courseDao.observeLessonsByTopic(topicId).map { entities -> entities.map { it.toDomain() } }
     override fun observeLesson(lessonId: String): Flow<Lesson?> = courseDao.observeLessonById(lessonId).map { it?.toDomain() }
-    
+
     override fun observeQuizByTopic(topicId: String): Flow<Quiz?> = courseDao.observeQuizWithQuestionsByTopic(topicId).map { it?.toDomain() }
-    
-    override fun observeQuizById(quizId: String): Flow<Quiz?> = 
+
+    override fun observeQuizById(quizId: String): Flow<Quiz?> =
         courseDao.observeQuizWithQuestionsById(quizId).map { it?.toDomain() }
 
     override fun observeQuizResult(quizId: String): Flow<QuizResult?> = courseDao.observeQuizResult(quizId).map { it?.toDomain() }
 
-    override fun observeClinicalCases(topicId: String): Flow<List<ClinicalCase>> = 
+    override fun observeClinicalCases(topicId: String): Flow<List<ClinicalCase>> =
         courseDao.observeClinicalCases(topicId).map { entities -> entities.map { it.toDomain() } }
 
-    override fun observeComplementaryResources(topicId: String): Flow<List<ComplementaryResource>> = 
+    override fun observeComplementaryResources(topicId: String): Flow<List<ComplementaryResource>> =
         courseDao.observeComplementaryResources(topicId).map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun syncTopics(): Result<Unit> {
@@ -88,13 +88,13 @@ class SupabaseCourseRepositoryImpl(
         val questionsDto = supabase.postgrest["questions"].select { filter { eq("quiz_id", quizDto.id) } }.decodeList<QuestionDto>()
         courseDao.insertQuiz(quizDto.toEntity())
         courseDao.insertQuestions(questionsDto.map { it.toEntity() })
-        
+
         val userId = supabase.auth.currentUserOrNull()?.id
         if (userId != null) {
-            val resultDto = supabase.postgrest["quiz_results"].select { 
-                filter { eq("quiz_id", quizDto.id); eq("user_id", userId) } 
+            val resultDto = supabase.postgrest["quiz_results"].select {
+                filter { eq("quiz_id", quizDto.id); eq("user_id", userId) }
             }.decodeSingleOrNull<QuizResultDto>()
-            
+
             resultDto?.let { dto ->
                 val timestamp = try { Instant.parse(dto.completedAt).toEpochMilliseconds() } catch(e: Exception) { System.currentTimeMillis() }
                 courseDao.insertQuizResult(QuizResultEntity(quizId = dto.quizId, score = dto.score, correctAnswers = dto.correctAnswers, totalQuestions = dto.totalQuestions, completedAt = timestamp))

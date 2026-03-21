@@ -29,6 +29,7 @@
     <dimen name="quiz_card_corner_radius">24dp</dimen>
     <dimen name="quiz_match_item_size">44dp</dimen>
     <dimen name="quiz_match_indicator_size">28dp</dimen>
+    <dimen name="quiz_match_letter_container_size">32dp</dimen>
     <dimen name="quiz_progress_height">8dp</dimen>
     <dimen name="quiz_result_logo_size">80dp</dimen>
     <dimen name="quiz_result_score_container_size">160dp</dimen>
@@ -44,8 +45,22 @@
     <dimen name="topic_card_corner_radius">28dp</dimen>
     <dimen name="topic_card_progress_height">10dp</dimen>
 
+    <!-- Chat -->
+    <dimen name="chat_input_height">56dp</dimen>
+    <dimen name="chat_input_corner_radius">28dp</dimen>
+    <dimen name="chat_bubble_corner_radius">16dp</dimen>
+    <dimen name="chat_scroll_bottom_button_size">40dp</dimen>
+
+    <!-- Auth -->
+    <dimen name="auth_header_padding_top">48dp</dimen>
+    <dimen name="auth_card_elevation">3dp</dimen>
+
+    <!-- Profile -->
+    <dimen name="profile_section_corner_radius">20dp</dimen>
+    <dimen name="profile_option_icon_size">24dp</dimen>
+
     <!-- Botones -->
-    <dimen name="button_height">40dp</dimen>
+    <dimen name="button_height">48dp</dimen>
     <dimen name="button_corner_radius">24dp</dimen>
     <dimen name="button_icon_size">24dp</dimen>
 
@@ -59,5 +74,10 @@
     <dimen name="text_size_title_large">22sp</dimen>
     <dimen name="text_size_headline_small">24sp</dimen>
     <dimen name="text_size_headline_medium">28sp</dimen>
+
+    <!-- Line Heights (sp) -->
+    <dimen name="line_height_m">20sp</dimen>
+    <dimen name="line_height_l">24sp</dimen>
+    <dimen name="line_height_xl">28sp</dimen>
 
 </resources>

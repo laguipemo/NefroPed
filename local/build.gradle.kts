@@ -8,7 +8,7 @@ plugins {
 
 configure<LibraryExtension> {
     namespace = "com.laguipemo.nefroped.core.local"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26

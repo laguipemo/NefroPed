@@ -6,9 +6,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.VisualTransformation
 
 @Composable
@@ -37,7 +39,21 @@ fun AuthTextField(
             visualTransformation = visualTransformation,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                focusedLabelColor = Color.White,
+                unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                cursorColor = Color.White,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                errorLabelColor = MaterialTheme.colorScheme.error,
+                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                errorTrailingIconColor = MaterialTheme.colorScheme.error,
+                errorSupportingTextColor = MaterialTheme.colorScheme.error
+            )
         )
         if (supportingText != null) {
             Text(
@@ -46,7 +62,7 @@ fun AuthTextField(
                 color = if (isError) {
                     MaterialTheme.colorScheme.error
                 } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                    Color.White.copy(alpha = 0.7f)
                 }
             )
         }

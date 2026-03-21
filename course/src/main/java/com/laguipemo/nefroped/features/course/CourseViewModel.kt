@@ -2,29 +2,26 @@ package com.laguipemo.nefroped.features.course
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.laguipemo.nefroped.core.domain.usecase.course.GetTopicsUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.ObserveTopicsUseCase
 import com.laguipemo.nefroped.core.domain.usecase.course.SyncTopicsUseCase
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class CourseViewModel(
-    private val getTopicsUseCase: GetTopicsUseCase,
-    private val syncTopicsUseCase: SyncTopicsUseCase
+    private val observeTopics: ObserveTopicsUseCase,
+    private val syncTopics: SyncTopicsUseCase
 ) : ViewModel() {
 
-    private val _isRefreshing = MutableStateFlow(false)
-    
     private val _searchQuery = MutableStateFlow("")
-    val searchQuery = _searchQuery.asStateFlow()
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     private val _isSearchActive = MutableStateFlow(false)
-    val isSearchActive = _isSearchActive.asStateFlow()
+    val isSearchActive: StateFlow<Boolean> = _isSearchActive.asStateFlow()
 
     val uiState: StateFlow<CourseUiState> = combine(
-        getTopicsUseCase(),
-        _isRefreshing,
+        observeTopics(),
         _searchQuery
-    ) { topics, refreshing, query ->
+    ) { topics, query ->
         val filteredTopics = if (query.isBlank()) {
             topics
         } else {
@@ -33,18 +30,7 @@ class CourseViewModel(
                 it.description.contains(query, ignoreCase = true) 
             }
         }
-
-        if (topics.isEmpty() && refreshing) {
-            CourseUiState.Loading
-        } else {
-            CourseUiState.Content(
-                topics = filteredTopics,
-                isRefreshing = refreshing
-            )
-        }
-    }
-    .catch { e ->
-        emit(CourseUiState.Error(e.message ?: "Error al cargar los temas"))
+        CourseUiState.Content(topics = filteredTopics)
     }
     .stateIn(
         scope = viewModelScope,
@@ -53,23 +39,17 @@ class CourseViewModel(
     )
 
     init {
-        refreshTopics()
+        viewModelScope.launch {
+            syncTopics()
+        }
     }
 
-    fun onSearchQueryChange(newQuery: String) {
-        _searchQuery.value = newQuery
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
     }
 
     fun onSearchActiveChange(active: Boolean) {
         _isSearchActive.value = active
         if (!active) _searchQuery.value = ""
-    }
-
-    fun refreshTopics() {
-        viewModelScope.launch {
-            _isRefreshing.value = true
-            syncTopicsUseCase()
-            _isRefreshing.value = false
-        }
     }
 }

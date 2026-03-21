@@ -1,22 +1,11 @@
 package com.laguipemo.nefroped.features.auth.login
 
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -32,21 +22,17 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
-import com.laguipemo.nefroped.designsystem.components.EmailTextField
-import com.laguipemo.nefroped.designsystem.components.HeaderAuth
-import com.laguipemo.nefroped.designsystem.components.HorizontalDiv
-import com.laguipemo.nefroped.designsystem.components.PasswordTextField
-import com.laguipemo.nefroped.designsystem.components.SocialMediaButton
+import com.laguipemo.nefroped.designsystem.components.*
 import com.laguipemo.nefroped.designsystem.util.toMessage
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -64,24 +50,11 @@ fun LoginScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val horizontalPadding = dimensionResource(R.dimen.screen_horizontal_padding)
-    val verticalPadding = dimensionResource(R.dimen.screen_vertical_padding)
-    val spaceS = dimensionResource(R.dimen.space_s)
-    val spaceM = dimensionResource(R.dimen.space_m)
-    val spaceL = dimensionResource(R.dimen.space_l)
-    val spaceXL = dimensionResource(R.dimen.space_xl)
-    val buttonHeight = dimensionResource(R.dimen.button_height)
-
     LaunchedEffect(Unit) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
-                is LoginUiEffect.ShowError -> {
-                    snackbarHostState.showSnackbar(effect.error.toMessage())
-                }
-
-                LoginUiEffect.LoginSuccess -> {
-                    onLoginSuccess()
-                }
+                is LoginUiEffect.ShowError -> snackbarHostState.showSnackbar(effect.error.toMessage())
+                LoginUiEffect.LoginSuccess -> onLoginSuccess()
             }
         }
     }
@@ -95,194 +68,207 @@ fun LoginScreen(
                     contentColor = MaterialTheme.colorScheme.error
                 )
             }
-        }
+        },
+        containerColor = Color.Transparent
     ) { padding ->
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
-                .padding(
-                    horizontal = horizontalPadding,
-                    vertical = verticalPadding
-                ),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(padding)
         ) {
-            Column {
-                HeaderAuth(stringResource(R.string.auth_title_login))
-                Spacer(modifier = Modifier.height(spaceXL))
+            val minHeight = maxHeight
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.heightIn(min = minHeight),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    EmailTextField(
-                        value = uiState.email,
-                        onValueChange = {
-                            viewModel.onEvent(
-                                LoginUserEvent.EmailChanged(
-                                    it
-                                )
-                            )
-                        },
-                        isError = uiState.emailError != null,
-                        supportingText = when (uiState.emailError) {
-                            ValidationError.EmptyEmail -> stringResource(R.string.auth_error_email_required)
-                            ValidationError.InvalidEmailFormat -> stringResource(
-                                R.string.auth_error_email_invalid
-                            )
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
+                    
+                    HeaderAuth(stringResource(R.string.auth_title_login))
+                    
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
 
-                            else -> null
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(spaceS))
-                    PasswordTextField(
-                        value = uiState.password,
-                        onValueChange = {
-                            viewModel.onEvent(
-                                LoginUserEvent.PasswordChanged(
-                                    it
-                                )
-                            )
-                        },
-                        isError = uiState.passwordError != null,
-                        supportingText = when (val error =
-                            uiState.passwordError) {
-                            ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
-                            is ValidationError.PasswordTooShort -> stringResource(
-                                R.string.auth_error_password_too_short,
-                                error.minLength
-                            )
-
-                            else -> null
-                        },
-                        onImeDone = { viewModel.onEvent(LoginUserEvent.Submit) }
-                    )
-                    Spacer(modifier = Modifier.height(spaceS))
-                    Row(
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        val recoverText = buildAnnotatedString {
-                            append(stringResource(R.string.auth_forgot_password_question) + " ")
-                            pushLink(
-                                LinkAnnotation.Clickable(
-                                    tag = "recover_password",
-                                    styles = TextLinkStyles(
-                                        style = SpanStyle(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            textDecoration = TextDecoration.Underline
-                                        )
-                                    ),
-                                    linkInteractionListener = { onRecoverPassword() }
-                                )
-                            )
-                            append(stringResource(R.string.auth_forgot_password_action))
-                            pop()
-                        }
-                        Text(text = recoverText)
-                    }
-                    Spacer(Modifier.height(spaceM))
-                    Button(
-                        onClick = { viewModel.onEvent(LoginUserEvent.Submit) },
-                        enabled = !uiState.isLoading,
-                        modifier = Modifier
-                            .padding(horizontal = spaceM)
-                            .fillMaxWidth()
-                            .height(buttonHeight)
-                    ) {
-                        Text(text = stringResource(R.string.auth_login_button))
-                    }
-                    Spacer(modifier = Modifier.height(spaceL))
-                    HorizontalDiv()
-                    Spacer(modifier = Modifier.height(spaceL))
-                    SocialMediaButton(
-                        onClick = { viewModel.onEvent(LoginUserEvent.ContinueAsGuest) },
-                        text = stringResource(R.string.auth_continue_guest),
-                        icon = R.drawable.ic_incognito,
-                        color = colorResource(R.color.bg_btn_incognito)
-                    )
-                    Spacer(modifier = Modifier.height(spaceS))
-                    SocialMediaButton(
-                        onClick = {
-                            scope.launch {
-                                handleGoogleLogin(context, viewModel)
-                            }
-                        },
-                        text = stringResource(R.string.auth_continue_google),
-                        icon = R.drawable.ic_google,
-                        color = colorResource(R.color.bg_btn_google)
-                    )
-                }
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                val createAccount = buildAnnotatedString {
-                    append(stringResource(R.string.auth_no_account_question) + " ")
-                    pushLink(
-                        LinkAnnotation.Clickable(
-                            tag = "create_account",
-                            styles = TextLinkStyles(
-                                style = SpanStyle(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            ),
-                            linkInteractionListener = { onRegister() }
+                        shape = RoundedCornerShape(dimensionResource(R.dimen.quiz_card_corner_radius)),
+                        color = Color.White.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = dimensionResource(R.dimen.border_stroke_width), 
+                            color = Color.White.copy(alpha = 0.2f)
                         )
+                    ) {
+                        Column(modifier = Modifier.padding(dimensionResource(R.dimen.space_m))) {
+                            LoginForm(
+                                uiState = uiState,
+                                onEvent = viewModel::onEvent,
+                                onRecoverPassword = onRecoverPassword
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
+                    HorizontalDiv()
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
+
+                    SocialLoginSection(
+                        onContinueAsGuest = { viewModel.onEvent(LoginUserEvent.ContinueAsGuest) },
+                        onGoogleLogin = { scope.launch { handleGoogleLogin(context, viewModel) } }
                     )
-                    append(stringResource(R.string.auth_register_action))
-                    pop()
-                }
-                Text(text = createAccount)
-                Spacer(Modifier.height(spaceS))
-                if (uiState.isLoading) {
-                    CircularProgressIndicator()
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    CreateAccountFooter(onRegister = onRegister, isLoading = uiState.isLoading)
+                    
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
                 }
             }
         }
     }
 }
 
-private suspend fun handleGoogleLogin(
-    context: Context,
-    viewModel: LoginViewModel
+@Composable
+private fun LoginForm(
+    uiState: LoginUiState,
+    onEvent: (LoginUserEvent) -> Unit,
+    onRecoverPassword: () -> Unit
 ) {
-    val credentialManager = CredentialManager.create(context)
-    val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_s))
+    ) {
+        EmailTextField(
+            value = uiState.email,
+            onValueChange = { onEvent(LoginUserEvent.EmailChanged(it)) },
+            isError = uiState.emailError != null,
+            supportingText = when (uiState.emailError) {
+                ValidationError.EmptyEmail -> stringResource(R.string.auth_error_email_required)
+                ValidationError.InvalidEmailFormat -> stringResource(R.string.auth_error_email_invalid)
+                else -> null
+            }
+        )
+
+        PasswordTextField(
+            value = uiState.password,
+            onValueChange = { onEvent(LoginUserEvent.PasswordChanged(it)) },
+            isError = uiState.passwordError != null,
+            supportingText = when (val error = uiState.passwordError) {
+                ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
+                is ValidationError.PasswordTooShort -> stringResource(R.string.auth_error_password_too_short, error.minLength)
+                else -> null
+            },
+            onImeDone = { onEvent(LoginUserEvent.Submit) }
+        )
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            val recoverText = buildAnnotatedString {
+                append(stringResource(R.string.auth_forgot_password_question) + " ")
+                pushLink(
+                    LinkAnnotation.Clickable(
+                        tag = "recover_password",
+                        styles = TextLinkStyles(style = SpanStyle(
+                            color = Color.White, 
+                            fontWeight = FontWeight.Bold, 
+                            textDecoration = TextDecoration.Underline
+                        )),
+                        linkInteractionListener = { onRecoverPassword() }
+                    )
+                )
+                append(stringResource(R.string.auth_forgot_password_action))
+                pop()
+            }
+            Text(text = recoverText, style = MaterialTheme.typography.bodyMedium)
+        }
+
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_s)))
+
+        Button(
+            onClick = { onEvent(LoginUserEvent.Submit) },
+            enabled = !uiState.isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.button_height)),
+            shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text(text = stringResource(R.string.auth_login_button), fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun SocialLoginSection(onContinueAsGuest: () -> Unit, onGoogleLogin: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_s))) {
+        SocialMediaButton(
+            onClick = onContinueAsGuest,
+            text = stringResource(R.string.auth_continue_guest),
+            icon = R.drawable.ic_incognito,
+            color = colorResource(R.color.bg_btn_incognito)
+        )
+        SocialMediaButton(
+            onClick = onGoogleLogin,
+            text = stringResource(R.string.auth_continue_google),
+            icon = R.drawable.ic_google,
+            color = Color.White
+        )
+    }
+}
+
+@Composable
+private fun CreateAccountFooter(onRegister: () -> Unit, isLoading: Boolean) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        val createAccount = buildAnnotatedString {
+            append(stringResource(R.string.auth_no_account_question) + " ")
+            pushLink(
+                LinkAnnotation.Clickable(
+                    tag = "create_account",
+                    styles = TextLinkStyles(style = SpanStyle(
+                        color = MaterialTheme.colorScheme.primary, 
+                        fontWeight = FontWeight.ExtraBold, 
+                        textDecoration = TextDecoration.Underline
+                    )),
+                    linkInteractionListener = { onRegister() }
+                )
+            )
+            append(stringResource(R.string.auth_register_action))
+            pop()
+        }
+        Text(
+            text = createAccount, 
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        if (isLoading) {
+            Spacer(Modifier.height(dimensionResource(R.dimen.space_s)))
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
+
+private suspend fun handleGoogleLogin(context: Context, viewModel: LoginViewModel) {
+    val credentialManager = androidx.credentials.CredentialManager.create(context)
+    val googleIdOption = GetGoogleIdOption.Builder()
         .setFilterByAuthorizedAccounts(false)
         .setServerClientId("439824105960-rto1l6vlrkp59kplrm243dlvamf1ek4v.apps.googleusercontent.com")
         .build()
-
-    val request = GetCredentialRequest.Builder()
-        .addCredentialOption(googleIdOption)
-        .build()
-
+    val request = androidx.credentials.GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
     try {
-        val result = credentialManager.getCredential(
-            context = context,
-            request = request
-        )
+        val result = credentialManager.getCredential(context = context, request = request)
         handleCredential(result, viewModel)
-    } catch (_: GetCredentialException) {
-    } catch (_: Exception) {
-    }
+    } catch (_: Exception) {}
 }
 
-private fun handleCredential(
-    result: GetCredentialResponse,
-    viewModel: LoginViewModel
-) {
+private fun handleCredential(result: androidx.credentials.GetCredentialResponse, viewModel: LoginViewModel) {
     val credential = result.credential
-
-    if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+    if (credential.type == "com.google.android.libraries.identity.googleid.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL") {
         try {
-            val googleIdTokenCredential =
-                GoogleIdTokenCredential.createFrom(credential.data)
-            viewModel.onEvent(
-                LoginUserEvent.LoginWithGoogle(
-                    googleIdTokenCredential.idToken
-                )
-            )
-        } catch (_: Exception) {
-        }
+            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+            viewModel.onEvent(LoginUserEvent.LoginWithGoogle(googleIdTokenCredential.idToken))
+        } catch (_: Exception) {}
     }
 }

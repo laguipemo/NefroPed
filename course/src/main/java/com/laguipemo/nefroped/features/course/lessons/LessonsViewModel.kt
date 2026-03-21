@@ -3,24 +3,21 @@ package com.laguipemo.nefroped.features.course.lessons
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.laguipemo.nefroped.core.domain.usecase.course.GetLessonsUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.ObserveLessonsUseCase
 import com.laguipemo.nefroped.core.domain.usecase.course.SyncLessonsUseCase
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class LessonsViewModel(
     private val topicId: String,
-    private val getLessonsUseCase: GetLessonsUseCase,
-    private val syncLessonsUseCase: SyncLessonsUseCase
+    private val observeLessons: ObserveLessonsUseCase,
+    private val syncLessons: SyncLessonsUseCase
 ) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
 
-    val uiState: StateFlow<LessonsUiState> = getLessonsUseCase(topicId)
+    val uiState: StateFlow<LessonsUiState> = observeLessons(topicId)
         .combine(_isRefreshing) { lessons, refreshing ->
-            Log.d("LessonsVM", "Topic: $topicId, Lessons found: ${lessons.size}, Refreshing: $refreshing")
-            
-            // Si no hay lecciones y no estamos refrescando, mostramos una lista vacía en lugar de Loading infinito
             if (lessons.isEmpty() && refreshing) {
                 LessonsUiState.Loading
             } else {
@@ -31,7 +28,6 @@ class LessonsViewModel(
             }
         }
         .catch { e ->
-            Log.e("LessonsVM", "Error in Flow for topic $topicId", e)
             emit(LessonsUiState.Error(e.message ?: "Error al cargar las lecciones"))
         }
         .stateIn(
@@ -47,19 +43,8 @@ class LessonsViewModel(
     fun refreshLessons() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            Log.d("LessonsVM", "Starting sync for topic: $topicId")
-            try {
-                val result = syncLessonsUseCase(topicId)
-                if (result.isFailure) {
-                    Log.e("LessonsVM", "Sync failed for topic $topicId: ${result.exceptionOrNull()?.message}")
-                } else {
-                    Log.d("LessonsVM", "Sync success for topic $topicId")
-                }
-            } catch (e: Exception) {
-                Log.e("LessonsVM", "Unexpected error syncing topic $topicId", e)
-            } finally {
-                _isRefreshing.value = false
-            }
+            syncLessons(topicId)
+            _isRefreshing.value = false
         }
     }
 }

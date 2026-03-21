@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.features.course.quiz.QuizUiState
 
@@ -43,7 +42,7 @@ fun QuizPlayContent(
             progress = { state.progress },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
+                .height(dimensionResource(R.dimen.quiz_progress_height))
                 .clip(CircleShape),
             color = Color.White,
             trackColor = Color.White.copy(alpha = 0.2f)
@@ -76,10 +75,15 @@ fun QuizPlayContent(
             if (state.currentQuestionIndex > 0) {
                 OutlinedButton(
                     onClick = onPrevClick,
-                    modifier = Modifier.weight(1f).height(56.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(dimensionResource(R.dimen.clinical_resource_item_height)),
                     shape = RoundedCornerShape(dimensionResource(R.dimen.space_m)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                    border = androidx.compose.foundation.BorderStroke(
+                        dimensionResource(R.dimen.border_stroke_width), 
+                        Color.White.copy(alpha = 0.5f)
+                    )
                 ) {
                     Text(stringResource(R.string.quiz_previous), fontWeight = FontWeight.Bold)
                 }
@@ -88,7 +92,9 @@ fun QuizPlayContent(
             Button(
                 onClick = onNextClick,
                 enabled = state.canContinue && !state.isSubmitting,
-                modifier = Modifier.weight(1f).height(56.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(dimensionResource(R.dimen.clinical_resource_item_height)),
                 shape = RoundedCornerShape(dimensionResource(R.dimen.space_m)),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
@@ -96,7 +102,10 @@ fun QuizPlayContent(
                 )
             ) {
                 if (state.isSubmitting) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(dimensionResource(R.dimen.button_icon_size)), 
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 } else {
                     Text(
                         text = if (state.isLastQuestion) stringResource(R.string.quiz_submit) else stringResource(R.string.quiz_next),
