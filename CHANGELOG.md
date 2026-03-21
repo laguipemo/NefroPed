@@ -17,17 +17,24 @@ Cada versión debería:
 
 
 ## [Unreleased]
-
 ### Added
-
+- Migrar contenidos de las lecciones, casos clínicos, etc de github a supabase.
 ### Refactor
-- Seguir limpieza y refactorización de las features.
-
-### Fix 
-
+- 
+### Fix
 - Corregir el crash cuando hay un tiempo de inactividad y hay una cancelación/renovadión 
   del token. En principio era un bug del ChannelFlow en Supabase 3.3.0 que debería estar
   corregido en la versión actual 3.4.1
+
+
+## [0.9.0] - 2026-03-21
+### Refactor
+- Finaliza limpieza y refactorización de todas las features.
+### Fix
+- Adiciona el degradado a las pantallas de autenticación que nos lo tenían:
+  - Asegura con una capa semitransparente, que se pueda ver correctaamente los textos.
+  - Garantiza que al pasar de una pantalla a otra en auth, le header no se mueva y por
+    tanto no se muestren saltos.
 
 ## [0.8.1] - 2026-03-20
 ### Refector
