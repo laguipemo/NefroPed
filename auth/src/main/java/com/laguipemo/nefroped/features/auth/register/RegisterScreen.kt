@@ -1,22 +1,11 @@
 package com.laguipemo.nefroped.features.auth.register
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,10 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
-import com.laguipemo.nefroped.designsystem.components.AuthTextField
-import com.laguipemo.nefroped.designsystem.components.EmailTextField
-import com.laguipemo.nefroped.designsystem.components.HeaderAuth
-import com.laguipemo.nefroped.designsystem.components.PasswordTextField
+import com.laguipemo.nefroped.designsystem.components.*
 import com.laguipemo.nefroped.designsystem.util.toMessage
 import org.koin.androidx.compose.koinViewModel
 
@@ -44,26 +30,11 @@ fun RegisterScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val horizontalPadding = dimensionResource(
-        R.dimen.screen_horizontal_padding
-    )
-    val verticalPadding = dimensionResource(
-        R.dimen.screen_vertical_padding
-    )
-    val spaceS = dimensionResource(R.dimen.space_s)
-    val spaceM = dimensionResource(R.dimen.space_m)
-    val spaceXL = dimensionResource(R.dimen.space_xl)
-    val buttonHeight = dimensionResource(R.dimen.button_height)
-
     LaunchedEffect(Unit) {
         viewModel.uiEffects.collect { effect ->
             when (effect) {
-                is RegisterUiEffect.ShowError ->
-                    snackbarHostState.showSnackbar(effect.error.toMessage())
-
-                RegisterUiEffect.RegisterSuccess -> {
-                    onRegisterSuccess()
-                }
+                is RegisterUiEffect.ShowError -> snackbarHostState.showSnackbar(effect.error.toMessage())
+                RegisterUiEffect.RegisterSuccess -> onRegisterSuccess()
             }
         }
     }
@@ -77,134 +48,107 @@ fun RegisterScreen(
                     contentColor = MaterialTheme.colorScheme.error
                 )
             }
-
-        }
+        },
+        containerColor = androidx.compose.ui.graphics.Color.Transparent
     ) { padding ->
-
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(
-                    horizontal = horizontalPadding,
-                    vertical = verticalPadding
-                ),
-            verticalArrangement = Arrangement.Top,
+                .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.screen_vertical_padding)))
 
-            // HEADER: título + logo + subtítulo
-            HeaderAuth(
-                stringResource(R.string.auth_title_register)
+            HeaderAuth(stringResource(R.string.auth_title_register))
+
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
+
+            RegisterForm(
+                uiState = uiState,
+                onEvent = viewModel::onEvent
             )
-
-            Spacer(modifier = Modifier.height(spaceXL))
-
-            // FORM + BOTONES
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                AuthTextField(
-                    value = uiState.fullName,
-                    onValueChange = {
-                        viewModel.onEvent(RegisterUserEvent.FullNameChanged(it))
-                    },
-                    label = "Nombre completo",
-                    isError = uiState.fullNameError != null,
-                    supportingText = if (uiState.fullNameError is ValidationError.EmptyFullName) "El nombre es obligatorio" else null,
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Outlined.Person, contentDescription = null)
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(spaceS))
-
-                EmailTextField(
-                    value = uiState.email,
-                    onValueChange = {
-                        viewModel.onEvent(
-                            RegisterUserEvent.EmailChanged(it)
-                        )
-                    },
-                    isError = uiState.emailError != null,
-                    supportingText = when (uiState.emailError) {
-                        is ValidationError.EmptyEmail ->
-                            stringResource(R.string.auth_error_email_required)
-
-                        is ValidationError.InvalidEmailFormat ->
-                            stringResource(R.string.auth_error_email_invalid)
-
-                        else -> null
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(spaceS))
-
-                PasswordTextField(
-                    value = uiState.password,
-                    onValueChange = {
-                        viewModel.onEvent(
-                            RegisterUserEvent.PasswordChanged(it)
-                        )
-                    },
-                    isError = uiState.passwordError != null,
-                    supportingText = when (val error = uiState.passwordError) {
-                        is ValidationError.EmptyPassword ->
-                            stringResource(R.string.auth_error_password_required)
-
-                        is ValidationError.PasswordTooShort ->
-                            stringResource(
-                                R.string.auth_error_password_too_short,
-                                error.minLength
-                            )
-
-                        else -> null
-                    },
-                    onImeDone = { }
-                )
-
-                Spacer(modifier = Modifier.height(spaceS))
-
-                PasswordTextField(
-                    value = uiState.confirmPassword,
-                    onValueChange = {
-                        viewModel.onEvent(
-                            RegisterUserEvent.ConfirmPasswordChanged(it)
-                        )
-                    },
-                    isError = uiState.confirmPasswordError != null,
-                    supportingText = when (uiState.confirmPasswordError) {
-                        is ValidationError.EmptyPassword ->
-                            stringResource(R.string.auth_error_password_required)
-
-                        is ValidationError.PasswordsDoNotMatch ->
-                            stringResource(R.string.auth_error_passwords_do_not_match)
-
-                        else -> null
-                    },
-                    onImeDone = { viewModel.onEvent(RegisterUserEvent.Submit) }
-                )
-
-                Spacer(modifier = Modifier.height(spaceM))
-
-                Button(
-                    onClick = { viewModel.onEvent(RegisterUserEvent.Submit) },
-                    enabled = !uiState.isLoading,
-                    modifier = Modifier
-                        .padding(horizontal = spaceM)
-                        .fillMaxWidth()
-                        .height(buttonHeight)
-                ) {
-                    Text(
-                        text = stringResource(R.string.auth_register_button),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Normal
-                        )
-                    )
-                }
+            
+            if (uiState.isLoading) {
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
+            
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
         }
     }
+}
 
+@Composable
+private fun RegisterForm(
+    uiState: RegisterUiState,
+    onEvent: (RegisterUserEvent) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_s))
+    ) {
+        AuthTextField(
+            value = uiState.fullName,
+            onValueChange = { onEvent(RegisterUserEvent.FullNameChanged(it)) },
+            label = "Nombre completo",
+            isError = uiState.fullNameError != null,
+            supportingText = if (uiState.fullNameError is ValidationError.EmptyFullName) "El nombre es obligatorio" else null,
+            leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) }
+        )
+
+        EmailTextField(
+            value = uiState.email,
+            onValueChange = { onEvent(RegisterUserEvent.EmailChanged(it)) },
+            isError = uiState.emailError != null,
+            supportingText = when (uiState.emailError) {
+                is ValidationError.EmptyEmail -> stringResource(R.string.auth_error_email_required)
+                is ValidationError.InvalidEmailFormat -> stringResource(R.string.auth_error_email_invalid)
+                else -> null
+            }
+        )
+
+        PasswordTextField(
+            value = uiState.password,
+            onValueChange = { onEvent(RegisterUserEvent.PasswordChanged(it)) },
+            isError = uiState.passwordError != null,
+            supportingText = when (val error = uiState.passwordError) {
+                is ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
+                is ValidationError.PasswordTooShort -> stringResource(R.string.auth_error_password_too_short, error.minLength)
+                else -> null
+            },
+            onImeDone = { }
+        )
+
+        PasswordTextField(
+            value = uiState.confirmPassword,
+            onValueChange = { onEvent(RegisterUserEvent.ConfirmPasswordChanged(it)) },
+            label = stringResource(R.string.auth_confirm_password_label),
+            isError = uiState.confirmPasswordError != null,
+            supportingText = when (uiState.confirmPasswordError) {
+                is ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
+                is ValidationError.PasswordsDoNotMatch -> stringResource(R.string.auth_error_passwords_do_not_match)
+                else -> null
+            },
+            onImeDone = { onEvent(RegisterUserEvent.Submit) }
+        )
+
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+
+        Button(
+            onClick = { onEvent(RegisterUserEvent.Submit) },
+            enabled = !uiState.isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.button_height)),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius))
+        ) {
+            Text(
+                text = stringResource(R.string.auth_register_button),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            )
+        }
+    }
 }

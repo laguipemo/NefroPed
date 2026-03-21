@@ -25,25 +25,29 @@ val domainKoinModule = module {
     factoryOf(::RecoverPasswordUseCaseImpl) { bind<RecoverPasswordUseCase>() }
     factoryOf(::UpdatePasswordUseCaseImpl) { bind<UpdatePasswordUseCase>() }
     
+    // Profile
     factoryOf(::UpdateAvatarUseCaseImpl) { bind<UpdateAvatarUseCase>() }
     
+    // Chat
     factoryOf(::SendMessageUseCaseImpl) { bind<SendMessageUseCase>() }
     factoryOf(::ObserveMessagesUseCaseImpl) { bind<ObserveMessagesUseCase>() }
     factoryOf(::ResolveChatCapabilitiesUseCase)
     
-    // Course & Quiz & Clinical Cases
-    factoryOf(::GetTopicsUseCase)
-    factoryOf(::GetLessonsUseCase)
-    factoryOf(::GetLessonUseCase)
+    // Course
+    factoryOf(::ObserveTopicsUseCase)
+    factoryOf(::ObserveLessonsUseCase)
+    factoryOf(::ObserveLessonUseCase)
     factoryOf(::SyncTopicsUseCase)
     factoryOf(::SyncLessonsUseCase)
     factoryOf(::MarkLessonAsCompletedUseCase)
+    
+    // Clinical Cases (Tema 4)
     factoryOf(::ObserveClinicalCasesUseCase)
     factoryOf(::ObserveComplementaryResourcesUseCase)
     factoryOf(::SyncClinicalDataUseCase)
     
-    // Quiz Específicos
-    factoryOf(::GetQuizUseCase)
+    // Quiz
+    factoryOf(::ObserveQuizByTopicUseCase)
     factoryOf(::ObserveQuizByIdUseCase)
     factoryOf(::SubmitQuizUseCase)
     factoryOf(::SyncQuizUseCase)
@@ -52,6 +56,7 @@ val domainKoinModule = module {
     // Onboarding
     factoryOf(::CompleteOnboardingUseCaseImpl) { bind<CompleteOnboardingUseCase>() }
     
+    // App State & Session
     factoryOf(::ObserveAuthStateUseCase)
     factoryOf(::ObserveOnboardingCompleteUseCase)
     factoryOf(::ResolveAppEntryStateUseCase)

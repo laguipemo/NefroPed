@@ -2,6 +2,7 @@ package com.laguipemo.nefroped.designsystem.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
@@ -10,8 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.laguipemo.nefroped.designsystem.R
 
 @Composable
 fun ProfileSection(
@@ -22,17 +24,20 @@ fun ProfileSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = dimensionResource(R.dimen.space_m))
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            // Cambiado a OnSurface para legibilidad sobre el degradado
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+            modifier = Modifier.padding(
+                start = dimensionResource(R.dimen.space_s),
+                bottom = dimensionResource(R.dimen.space_s)
+            )
         )
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(dimensionResource(R.dimen.profile_section_corner_radius)),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
             )
@@ -56,16 +61,16 @@ fun ProfileOptionItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(16.dp),
+            .padding(dimensionResource(R.dimen.space_m)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = iconColor,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(dimensionResource(R.dimen.profile_option_icon_size))
         )
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.space_m)))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -85,7 +90,7 @@ fun ProfileOptionItem(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(dimensionResource(R.dimen.button_icon_size))
             )
         }
     }

@@ -7,10 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +17,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.features.profile.ProfileUiState
@@ -72,11 +68,11 @@ fun UserHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Default.CameraAlt,
-                        contentDescription = "Cambiar foto",
+                        contentDescription = null,
                         tint = Color.White.copy(alpha = 0.8f),
                         modifier = Modifier
-                            .padding(bottom = 8.dp)
-                            .size(20.dp)
+                            .padding(bottom = dimensionResource(R.dimen.space_s))
+                            .size(dimensionResource(R.dimen.button_icon_size))
                     )
                 }
             }
@@ -107,7 +103,10 @@ fun UserHeader(
             ) {
                 Text(
                     text = stringResource(R.string.profile_guest_mode),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(
+                        horizontal = dimensionResource(R.dimen.space_ms), 
+                        vertical = dimensionResource(R.dimen.space_xs)
+                    ),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
