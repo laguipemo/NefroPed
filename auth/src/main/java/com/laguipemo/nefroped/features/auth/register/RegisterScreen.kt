@@ -2,6 +2,7 @@ package com.laguipemo.nefroped.features.auth.register
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Person
@@ -12,9 +13,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
@@ -49,7 +52,7 @@ fun RegisterScreen(
                 )
             }
         },
-        containerColor = androidx.compose.ui.graphics.Color.Transparent
+        containerColor = Color.Transparent
     ) { padding ->
         Column(
             modifier = Modifier
@@ -59,20 +62,30 @@ fun RegisterScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.screen_vertical_padding)))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
 
             HeaderAuth(stringResource(R.string.auth_title_register))
 
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
 
-            RegisterForm(
-                uiState = uiState,
-                onEvent = viewModel::onEvent
-            )
+            // CAPA DE CONTRASTE para el formulario de registro
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(dimensionResource(R.dimen.quiz_card_corner_radius)),
+                color = Color.White.copy(alpha = 0.12f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+            ) {
+                Column(modifier = Modifier.padding(dimensionResource(R.dimen.space_m))) {
+                    RegisterForm(
+                        uiState = uiState,
+                        onEvent = viewModel::onEvent
+                    )
+                }
+            }
             
             if (uiState.isLoading) {
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                CircularProgressIndicator(color = Color.White)
             }
             
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
@@ -93,9 +106,9 @@ private fun RegisterForm(
         AuthTextField(
             value = uiState.fullName,
             onValueChange = { onEvent(RegisterUserEvent.FullNameChanged(it)) },
-            label = "Nombre completo",
+            label = stringResource(R.string.auth_full_name_label),
             isError = uiState.fullNameError != null,
-            supportingText = if (uiState.fullNameError is ValidationError.EmptyFullName) "El nombre es obligatorio" else null,
+            supportingText = if (uiState.fullNameError is ValidationError.EmptyFullName) stringResource(R.string.auth_error_full_name_required) else null,
             leadingIcon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = null) }
         )
 
@@ -143,7 +156,8 @@ private fun RegisterForm(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(dimensionResource(R.dimen.button_height)),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius))
+            shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text(
                 text = stringResource(R.string.auth_register_button),

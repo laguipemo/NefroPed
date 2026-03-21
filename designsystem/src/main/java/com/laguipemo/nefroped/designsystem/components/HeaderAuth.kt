@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -34,7 +35,7 @@ fun HeaderAuth(
         Text(
             text = name,
             style = MaterialTheme.typography.displayMedium.copy(
-                color = MaterialTheme.colorScheme.primary
+                color = Color.White // Cambiado a Blanco para contraste
             )
         )
 
@@ -47,7 +48,7 @@ fun HeaderAuth(
         Text(
             text = subtitle,
             style = MaterialTheme.typography.headlineSmall.copy(
-                color = MaterialTheme.colorScheme.primary
+                color = Color.White // Cambiado a Blanco para contraste
             )
         )
 

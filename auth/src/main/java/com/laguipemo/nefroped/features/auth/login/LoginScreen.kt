@@ -3,6 +3,7 @@ package com.laguipemo.nefroped.features.auth.login
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -12,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -20,11 +22,11 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -41,6 +43,7 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onRegister: () -> Unit,
     onRecoverPassword: () -> Unit = {},
+    onContinueWithGoogle: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -66,48 +69,65 @@ fun LoginScreen(
                 )
             }
         },
-        containerColor = androidx.compose.ui.graphics.Color.Transparent
+        containerColor = Color.Transparent
     ) { padding ->
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
-                .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(padding)
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
-                
-                HeaderAuth(stringResource(R.string.auth_title_login))
-                
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
+            val minHeight = maxHeight
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Column(
+                    modifier = Modifier.heightIn(min = minHeight),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
+                    
+                    HeaderAuth(stringResource(R.string.auth_title_login))
+                    
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
 
-                LoginForm(
-                    uiState = uiState,
-                    onEvent = viewModel::onEvent,
-                    onRecoverPassword = onRecoverPassword
-                )
-
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
-                
-                HorizontalDiv()
-                
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
-
-                SocialLoginSection(
-                    onContinueAsGuest = { viewModel.onEvent(LoginUserEvent.ContinueAsGuest) },
-                    onGoogleLogin = { 
-                        scope.launch { handleGoogleLogin(context, viewModel) } 
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(dimensionResource(R.dimen.quiz_card_corner_radius)),
+                        color = Color.White.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = dimensionResource(R.dimen.border_stroke_width), 
+                            color = Color.White.copy(alpha = 0.2f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(dimensionResource(R.dimen.space_m))) {
+                            LoginForm(
+                                uiState = uiState,
+                                onEvent = viewModel::onEvent,
+                                onRecoverPassword = onRecoverPassword
+                            )
+                        }
                     }
-                )
-            }
 
-            CreateAccountFooter(
-                onRegister = onRegister,
-                isLoading = uiState.isLoading
-            )
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
+                    HorizontalDiv()
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
+
+                    SocialLoginSection(
+                        onContinueAsGuest = { viewModel.onEvent(LoginUserEvent.ContinueAsGuest) },
+                        onGoogleLogin = { scope.launch { handleGoogleLogin(context, viewModel) } }
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    CreateAccountFooter(onRegister = onRegister, isLoading = uiState.isLoading)
+                    
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                }
+            }
         }
     }
 }
@@ -145,7 +165,25 @@ private fun LoginForm(
             onImeDone = { onEvent(LoginUserEvent.Submit) }
         )
 
-        RecoverPasswordLink(onRecoverPassword = onRecoverPassword)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            val recoverText = buildAnnotatedString {
+                append(stringResource(R.string.auth_forgot_password_question) + " ")
+                pushLink(
+                    LinkAnnotation.Clickable(
+                        tag = "recover_password",
+                        styles = TextLinkStyles(style = SpanStyle(
+                            color = Color.White, 
+                            fontWeight = FontWeight.Bold, 
+                            textDecoration = TextDecoration.Underline
+                        )),
+                        linkInteractionListener = { onRecoverPassword() }
+                    )
+                )
+                append(stringResource(R.string.auth_forgot_password_action))
+                pop()
+            }
+            Text(text = recoverText, style = MaterialTheme.typography.bodyMedium)
+        }
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_s)))
 
@@ -155,37 +193,16 @@ private fun LoginForm(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(dimensionResource(R.dimen.button_height)),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius))
+            shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text(text = stringResource(R.string.auth_login_button))
+            Text(text = stringResource(R.string.auth_login_button), fontWeight = FontWeight.Bold)
         }
     }
 }
 
 @Composable
-private fun RecoverPasswordLink(onRecoverPassword: () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-        val recoverText = buildAnnotatedString {
-            append(stringResource(R.string.auth_forgot_password_question) + " ")
-            pushLink(
-                LinkAnnotation.Clickable(
-                    tag = "recover_password",
-                    styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)),
-                    linkInteractionListener = { onRecoverPassword() }
-                )
-            )
-            append(stringResource(R.string.auth_forgot_password_action))
-            pop()
-        }
-        Text(text = recoverText, style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
-@Composable
-private fun SocialLoginSection(
-    onContinueAsGuest: () -> Unit,
-    onGoogleLogin: () -> Unit
-) {
+private fun SocialLoginSection(onContinueAsGuest: () -> Unit, onGoogleLogin: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_s))) {
         SocialMediaButton(
             onClick = onContinueAsGuest,
@@ -197,30 +214,35 @@ private fun SocialLoginSection(
             onClick = onGoogleLogin,
             text = stringResource(R.string.auth_continue_google),
             icon = R.drawable.ic_google,
-            color = colorResource(R.color.bg_btn_google)
+            color = Color.White
         )
     }
 }
 
 @Composable
 private fun CreateAccountFooter(onRegister: () -> Unit, isLoading: Boolean) {
-    Column(
-        modifier = Modifier.padding(bottom = dimensionResource(R.dimen.screen_vertical_padding)),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         val createAccount = buildAnnotatedString {
             append(stringResource(R.string.auth_no_account_question) + " ")
             pushLink(
                 LinkAnnotation.Clickable(
                     tag = "create_account",
-                    styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)),
+                    styles = TextLinkStyles(style = SpanStyle(
+                        color = MaterialTheme.colorScheme.primary, 
+                        fontWeight = FontWeight.ExtraBold, 
+                        textDecoration = TextDecoration.Underline
+                    )),
                     linkInteractionListener = { onRegister() }
                 )
             )
             append(stringResource(R.string.auth_register_action))
             pop()
         }
-        Text(text = createAccount, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = createAccount, 
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
         if (isLoading) {
             Spacer(Modifier.height(dimensionResource(R.dimen.space_s)))
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -229,21 +251,21 @@ private fun CreateAccountFooter(onRegister: () -> Unit, isLoading: Boolean) {
 }
 
 private suspend fun handleGoogleLogin(context: Context, viewModel: LoginViewModel) {
-    val credentialManager = CredentialManager.create(context)
+    val credentialManager = androidx.credentials.CredentialManager.create(context)
     val googleIdOption = GetGoogleIdOption.Builder()
         .setFilterByAuthorizedAccounts(false)
         .setServerClientId("439824105960-rto1l6vlrkp59kplrm243dlvamf1ek4v.apps.googleusercontent.com")
         .build()
-    val request = GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
+    val request = androidx.credentials.GetCredentialRequest.Builder().addCredentialOption(googleIdOption).build()
     try {
         val result = credentialManager.getCredential(context = context, request = request)
         handleCredential(result, viewModel)
     } catch (_: Exception) {}
 }
 
-private fun handleCredential(result: GetCredentialResponse, viewModel: LoginViewModel) {
+private fun handleCredential(result: androidx.credentials.GetCredentialResponse, viewModel: LoginViewModel) {
     val credential = result.credential
-    if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+    if (credential.type == "com.google.android.libraries.identity.googleid.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL") {
         try {
             val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
             viewModel.onEvent(LoginUserEvent.LoginWithGoogle(googleIdTokenCredential.idToken))

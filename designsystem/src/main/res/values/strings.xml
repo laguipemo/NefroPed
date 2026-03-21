@@ -9,6 +9,7 @@
     <string name="auth_title_recoverpassword">Restablecer contraseña</string>
     <string name="auth_title_reset_password">Nueva Contraseña</string>
 
+    <string name="auth_full_name_label">Nombre completo</string>
     <string name="auth_email_label">Correo electrónico</string>
     <string name="auth_password_label">Contraseña</string>
     <string name="auth_new_password_label">Nueva contraseña</string>
@@ -30,6 +31,7 @@
     <string name="auth_logo_content_description">Logo</string>
 
     <!-- Mensajes de validación -->
+    <string name="auth_error_full_name_required">El nombre es obligatorio</string>
     <string name="auth_error_email_required">Email es obligatorio</string>
     <string name="auth_error_email_invalid">Email no es válido</string>
     <string name="auth_error_password_required">Password es obligatorio</string>

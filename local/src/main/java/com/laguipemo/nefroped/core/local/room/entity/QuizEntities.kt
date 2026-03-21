@@ -1,9 +1,11 @@
 package com.laguipemo.nefroped.core.local.room.entity
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 
 @Entity(
     tableName = "quizzes",
@@ -41,7 +43,7 @@ data class QuestionEntity(
     val quizId: String,
     val text: String,
     val intro: String?,
-    val type: String, // TRUE_FALSE, ONE_CHOICE, MULTIPLE_CHOICE, MATCH_DEFINITION
+    val type: String,
     val optionsJson: String,
     val correctAnswerJson: String,
     val explanation: String?
@@ -65,4 +67,13 @@ data class QuizResultEntity(
     val correctAnswers: Int,
     val totalQuestions: Int,
     val completedAt: Long
+)
+
+data class QuizWithQuestions(
+    @Embedded val quiz: QuizEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "quizId"
+    )
+    val questions: List<QuestionEntity>
 )

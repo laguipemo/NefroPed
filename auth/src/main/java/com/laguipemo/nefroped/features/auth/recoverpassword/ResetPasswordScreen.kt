@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 import com.laguipemo.nefroped.designsystem.R
@@ -34,7 +35,7 @@ fun ResetPasswordScreen(
         viewModel.uiEffects.collect { effect ->
             when (effect) {
                 is ResetPasswordUiEffect.ShowError -> snackbarHostState.showSnackbar(effect.error.toMessage())
-                ResetPasswordUiEffect.ResetSuccess -> onResetSuccess()
+                ResetPasswordUiEffect.ResetPasswordSuccess -> onResetSuccess()
             }
         }
     }
@@ -59,20 +60,30 @@ fun ResetPasswordScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.screen_vertical_padding)))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.auth_header_padding_top)))
 
             HeaderAuth(stringResource(R.string.auth_title_reset_password))
 
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
 
-            ResetPasswordForm(
-                uiState = uiState,
-                onEvent = viewModel::onEvent
-            )
+            // CAPA DE CONTRASTE
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(dimensionResource(R.dimen.quiz_card_corner_radius)),
+                color = Color.White.copy(alpha = 0.15f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+            ) {
+                Column(modifier = Modifier.padding(dimensionResource(R.dimen.space_m))) {
+                    ResetPasswordForm(
+                        uiState = uiState,
+                        onEvent = viewModel::onEvent
+                    )
+                }
+            }
 
             if (uiState.isLoading) {
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                CircularProgressIndicator(color = Color.White)
             }
         }
     }
@@ -106,8 +117,8 @@ private fun ResetPasswordForm(
             label = stringResource(R.string.auth_confirm_password_label),
             isError = uiState.confirmPasswordError != null,
             supportingText = when (uiState.confirmPasswordError) {
-                ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
-                ValidationError.PasswordsDoNotMatch -> stringResource(R.string.auth_error_passwords_do_not_match)
+                is ValidationError.EmptyPassword -> stringResource(R.string.auth_error_password_required)
+                is ValidationError.PasswordsDoNotMatch -> stringResource(R.string.auth_error_passwords_do_not_match)
                 else -> null
             },
             onImeDone = { onEvent(ResetPasswordUserEvent.Submit) }
@@ -121,7 +132,8 @@ private fun ResetPasswordForm(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(dimensionResource(R.dimen.button_height)),
-            shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius))
+            shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text(
                 text = stringResource(R.string.auth_reset_password_button),
