@@ -1,7 +1,6 @@
 package com.laguipemo.nefroped.features.course.lessons.detail
 
 import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -37,7 +36,6 @@ fun LessonDetailScreen(
     val darkTheme = isSystemInDarkTheme()
     val scrollState = rememberScrollState()
 
-    // Manejo de efectos (Navegación)
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collectLatest { effect ->
             when (effect) {
@@ -46,10 +44,8 @@ fun LessonDetailScreen(
         }
     }
 
-    // Lógica para mostrar el botón solo al llegar al final
     val isAtBottom by remember {
         derivedStateOf {
-            // Si no hay scroll (contenido corto) o estamos cerca del final
             scrollState.value >= (scrollState.maxValue - 50)
         }
     }
@@ -84,8 +80,6 @@ fun LessonDetailScreen(
         floatingActionButton = {
             if (uiState is LessonDetailUiState.Content) {
                 val state = uiState as LessonDetailUiState.Content
-                
-                // El FAB solo aparece con animación si se llega al final y NO está completada
                 AnimatedVisibility(
                     visible = isAtBottom && !state.isCompleted,
                     enter = fadeIn() + scaleIn(),
@@ -125,12 +119,12 @@ fun LessonDetailScreen(
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            shape = RoundedCornerShape(24.dp),
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                                .padding(12.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
                             tonalElevation = 2.dp
                         ) {
-                            Column(modifier = Modifier.padding(20.dp)) {
+                            Column(modifier = Modifier.padding(16.dp)) {
                                 if (state.isMarkdownLoading) {
                                     LinearProgressIndicator(
                                         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -141,16 +135,18 @@ fun LessonDetailScreen(
                                 MarkdownText(
                                     markdown = state.markdownContent.replace("\\n", "\n"),
                                     modifier = Modifier.fillMaxWidth(),
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        lineHeight = 24.sp,
+                                    linkColor = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        lineHeight = 22.sp,
                                         color = MaterialTheme.colorScheme.onSurface
-                                    )
+                                    ),
+                                    isTextSelectable = true,
+                                    syntaxHighlightTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                         
-                        // Añadimos un Spacer al final para que el FAB no tape el texto
-                        Spacer(modifier = Modifier.height(120.dp))
+                        Spacer(modifier = Modifier.height(64.dp))
                     }
                 }
 

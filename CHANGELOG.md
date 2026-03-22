@@ -27,6 +27,16 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
+## [0.10.0] - 2026-03-22
+### Added
+- Adecuado viewmodel para que durante sincronización se descarga markdown y localmente se 
+  almacene como texto en Room.
+- MarkdownText ahora renderiza desde el texto almacenado en Room, evitando doble descarga.
+- Disminuye tamaño de letra en el renderizado de MarkdownText.
+### Refactor
+- Migrados los datos de github a supabase quedando esta última como única fuente de verdad
+  remota.
+
 ## [0.9.0] - 2026-03-21
 ### Refactor
 - Finaliza limpieza y refactorización de todas las features.
