@@ -93,6 +93,7 @@
 
     <!-- Quiz & Clinical Cases -->
     <string name="quiz_title">Autoevaluación</string>
+    <string name="quiz_unfinished_lessons">Lecciones incompletas</string>
     <string name="quiz_question_count">Pregunta %1$d de %2$d</string>
     <string name="quiz_submit">Finalizar Test</string>
     <string name="quiz_next">Siguiente Pregunta</string>

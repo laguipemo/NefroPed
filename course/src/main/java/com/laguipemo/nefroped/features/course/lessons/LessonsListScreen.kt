@@ -78,7 +78,7 @@ fun LessonsListScreen(
                 ExtendedFloatingActionButton(
                     onClick = { onQuizClick(topicId, "Autoevaluación") },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    contentColor = if (allCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.secondary.copy(alpha=0.7f),
                     shape = RoundedCornerShape(16.dp),
                     icon = { 
                         Icon(
@@ -88,7 +88,7 @@ fun LessonsListScreen(
                     },
                     text = { 
                         Text(
-                            text = if (allCompleted) stringResource(R.string.quiz_title) else "Autoevaluación",
+                            text = if (allCompleted) stringResource(R.string.quiz_title) else stringResource(R.string.quiz_unfinished_lessons),
                             style = MaterialTheme.typography.labelLarge
                         ) 
                     }
