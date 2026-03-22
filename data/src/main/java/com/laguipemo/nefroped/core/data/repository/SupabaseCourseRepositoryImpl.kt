@@ -89,7 +89,7 @@ class SupabaseCourseRepositoryImpl(
                     httpClient.get(dto.contentUrl).bodyAsText()
                 } catch (e: Exception) {
                     Log.e("CourseRepo", "Error downloading lesson markdown: ${dto.title}", e)
-                    "" // O podrías manejarlo de otra forma
+                    ""
                 }
                 
                 dto.toEntity(
@@ -225,7 +225,7 @@ internal fun TopicDto.toEntity(lessonsCount: Int, completedCount: Int, downloade
 
 internal fun TopicEntity.toDomain() = Topic(id = id, title = title, description = description, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, contentUrl = contentUrl, indexContent = indexContent, order = order, type = if (type == "clinical_cases") TopicType.CLINICAL_CASES else TopicType.LESSONS, conversationId = conversationId, lessonsCount = lessonsCount, completedLessonsCount = completedLessonsCount)
 internal fun LessonDto.toEntity(isCompleted: Boolean, downloadedContent: String) = LessonEntity(id = id, topicId = topicId, title = title, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, description = description, content = downloadedContent, videoUrl = videoUrl, audioUrl = audioUrl, pdfUrl = pdfUrl, order = order, isCompleted = isCompleted)
-internal fun LessonEntity.toDomain() = Lesson(id = id, topicId = topicId, title = title, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, description = description, contentUrl = content, videoUrl = videoUrl, audioUrl = audioUrl, pdfUrl = pdfUrl, order = order, isCompleted = isCompleted)
+internal fun LessonEntity.toDomain() = Lesson(id = id, topicId = topicId, title = title, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, description = description, content = content, videoUrl = videoUrl, audioUrl = audioUrl, pdfUrl = pdfUrl, order = order, isCompleted = isCompleted)
 internal fun QuizDto.toEntity() = QuizEntity(id = id, topicId = topicId, title = title, description = description)
 internal fun QuestionDto.toEntity() = QuestionEntity(id = id, quizId = quizId, text = text, intro = intro, type = type, optionsJson = options.toString(), correctAnswerJson = correctAnswer.toString(), explanation = explanation)
 internal fun ClinicalCaseDto.toEntity() = ClinicalCaseEntity(id = id, topicId = topicId, title = title, description = description, imageUrl = imageUrl, quizId = quizId)

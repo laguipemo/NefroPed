@@ -16,17 +16,16 @@ class LessonDetailViewModel(
     private val _uiEffect = MutableSharedFlow<LessonDetailUiEffect>()
     val uiEffect = _uiEffect.asSharedFlow()
 
-    // El estado ahora depende directamente del flujo de la base de datos
     val uiState: StateFlow<LessonDetailUiState> = observeLessonUseCase(lessonId)
         .map { lesson ->
             if (lesson == null) {
                 LessonDetailUiState.Error("Lección no encontrada")
             } else {
-                // 'contentUrl' ahora contiene el contenido Markdown descargado en la sincronización
+                // Ahora usamos 'content' que contiene el texto del Markdown descargado
                 LessonDetailUiState.Content(
                     lesson = lesson,
-                    markdownContent = lesson.contentUrl ?: "",
-                    isMarkdownLoading = false, // Ya no hay carga remota aquí
+                    markdownContent = lesson.content,
+                    isMarkdownLoading = false,
                     isCompleted = lesson.isCompleted
                 )
             }
