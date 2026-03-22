@@ -144,7 +144,7 @@ fun LessonDetailScreen(
                             }
                         }
                         
-                        Spacer(modifier = Modifier.height(100.dp))
+                        Spacer(modifier = Modifier.height(64.dp))
                     }
                 }
 
