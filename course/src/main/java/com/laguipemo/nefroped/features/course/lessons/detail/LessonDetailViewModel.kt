@@ -4,42 +4,32 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.laguipemo.nefroped.core.domain.usecase.course.ObserveLessonUseCase
 import com.laguipemo.nefroped.core.domain.usecase.course.MarkLessonAsCompletedUseCase
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class LessonDetailViewModel(
     private val lessonId: String,
     private val observeLessonUseCase: ObserveLessonUseCase,
-    private val markLessonAsCompletedUseCase: MarkLessonAsCompletedUseCase,
-    private val httpClient: HttpClient
+    private val markLessonAsCompletedUseCase: MarkLessonAsCompletedUseCase
 ) : ViewModel() {
 
-    private val _markdownContent = MutableStateFlow("")
-    private val _isMarkdownLoading = MutableStateFlow(false)
-    
     private val _uiEffect = MutableSharedFlow<LessonDetailUiEffect>()
     val uiEffect = _uiEffect.asSharedFlow()
 
+    // El estado ahora depende directamente del flujo de la base de datos
     val uiState: StateFlow<LessonDetailUiState> = observeLessonUseCase(lessonId)
-        .combine(_markdownContent) { lesson, markdown ->
+        .map { lesson ->
             if (lesson == null) {
                 LessonDetailUiState.Error("Lección no encontrada")
             } else {
+                // 'contentUrl' ahora contiene el contenido Markdown descargado en la sincronización
                 LessonDetailUiState.Content(
                     lesson = lesson,
-                    markdownContent = markdown,
-                    isMarkdownLoading = _isMarkdownLoading.value,
+                    markdownContent = lesson.contentUrl ?: "",
+                    isMarkdownLoading = false, // Ya no hay carga remota aquí
                     isCompleted = lesson.isCompleted
                 )
             }
-        }
-        .combine(_isMarkdownLoading) { state, loading ->
-            if (state is LessonDetailUiState.Content) {
-                state.copy(isMarkdownLoading = loading)
-            } else state
         }
         .catch { e ->
             emit(LessonDetailUiState.Error(e.message ?: "Error al cargar la lección"))
@@ -50,45 +40,11 @@ class LessonDetailViewModel(
             initialValue = LessonDetailUiState.Loading
         )
 
-    init {
-        loadMarkdown()
-    }
-
     fun markAsCompleted() {
         viewModelScope.launch {
             val success = markLessonAsCompletedUseCase(lessonId)
             if (success) {
                 _uiEffect.emit(LessonDetailUiEffect.NavigateBack)
-            }
-        }
-    }
-
-    private fun loadMarkdown() {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is LessonDetailUiState.Content) {
-                val url = currentState.lesson.contentUrl
-                if (url.isNotBlank()) {
-                    _isMarkdownLoading.value = true
-                    try {
-                        val response = httpClient.get(url)
-                        _markdownContent.value = response.bodyAsText()
-                    } catch (e: Exception) {
-                    } finally {
-                        _isMarkdownLoading.value = false
-                    }
-                }
-            } else {
-                observeLessonUseCase(lessonId).filterNotNull().firstOrNull()?.let { lesson ->
-                    _isMarkdownLoading.value = true
-                    try {
-                        val response = httpClient.get(lesson.contentUrl)
-                        _markdownContent.value = response.bodyAsText()
-                    } catch (e: Exception) {
-                    } finally {
-                        _isMarkdownLoading.value = false
-                    }
-                }
             }
         }
     }

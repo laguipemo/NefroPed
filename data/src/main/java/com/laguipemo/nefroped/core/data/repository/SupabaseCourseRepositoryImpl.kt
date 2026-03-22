@@ -8,6 +8,9 @@ import com.laguipemo.nefroped.core.local.room.entity.*
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerialName
@@ -17,7 +20,8 @@ import kotlinx.datetime.Instant
 
 class SupabaseCourseRepositoryImpl(
     private val supabase: SupabaseClient,
-    private val courseDao: CourseDao
+    private val courseDao: CourseDao,
+    private val httpClient: HttpClient
 ) : CourseRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -46,9 +50,25 @@ class SupabaseCourseRepositoryImpl(
             val userProgress = if (userId.isNotEmpty()) {
                 supabase.postgrest["user_progress"].select { filter { eq("user_id", userId) } }.decodeList<UserProgressDto>().map { it.lesson_id }.toSet()
             } else emptySet()
+            
             val entities = topicsDto.map { dto ->
                 val lessons = supabase.postgrest["lessons"].select { filter { eq("topic_id", dto.id) } }.decodeList<LessonDto>()
-                dto.toEntity(lessonsCount = lessons.size, completedCount = lessons.count { it.id in userProgress })
+                
+                // Descargamos el contenido Markdown si existe la URL
+                val indexContent = dto.contentUrl?.let { url ->
+                    try {
+                        httpClient.get(url).bodyAsText()
+                    } catch (e: Exception) {
+                        Log.e("CourseRepo", "Error downloading topic markdown: ${dto.title}", e)
+                        null
+                    }
+                }
+                
+                dto.toEntity(
+                    lessonsCount = lessons.size, 
+                    completedCount = lessons.count { it.id in userProgress },
+                    downloadedIndexContent = indexContent
+                )
             }
             courseDao.insertTopics(entities)
             Result.success(Unit)
@@ -62,7 +82,23 @@ class SupabaseCourseRepositoryImpl(
             val userProgress = if (userId.isNotEmpty()) {
                 supabase.postgrest["user_progress"].select { filter { eq("user_id", userId) } }.decodeList<UserProgressDto>().map { it.lesson_id }.toSet()
             } else emptySet()
-            courseDao.insertLessons(lessonsDto.map { it.toEntity(isCompleted = it.id in userProgress) })
+            
+            val entities = lessonsDto.map { dto ->
+                // Descargamos el contenido Markdown de la lección
+                val contentText = try {
+                    httpClient.get(dto.contentUrl).bodyAsText()
+                } catch (e: Exception) {
+                    Log.e("CourseRepo", "Error downloading lesson markdown: ${dto.title}", e)
+                    "" // O podrías manejarlo de otra forma
+                }
+                
+                dto.toEntity(
+                    isCompleted = dto.id in userProgress,
+                    downloadedContent = contentText
+                )
+            }
+            
+            courseDao.insertLessons(entities)
             courseDao.refreshTopicProgress(topicId)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -139,25 +175,56 @@ class SupabaseCourseRepositoryImpl(
 }
 
 @Serializable
-internal data class TopicDto(val id: String, val title: String, val description: String, @SerialName("image_url") val imageUrl: String? = null, @SerialName("image_placeholder") val imagePlaceholder: String? = null, @SerialName("content_url") val contentUrl: String? = null, val content: String? = null, val order: Int, val type: String? = "lessons", @SerialName("conversation_id") val conversationId: String? = null)
+internal data class TopicDto(
+    val id: String, 
+    val title: String, 
+    val description: String, 
+    @SerialName("image_url") val imageUrl: String? = null, 
+    @SerialName("image_placeholder") val imagePlaceholder: String? = null, 
+    @SerialName("content_url") val contentUrl: String? = null, 
+    val order: Int, 
+    val type: String? = "lessons", 
+    @SerialName("conversation_id") val conversationId: String? = null
+)
+
 @Serializable
 internal data class LessonDto(val id: String, @SerialName("topic_id") val topicId: String, val title: String, @SerialName("image_url") val imageUrl: String? = null, @SerialName("image_placeholder") val imagePlaceholder: String? = null, val description: String? = null, @SerialName("content_url") val contentUrl: String, @SerialName("video_url") val videoUrl: String? = null, @SerialName("audio_url") val audioUrl: String? = null, @SerialName("pdf_url") val pdfUrl: String? = null, val order: Int)
+
 @Serializable
 internal data class QuizDto(val id: String, @SerialName("topic_id") val topicId: String, val title: String, val description: String? = null)
+
 @Serializable
 internal data class QuestionDto(val id: String, @SerialName("quiz_id") val quizId: String, val text: String, val type: String, val options: JsonElement, @SerialName("correct_answer") val correctAnswer: JsonElement, val explanation: String? = null, val intro: String? = null)
+
 @Serializable
 internal data class QuizResultDto( @SerialName("user_id") val userId: String, @SerialName("quiz_id") val quizId: String, val score: Float, @SerialName("correct_answers") val correctAnswers: Int, @SerialName("total_questions") val totalQuestions: Int, @SerialName("completed_at") val completedAt: String)
+
 @Serializable
 internal data class ClinicalCaseDto(val id: String, @SerialName("topic_id") val topicId: String, val title: String, val description: String, @SerialName("image_url") val imageUrl: String? = null, @SerialName("quiz_id") val quizId: String? = null)
+
 @Serializable
 internal data class ComplementaryResourceDto(val id: String, @SerialName("topic_id") val topicId: String, val title: String, val url: String)
+
 @Serializable
 internal data class UserProgressDto(val user_id: String, val lesson_id: String)
 
-internal fun TopicDto.toEntity(lessonsCount: Int, completedCount: Int) = TopicEntity(id = id, title = title, description = description, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, contentUrl = contentUrl, indexContent = content, order = order, type = type ?: "lessons", conversationId = conversationId, lessonsCount = lessonsCount, completedLessonsCount = completedCount)
+internal fun TopicDto.toEntity(lessonsCount: Int, completedCount: Int, downloadedIndexContent: String?) = TopicEntity(
+    id = id, 
+    title = title, 
+    description = description, 
+    imageUrl = imageUrl, 
+    imagePlaceholder = imagePlaceholder, 
+    contentUrl = contentUrl, 
+    indexContent = downloadedIndexContent, 
+    order = order, 
+    type = type ?: "lessons", 
+    conversationId = conversationId, 
+    lessonsCount = lessonsCount, 
+    completedLessonsCount = completedCount
+)
+
 internal fun TopicEntity.toDomain() = Topic(id = id, title = title, description = description, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, contentUrl = contentUrl, indexContent = indexContent, order = order, type = if (type == "clinical_cases") TopicType.CLINICAL_CASES else TopicType.LESSONS, conversationId = conversationId, lessonsCount = lessonsCount, completedLessonsCount = completedLessonsCount)
-internal fun LessonDto.toEntity(isCompleted: Boolean) = LessonEntity(id = id, topicId = topicId, title = title, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, description = description, content = contentUrl, videoUrl = videoUrl, audioUrl = audioUrl, pdfUrl = pdfUrl, order = order, isCompleted = isCompleted)
+internal fun LessonDto.toEntity(isCompleted: Boolean, downloadedContent: String) = LessonEntity(id = id, topicId = topicId, title = title, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, description = description, content = downloadedContent, videoUrl = videoUrl, audioUrl = audioUrl, pdfUrl = pdfUrl, order = order, isCompleted = isCompleted)
 internal fun LessonEntity.toDomain() = Lesson(id = id, topicId = topicId, title = title, imageUrl = imageUrl, imagePlaceholder = imagePlaceholder, description = description, contentUrl = content, videoUrl = videoUrl, audioUrl = audioUrl, pdfUrl = pdfUrl, order = order, isCompleted = isCompleted)
 internal fun QuizDto.toEntity() = QuizEntity(id = id, topicId = topicId, title = title, description = description)
 internal fun QuestionDto.toEntity() = QuestionEntity(id = id, quizId = quizId, text = text, intro = intro, type = type, optionsJson = options.toString(), correctAnswerJson = correctAnswer.toString(), explanation = explanation)
