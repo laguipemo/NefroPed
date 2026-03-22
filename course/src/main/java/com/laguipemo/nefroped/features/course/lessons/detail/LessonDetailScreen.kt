@@ -135,11 +135,13 @@ fun LessonDetailScreen(
                                 MarkdownText(
                                     markdown = state.markdownContent.replace("\\n", "\n"),
                                     modifier = Modifier.fillMaxWidth(),
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        lineHeight = 24.sp,
+                                    linkColor = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        lineHeight = 22.sp,
                                         color = MaterialTheme.colorScheme.onSurface
                                     ),
-                                    isTextSelectable = true
+                                    isTextSelectable = true,
+                                    syntaxHighlightTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
