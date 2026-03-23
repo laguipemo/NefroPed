@@ -18,7 +18,7 @@ sealed interface AuthenticatedRoute {
     data class Quiz(
         val id: String, 
         val isTopicId: Boolean = true,
-        val title: String? = null // Nuevo campo para el título inmediato
+        val title: String? = null
     ) : AuthenticatedRoute
 
     @Serializable
@@ -28,7 +28,10 @@ sealed interface AuthenticatedRoute {
     data object Profile : AuthenticatedRoute
 
     @Serializable
-    data class Chat(val conversationId: String) : AuthenticatedRoute
+    data class Chat(
+        val conversationId: String,
+        val topicTitle: String? = null // Para mostrar "Chat: Glomerulopatias"
+    ) : AuthenticatedRoute
 
     @Serializable
     data object ResetPassword : AuthenticatedRoute

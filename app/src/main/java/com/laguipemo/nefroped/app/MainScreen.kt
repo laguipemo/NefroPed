@@ -19,7 +19,9 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.laguipemo.nefroped.navigation.AuthenticatedNavGraph
+import com.laguipemo.nefroped.navigation.AuthenticatedRoute
 import com.laguipemo.nefroped.navigation.bottomNavItems
 
 @Composable
@@ -29,7 +31,6 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     
-    // Detectamos si el teclado está abierto para ocultar la barra de navegación
     val isKeyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
     val backgroundGradient = Brush.verticalGradient(
@@ -48,7 +49,6 @@ fun MainScreen(
             contentColor = MaterialTheme.colorScheme.onBackground,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
-                // Ocultamos la barra con una pequeña animación cuando sale el teclado
                 AnimatedVisibility(
                     visible = !isKeyboardOpen,
                     enter = expandVertically(),
@@ -60,8 +60,14 @@ fun MainScreen(
                         windowInsets = WindowInsets.navigationBars
                     ) {
                         bottomNavItems.forEach { item ->
-                            val selected = currentDestination?.hierarchy?.any {
-                                it.hasRoute(item.route::class)
+                            // Selección precisa: solo "Consultas" se marca si el ID es "general"
+                            val selected = currentDestination?.hierarchy?.any { dest ->
+                                if (dest.hasRoute<AuthenticatedRoute.Chat>()) {
+                                    val route = navBackStackEntry?.toRoute<AuthenticatedRoute.Chat>()
+                                    item.route is AuthenticatedRoute.Chat && route?.conversationId == "general"
+                                } else {
+                                    dest.hasRoute(item.route::class)
+                                }
                             } == true
 
                             NavigationBarItem(
@@ -88,12 +94,13 @@ fun MainScreen(
                                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 onClick = {
+                                    // Al cambiar de pestaña, forzamos la vuelta a la raíz de esa pestaña
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                                            saveState = false // NO guardamos estado para evitar el "secuestro"
                                         }
                                         launchSingleTop = true
-                                        restoreState = true
+                                        restoreState = false // NO restauramos estado de pantallas secundarias
                                     }
                                 }
                             )
