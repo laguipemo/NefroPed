@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +55,13 @@ fun ChatScreen(
         (uiState as? ChatUiState.Active)?.messages?.asReversed() ?: emptyList()
     }
 
+    // Efecto para scroll automático al recibir o enviar mensajes
+    LaunchedEffect(reversedMessages.size) {
+        if (reversedMessages.isNotEmpty()) {
+            listState.animateScrollToItem(0)
+        }
+    }
+
     val showScrollToBottom by remember {
         derivedStateOf { listState.canScrollBackward }
     }
@@ -70,18 +78,19 @@ fun ChatScreen(
             CenterAlignedTopAppBar(
                 title = { 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (viewModel.topicTitle != null) {
+                        if (viewModel.conversationId != "general" && viewModel.topicTitle != null) {
                             Text(
-                                text = "Chat de Tema",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = Color.White.copy(alpha = 0.7f)
+                                text = "Consulta sobre:",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.8f)
                             )
                             Text(
                                 text = viewModel.topicTitle,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         } else {
                             Text(
@@ -93,7 +102,7 @@ fun ChatScreen(
                     }
                 },
                 navigationIcon = {
-                    if (onBackClick != null) {
+                    if (viewModel.conversationId != "general" && onBackClick != null) {
                         IconButton(onClick = onBackClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
