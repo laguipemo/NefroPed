@@ -54,7 +54,6 @@ class SupabaseCourseRepositoryImpl(
             val entities = topicsDto.map { dto ->
                 val lessons = supabase.postgrest["lessons"].select { filter { eq("topic_id", dto.id) } }.decodeList<LessonDto>()
                 
-                // Descargamos el contenido Markdown si existe la URL
                 val indexContent = dto.contentUrl?.let { url ->
                     try {
                         httpClient.get(url).bodyAsText()
@@ -84,7 +83,6 @@ class SupabaseCourseRepositoryImpl(
             } else emptySet()
             
             val entities = lessonsDto.map { dto ->
-                // Descargamos el contenido Markdown de la lección
                 val contentText = try {
                     httpClient.get(dto.contentUrl).bodyAsText()
                 } catch (e: Exception) {
@@ -234,20 +232,48 @@ internal fun ComplementaryResourceDto.toEntity() = ComplementaryResourceEntity(i
 internal fun ComplementaryResourceEntity.toDomain() = ComplementaryResource(id = id, topicId = topicId, title = title, url = url)
 internal fun QuizResultDto.toEntity(localTimestamp: Long) = QuizResultEntity(quizId = quizId, score = score, correctAnswers = correctAnswers, totalQuestions = totalQuestions, completedAt = localTimestamp)
 internal fun QuizWithQuestions.toDomain() = Quiz(id = quiz.id, topicId = quiz.topicId, title = quiz.title, description = quiz.description, questions = questions.map { it.toDomain() })
+
 internal fun QuestionEntity.toDomain(): Question {
-    val qType = QuestionType.valueOf(type.uppercase()); val optionsElem = Json.parseToJsonElement(optionsJson); val answerElem = Json.parseToJsonElement(correctAnswerJson)
+    val qType = try { QuestionType.valueOf(type.uppercase()) } catch(e: Exception) { QuestionType.ONE_CHOICE }
+    val optionsElem = Json.parseToJsonElement(optionsJson)
+    val answerElem = Json.parseToJsonElement(correctAnswerJson)
+    
     val domainOptions = when (qType) {
         QuestionType.MATCH_DEFINITION -> {
             val obj = optionsElem.jsonObject
-            QuestionOptions.Match(terms = obj["terms"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList(), definitions = obj["definitions"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList())
+            QuestionOptions.Match(
+                terms = obj["terms"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList(),
+                definitions = obj["definitions"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
+            )
         }
         else -> QuestionOptions.Simple(optionsElem.jsonArray.map { it.jsonPrimitive.content })
     }
+    
+    // Parseo robusto de respuestas correctas
     val domainAnswer = when (qType) {
-        QuestionType.TRUE_FALSE, QuestionType.ONE_CHOICE -> QuestionAnswer.Single(answerElem.jsonPrimitive.int)
-        QuestionType.MULTIPLE_CHOICE -> QuestionAnswer.Multiple(answerElem.jsonArray.map { it.jsonPrimitive.int })
-        QuestionType.MATCH_DEFINITION -> QuestionAnswer.Match(answerElem.jsonObject.map { it.key.toInt() to it.value.jsonPrimitive.int }.toMap())
+        QuestionType.TRUE_FALSE, QuestionType.ONE_CHOICE -> {
+            val idx = try { answerElem.jsonPrimitive.int } catch(e: Exception) { answerElem.jsonPrimitive.content.toIntOrNull() ?: 0 }
+            QuestionAnswer.Single(idx)
+        }
+        QuestionType.MULTIPLE_CHOICE -> {
+            val indices = try { 
+                answerElem.jsonArray.map { it.jsonPrimitive.int } 
+            } catch(e: Exception) { 
+                answerElem.jsonArray.mapNotNull { it.jsonPrimitive.content.toIntOrNull() } 
+            }
+            QuestionAnswer.Multiple(indices)
+        }
+        QuestionType.MATCH_DEFINITION -> {
+            val mapping = answerElem.jsonObject.map { (key, value) ->
+                val termIdx = key.toIntOrNull() ?: 0
+                val defIdx = try { value.jsonPrimitive.int } catch(e: Exception) { value.jsonPrimitive.content.toIntOrNull() ?: 0 }
+                termIdx to defIdx
+            }.toMap()
+            QuestionAnswer.Match(mapping)
+        }
     }
+    
     return Question(id = id, quizId = quizId, text = text, intro = intro, type = qType, options = domainOptions, correctAnswer = domainAnswer, explanation = explanation)
 }
+
 internal fun QuizResultEntity.toDomain() = QuizResult(quizId = quizId, score = score, correctAnswers = correctAnswers, totalQuestions = totalQuestions, completedAt = completedAt)
