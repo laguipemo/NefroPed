@@ -161,12 +161,28 @@ class SupabaseCourseRepositoryImpl(
         val userId = supabase.auth.currentUserOrNull()?.id ?: return false
         return try {
             val instant = Instant.fromEpochMilliseconds(result.completedAt)
-            val dto = QuizResultDto(userId = userId, quizId = result.quizId, score = result.score, correctAnswers = result.correctAnswers, totalQuestions = result.totalQuestions, completedAt = instant.toString())
+            // Aseguramos que se envía el objeto a Supabase mediante PostgREST
+            val dto = QuizResultDto(
+                userId = userId, 
+                quizId = result.quizId, 
+                score = result.score, 
+                correctAnswers = result.correctAnswers, 
+                totalQuestions = result.totalQuestions, 
+                completedAt = instant.toString()
+            )
             supabase.postgrest["quiz_results"].upsert(dto)
-            courseDao.insertQuizResult(QuizResultEntity(quizId = dto.quizId, score = dto.score, correctAnswers = dto.correctAnswers, totalQuestions = dto.totalQuestions, completedAt = result.completedAt))
+            
+            // También guardamos localmente en Room para persistencia inmediata
+            courseDao.insertQuizResult(QuizResultEntity(
+                quizId = dto.quizId, 
+                score = dto.score, 
+                correctAnswers = dto.correctAnswers, 
+                totalQuestions = dto.totalQuestions, 
+                completedAt = result.completedAt
+            ))
             true
         } catch (e: Exception) {
-            Log.e("CourseRepo", "Error saving quiz result", e)
+            Log.e("CourseRepo", "Error saving quiz result to Supabase", e)
             false
         }
     }
@@ -195,7 +211,14 @@ internal data class QuizDto(val id: String, @SerialName("topic_id") val topicId:
 internal data class QuestionDto(val id: String, @SerialName("quiz_id") val quizId: String, val text: String, val type: String, val options: JsonElement, @SerialName("correct_answer") val correctAnswer: JsonElement, val explanation: String? = null, val intro: String? = null)
 
 @Serializable
-internal data class QuizResultDto( @SerialName("user_id") val userId: String, @SerialName("quiz_id") val quizId: String, val score: Float, @SerialName("correct_answers") val correctAnswers: Int, @SerialName("total_questions") val totalQuestions: Int, @SerialName("completed_at") val completedAt: String)
+internal data class QuizResultDto(
+    @SerialName("user_id") val userId: String, 
+    @SerialName("quiz_id") val quizId: String, 
+    val score: Float, 
+    @SerialName("correct_answers") val correctAnswers: Int, 
+    @SerialName("total_questions") val totalQuestions: Int, 
+    @SerialName("completed_at") val completedAt: String
+)
 
 @Serializable
 internal data class ClinicalCaseDto(val id: String, @SerialName("topic_id") val topicId: String, val title: String, val description: String, @SerialName("image_url") val imageUrl: String? = null, @SerialName("quiz_id") val quizId: String? = null)
@@ -249,7 +272,6 @@ internal fun QuestionEntity.toDomain(): Question {
         else -> QuestionOptions.Simple(optionsElem.jsonArray.map { it.jsonPrimitive.content })
     }
     
-    // Parseo robusto de respuestas correctas
     val domainAnswer = when (qType) {
         QuestionType.TRUE_FALSE, QuestionType.ONE_CHOICE -> {
             val idx = try { answerElem.jsonPrimitive.int } catch(e: Exception) { answerElem.jsonPrimitive.content.toIntOrNull() ?: 0 }
