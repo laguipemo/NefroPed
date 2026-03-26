@@ -27,6 +27,11 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
+## [1.0.1] - 2026-03-22
+### Fixed
+- Restablece la condición de que la autoevalución solo puede lanzarse si se han compleatado
+  todas las lecciones del tema.
+
 ## [1.0.0] - 2026-03-26
 ### Added
 - Mejora la feature Profile, añadiendo el progreso del curso (lecciones completadas) y la
