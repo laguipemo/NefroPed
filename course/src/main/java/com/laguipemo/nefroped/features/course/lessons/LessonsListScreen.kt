@@ -76,7 +76,7 @@ fun LessonsListScreen(
                 val allCompleted = lessons.isNotEmpty() && lessons.all { it.isCompleted }
                 
                 ExtendedFloatingActionButton(
-                    onClick = { onQuizClick(topicId, "Autoevaluación") },
+                    onClick = { if(allCompleted) onQuizClick(topicId, "Autoevaluación") },
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = if (allCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.secondary.copy(alpha=0.7f),
                     shape = RoundedCornerShape(16.dp),
