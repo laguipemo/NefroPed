@@ -40,6 +40,7 @@ val domainKoinModule = module {
     factoryOf(::SyncTopicsUseCase)
     factoryOf(::SyncLessonsUseCase)
     factoryOf(::MarkLessonAsCompletedUseCase)
+    factoryOf(::GetCourseProgressUseCase)
     
     // Clinical Cases (Tema 4)
     factoryOf(::ObserveClinicalCasesUseCase)

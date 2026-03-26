@@ -11,14 +11,10 @@ import com.laguipemo.nefroped.core.domain.usecase.login.LoginWithGoogleUseCase
 import com.laguipemo.nefroped.core.domain.usecase.logout.LogoutUseCase
 import com.laguipemo.nefroped.core.domain.usecase.session.ObserveSessionStateUseCase
 import com.laguipemo.nefroped.core.domain.usecase.profile.UpdateAvatarUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.GetCourseProgressUseCase
 import com.laguipemo.nefroped.core.domain.util.ValidationConstants.MINIMAL_PASS_LENGTH
 import com.laguipemo.nefroped.core.domain.util.ValidationConstants.isValidEmail
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class ProfileViewModel(
@@ -27,6 +23,7 @@ class ProfileViewModel(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
     private val linkEmailPasswordUseCase: LinkEmailPasswordUseCase,
     private val updateAvatarUseCase: UpdateAvatarUseCase,
+    private val getCourseProgressUseCase: GetCourseProgressUseCase,
     getAppVersionUseCase: GetAppVersionUseCase
 ) : ViewModel() {
 
@@ -41,6 +38,7 @@ class ProfileViewModel(
     val uiState: StateFlow<ProfileUiState> =
         combine(
             observeSessionState(),
+            getCourseProgressUseCase(),
             _isLoading,
             _formEmail,
             _formPassword,
@@ -49,23 +47,28 @@ class ProfileViewModel(
             _showBottomSheet
         ) { args ->
             val sessionState = args[0] as SessionState
-            val isLoading = args[1] as Boolean
-            val formEmail = args[2] as String
-            val formPassword = args[3] as String
-            val emailError = args[4] as ValidationError?
-            val passwordError = args[5] as ValidationError?
-            val showBottomSheet = args[6] as Boolean
+            val progress = args[1] as Pair<Int, Int>
+            val isLoading = args[2] as Boolean
+            val formEmail = args[3] as String
+            val formPassword = args[4] as String
+            val emailError = args[5] as ValidationError?
+            val passwordError = args[6] as ValidationError?
+            val showBottomSheet = args[7] as Boolean
 
             when (sessionState) {
                 SessionState.Initializing -> ProfileUiState.Loading
                 is SessionState.User -> {
                     val name = sessionState.user.displayName ?: sessionState.user.email?.substringBefore("@") ?: "Usuario"
+                    val (completed, total) = progress
                     ProfileUiState.Content(
                         userDisplayName = name,
                         userEmail = sessionState.user.email ?: "",
                         avatarUrl = sessionState.user.avatarUrl,
                         isGuest = sessionState.isAnonymous,
                         isLoading = isLoading,
+                        completedLessons = completed,
+                        totalLessons = total,
+                        overallProgress = if (total > 0) completed.toFloat() / total else 0f,
                         formEmail = formEmail,
                         formPassword = formPassword,
                         emailError = emailError,
@@ -103,7 +106,6 @@ class ProfileViewModel(
     fun onShowBottomSheet(show: Boolean) {
         _showBottomSheet.update { show }
         if (!show) {
-            // Reset form when closing
             _formEmail.update { "" }
             _formPassword.update { "" }
             _emailError.update { null }
@@ -118,10 +120,7 @@ class ProfileViewModel(
                 is NefroResult.Success -> {
                     onShowBottomSheet(false)
                 }
-
-                is NefroResult.Error -> {
-                    // Handle error
-                }
+                is NefroResult.Error -> {}
             }
             _isLoading.update { false }
         }
@@ -146,10 +145,7 @@ class ProfileViewModel(
                 is NefroResult.Success -> {
                     onShowBottomSheet(false)
                 }
-
-                is NefroResult.Error -> {
-                    // Handle error
-                }
+                is NefroResult.Error -> {}
             }
             _isLoading.update { false }
         }
@@ -159,12 +155,8 @@ class ProfileViewModel(
         viewModelScope.launch {
             _isLoading.update { true }
             when (val result = updateAvatarUseCase(byteArray, fileName)) {
-                is NefroResult.Success -> {
-                    // The avatarUrl in User object will update via observeSessionState
-                }
-                is NefroResult.Error -> {
-                    // Handle error
-                }
+                is NefroResult.Success -> {}
+                is NefroResult.Error -> {}
             }
             _isLoading.update { false }
         }
@@ -182,8 +174,6 @@ class ProfileViewModel(
             password.isBlank() -> ValidationError.EmptyPassword
             password.length < MINIMAL_PASS_LENGTH ->
                 ValidationError.PasswordTooShort(MINIMAL_PASS_LENGTH)
-
             else -> null
         }
-
 }

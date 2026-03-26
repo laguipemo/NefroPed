@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
@@ -23,9 +24,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.*
+import com.laguipemo.nefroped.features.profile.components.CourseProgressCard
 import com.laguipemo.nefroped.features.profile.components.LinkAccountSheetContent
 import com.laguipemo.nefroped.features.profile.components.UserHeader
 import kotlinx.coroutines.launch
@@ -95,6 +98,15 @@ fun ProfileScreen(
                         }
                     )
 
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+
+                    // NUEVA: Tarjeta de Progreso
+                    CourseProgressCard(
+                        completedLessons = state.completedLessons,
+                        totalLessons = state.totalLessons,
+                        progress = state.overallProgress
+                    )
+
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 
                     ProfileSection(title = stringResource(R.string.profile_section_account)) {
@@ -160,6 +172,43 @@ fun ProfileScreen(
                 }
             }
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
+        }
+    }
+}
+
+@Composable
+private fun ProfileSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
+    ) {
+        // Título de sección con fondo traslúcido para legibilidad
+        Surface(
+            color = Color.White.copy(alpha = 0.15f),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            Text(
+                text = title.uppercase(),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+            )
+        }
+        
+        ElevatedCard(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(content = content)
         }
     }
 }
