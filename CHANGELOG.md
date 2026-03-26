@@ -31,7 +31,8 @@ Cada versión debería:
 ### Fixed
 - Mejora aspecto del botón para lanzar autoevaluación.
 - Centra el nombre completo y el email del usuario en la pantalla Profile
-
+- Arregla y da una experiencia visual profesional a la ModalBottomSheet lanzada para vincular
+  cuenta invitado en Profile
 
 ## [1.0.1] - 2026-03-26
 ### Fixed
