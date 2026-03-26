@@ -4,31 +4,42 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.laguipemo.nefroped.core.domain.usecase.course.ObserveLessonUseCase
 import com.laguipemo.nefroped.core.domain.usecase.course.MarkLessonAsCompletedUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.SyncLessonsUseCase
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class LessonDetailViewModel(
     private val lessonId: String,
     private val observeLessonUseCase: ObserveLessonUseCase,
-    private val markLessonAsCompletedUseCase: MarkLessonAsCompletedUseCase
+    private val markLessonAsCompletedUseCase: MarkLessonAsCompletedUseCase,
+    private val syncLessonsUseCase: SyncLessonsUseCase
 ) : ViewModel() {
 
+    private val _isSyncing = MutableStateFlow(false)
     private val _uiEffect = MutableSharedFlow<LessonDetailUiEffect>()
     val uiEffect = _uiEffect.asSharedFlow()
 
-    // El estado ahora depende directamente del flujo de la base de datos
     val uiState: StateFlow<LessonDetailUiState> = observeLessonUseCase(lessonId)
-        .map { lesson ->
-            if (lesson == null) {
-                LessonDetailUiState.Error("Lección no encontrada")
-            } else {
-                // 'contentUrl' ahora contiene el contenido Markdown descargado en la sincronización
-                LessonDetailUiState.Content(
-                    lesson = lesson,
-                    markdownContent = lesson.contentUrl ?: "",
-                    isMarkdownLoading = false, // Ya no hay carga remota aquí
-                    isCompleted = lesson.isCompleted
-                )
+        .combine(_isSyncing) { lesson, syncing ->
+            when {
+                lesson == null -> LessonDetailUiState.Error("Lección no encontrada")
+                
+                // Si el contenido está vacío y no estamos sincronizando, disparamos la carga
+                lesson.content.isBlank() && !syncing -> {
+                    triggerEmergencySync(lesson.topicId)
+                    LessonDetailUiState.Loading
+                }
+                
+                syncing -> LessonDetailUiState.Loading
+                
+                else -> {
+                    LessonDetailUiState.Content(
+                        lesson = lesson,
+                        markdownContent = lesson.content,
+                        isMarkdownLoading = false,
+                        isCompleted = lesson.isCompleted
+                    )
+                }
             }
         }
         .catch { e ->
@@ -39,6 +50,14 @@ class LessonDetailViewModel(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = LessonDetailUiState.Loading
         )
+
+    private fun triggerEmergencySync(topicId: String) {
+        viewModelScope.launch {
+            _isSyncing.value = true
+            syncLessonsUseCase(topicId)
+            _isSyncing.value = false
+        }
+    }
 
     fun markAsCompleted() {
         viewModelScope.launch {

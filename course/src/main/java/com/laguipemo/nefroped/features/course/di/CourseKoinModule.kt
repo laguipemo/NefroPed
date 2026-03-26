@@ -17,6 +17,7 @@ val courseKoinModule = module {
         LessonDetailViewModel(
             lessonId,
             get(),
+            get(),
             get()
         )
     }

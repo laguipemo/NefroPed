@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +42,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ChatScreen(
     modifier: Modifier = Modifier,
+    onBackClick: (() -> Unit)? = null,
     viewModel: ChatViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -47,18 +50,22 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     val darkTheme = isSystemInDarkTheme()
     val scope = rememberCoroutineScope()
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
 
     val reversedMessages = remember(uiState) {
         (uiState as? ChatUiState.Active)?.messages?.asReversed() ?: emptyList()
+    }
+
+    // Efecto para scroll automático al recibir o enviar mensajes
+    LaunchedEffect(reversedMessages.size) {
+        if (reversedMessages.isNotEmpty()) {
+            listState.animateScrollToItem(0)
+        }
     }
 
     val showScrollToBottom by remember {
         derivedStateOf { listState.canScrollBackward }
     }
 
-    // El chat ahora hereda el degradado de MainScreen, por lo que el fondo es claro abajo
     SystemBarsController(
         useStatusDarkIcons = false,
         useNavigationDarkIcons = !darkTheme
@@ -69,7 +76,42 @@ fun ChatScreen(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.chat_title), fontWeight = FontWeight.Bold, color = Color.White) },
+                title = { 
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (viewModel.conversationId != "general" && viewModel.topicTitle != null) {
+                            Text(
+                                text = "Consulta sobre:",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                            Text(
+                                text = viewModel.topicTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.chat_title),
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                },
+                navigationIcon = {
+                    if (viewModel.conversationId != "general" && onBackClick != null) {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
                     titleContentColor = Color.White
@@ -113,7 +155,7 @@ fun ChatScreen(
                                     top = dimensionResource(R.dimen.space_m),
                                     bottom = dimensionResource(R.dimen.space_s)
                                 ),
-                                verticalArrangement = Arrangement.Top
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 itemsIndexed(reversedMessages, key = { _, m -> m.clientId }) { index, message ->
                                     val showHeader = index == reversedMessages.size - 1 || 
@@ -179,11 +221,11 @@ fun ChatScreen(
                                             .padding(end = dimensionResource(R.dimen.space_xs))
                                             .size(dimensionResource(R.dimen.space_xl))
                                             .background(
-                                                color = if (content.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                                color = if (content.isNotBlank() && state.canSendMessage) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                                 shape = CircleShape
                                             )
                                             .clickable(enabled = content.isNotBlank() && state.canSendMessage) {
-                                                viewModel.sendMessage("", content)
+                                                viewModel.sendMessage(content)
                                                 content = ""
                                             },
                                         contentAlignment = Alignment.Center
@@ -204,7 +246,7 @@ fun ChatScreen(
                                 Text(
                                     stringResource(R.string.chat_remaining_messages, it),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onBackground
+                                    color = if (it <= 1) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
                                 )
                             }
                             

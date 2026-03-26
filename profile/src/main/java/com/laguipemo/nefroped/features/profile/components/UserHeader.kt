@@ -38,7 +38,7 @@ fun UserHeader(
             modifier = Modifier
                 .size(dimensionResource(R.dimen.avatar_profile_size))
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f))
                 .clickable(enabled = !state.isGuest, onClick = onAvatarClick),
             contentAlignment = Alignment.Center
         ) {
@@ -58,7 +58,6 @@ fun UserHeader(
                 )
             }
 
-            // Overlay de edición (solo si no es invitado)
             if (!state.isGuest) {
                 Box(
                     modifier = Modifier
@@ -80,34 +79,36 @@ fun UserHeader(
         
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
         
+        // Texto en blanco para resaltar sobre el degradado azul
         Text(
             text = state.userDisplayName,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color.White
         )
         
         if (!state.isGuest) {
             Text(
                 text = state.userEmail,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.7f)
             )
         }
         
         if (state.isGuest) {
             Surface(
-                color = MaterialTheme.colorScheme.tertiaryContainer,
+                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.9f),
                 shape = CircleShape,
                 modifier = Modifier.padding(top = dimensionResource(R.dimen.space_s))
             ) {
                 Text(
                     text = stringResource(R.string.profile_guest_mode),
                     modifier = Modifier.padding(
-                        horizontal = dimensionResource(R.dimen.space_ms), 
+                        horizontal = dimensionResource(R.dimen.space_m), 
                         vertical = dimensionResource(R.dimen.space_xs)
                     ),
                     style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }

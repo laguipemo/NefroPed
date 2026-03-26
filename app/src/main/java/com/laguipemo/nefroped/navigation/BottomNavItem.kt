@@ -12,7 +12,8 @@ sealed class BottomNavItem(
     val icon: ImageVector
 ) {
     data object Course : BottomNavItem(AuthenticatedRoute.Course, "Curso", Icons.Default.School)
-    data object Chat : BottomNavItem(AuthenticatedRoute.Chat("default"), "Consultas", Icons.AutoMirrored.Filled.Chat)
+    // Cambiado de "default" a "general" para coincidir con la lógica del NavGraph
+    data object Chat : BottomNavItem(AuthenticatedRoute.Chat(conversationId = "general"), "Consultas", Icons.AutoMirrored.Filled.Chat)
     data object Profile : BottomNavItem(AuthenticatedRoute.Profile, "Perfil", Icons.Default.Person)
 }
 

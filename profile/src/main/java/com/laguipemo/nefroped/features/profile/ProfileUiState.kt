@@ -11,6 +11,11 @@ sealed interface ProfileUiState {
         val isGuest: Boolean = false,
         val isLoading: Boolean = false,
         val appVersion: String = "",
+        // Progreso del curso
+        val completedLessons: Int = 0,
+        val totalLessons: Int = 0,
+        val overallProgress: Float = 0f,
+        val quizAverage: Float? = null, // Nueva: Nota media de autoevaluaciones
         // Campos del formulario de vinculación
         val formEmail: String = "",
         val formPassword: String = "",

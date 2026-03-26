@@ -36,7 +36,7 @@ fun CourseScreen(
     modifier: Modifier = Modifier,
     viewModel: CourseViewModel = koinViewModel(),
     onTopicClick: (String) -> Unit,
-    onChatClick: (String) -> Unit,
+    onChatClick: (String, String) -> Unit, // Cambiado para recibir id y título
     onClinicalCasesClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -164,7 +164,7 @@ private fun SearchBar(
 private fun TopicsList(
     state: CourseUiState.Content,
     onTopicClick: (String) -> Unit,
-    onChatClick: (String) -> Unit,
+    onChatClick: (String, String) -> Unit,
     onClinicalCasesClick: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -197,7 +197,11 @@ private fun TopicsList(
                             onTopicClick(topic.id)
                         }
                     },
-                    onChatClick = { topic.conversationId?.let { onChatClick(it) } }
+                    onChatClick = { 
+                        topic.conversationId?.let { id -> 
+                            onChatClick(id, topic.title) // Pasamos el título real
+                        } 
+                    }
                 )
             }
         }
