@@ -55,6 +55,9 @@ interface CourseDao {
     @Query("SELECT * FROM quiz_results WHERE quizId = :quizId")
     fun observeQuizResult(quizId: String): Flow<QuizResultEntity?>
 
+    @Query("SELECT * FROM quiz_results")
+    fun observeAllQuizResults(): Flow<List<QuizResultEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuizResult(result: QuizResultEntity)
 

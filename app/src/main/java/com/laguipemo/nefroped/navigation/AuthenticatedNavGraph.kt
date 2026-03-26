@@ -38,8 +38,14 @@ fun AuthenticatedNavGraph(
                 onTopicClick = { topicId ->
                     navController.navigate(AuthenticatedRoute.Lessons(topicId))
                 },
-                onChatClick = { conversationId ->
-                    navController.navigate(AuthenticatedRoute.Chat(conversationId))
+                onChatClick = { conversationId, topicTitle ->
+                    // Corregido: Ahora pasamos ambos parámetros a la ruta
+                    navController.navigate(
+                        AuthenticatedRoute.Chat(
+                            conversationId = conversationId,
+                            topicTitle = topicTitle
+                        )
+                    )
                 },
                 onClinicalCasesClick = { topicId ->
                     navController.navigate(AuthenticatedRoute.ClinicalCaseList(topicId))
@@ -88,13 +94,18 @@ fun AuthenticatedNavGraph(
         composable<AuthenticatedRoute.Profile> {
             ProfileScreen(
                 onOpenChat = {
-                    navController.navigate(AuthenticatedRoute.Chat("default"))
+                    navController.navigate(AuthenticatedRoute.Chat(conversationId = "general"))
                 }
             )
         }
 
-        composable<AuthenticatedRoute.Chat> {
-            ChatScreen()
+        composable<AuthenticatedRoute.Chat> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.Chat>()
+            val showBack = route.conversationId != "general"
+            
+            ChatScreen(
+                onBackClick = if (showBack) { { navController.popBackStack() } } else null
+            )
         }
 
         composable<AuthenticatedRoute.ResetPassword>(

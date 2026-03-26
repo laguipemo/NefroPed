@@ -1,5 +1,6 @@
 package com.laguipemo.nefroped.features.course.quiz
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +32,7 @@ class QuizViewModel(
     private val _isFinished = MutableStateFlow(false)
     private val _quizResult = MutableStateFlow<QuizResult?>(null)
     private val _shuffledQuiz = MutableStateFlow<Quiz?>(null)
+    private val _errorMessage = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<QuizUiState> = combine(
         _shuffledQuiz,
@@ -39,7 +41,8 @@ class QuizViewModel(
         _answers,
         _isSubmitting,
         _isFinished,
-        _quizResult
+        _quizResult,
+        _errorMessage
     ) { params: Array<Any?> ->
         val quiz = params[0] as Quiz?
         val index = params[1] as Int
@@ -48,11 +51,12 @@ class QuizViewModel(
         val submitting = params[4] as Boolean
         val finished = params[5] as Boolean
         val result = params[6] as QuizResult?
+        val error = params[7] as String?
 
-        if (quiz == null) {
-            QuizUiState.Loading(initialTitleArg)
-        } else {
-            QuizUiState.Content(
+        when {
+            error != null -> QuizUiState.Error(error)
+            quiz == null -> QuizUiState.Loading(initialTitleArg)
+            else -> QuizUiState.Content(
                 quiz = quiz,
                 currentQuestionIndex = index,
                 currentSelection = selection,
@@ -74,16 +78,20 @@ class QuizViewModel(
 
     private fun loadQuiz() {
         viewModelScope.launch {
-            if (isTopicId) {
-                syncQuiz(quizIdArg)
-                observeQuizByTopic(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
-                    _shuffledQuiz.value = shuffleQuiz(quiz)
+            try {
+                if (isTopicId) {
+                    syncQuiz(quizIdArg)
+                    observeQuizByTopic(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
+                        _shuffledQuiz.value = shuffleQuiz(quiz)
+                    }
+                } else {
+                    syncQuizById(quizIdArg)
+                    observeQuizById(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
+                        _shuffledQuiz.value = shuffleQuiz(quiz)
+                    }
                 }
-            } else {
-                syncQuizById(quizIdArg)
-                observeQuizById(quizIdArg).filterNotNull().firstOrNull()?.let { quiz ->
-                    _shuffledQuiz.value = shuffleQuiz(quiz)
-                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al cargar el quiz: ${e.localizedMessage}"
             }
         }
     }
@@ -163,21 +171,41 @@ class QuizViewModel(
         _answers.value = emptyMap()
         _isFinished.value = false
         _quizResult.value = null
+        _errorMessage.value = null
         _shuffledQuiz.value?.let { _shuffledQuiz.value = shuffleQuiz(it) }
     }
 
     private fun submitQuiz(quizId: String, answers: Map<Int, UserSelection>, totalQuestions: Int) {
         viewModelScope.launch {
             _isSubmitting.value = true
-            val quiz = _shuffledQuiz.value ?: return@launch
-            val correctCount = quiz.questions.indices.count { i ->
-                validateAnswer(quiz.questions[i], answers[i] ?: return@count false)
+            try {
+                val quiz = _shuffledQuiz.value ?: return@launch
+                val correctCount = quiz.questions.indices.count { i ->
+                    validateAnswer(quiz.questions[i], answers[i] ?: return@count false)
+                }
+                val result = QuizResult(
+                    quizId = quizId, 
+                    score = (correctCount.toFloat() / totalQuestions) * 10, 
+                    correctAnswers = correctCount, 
+                    totalQuestions = totalQuestions, 
+                    completedAt = System.currentTimeMillis()
+                )
+                
+                // Intentamos guardar en Supabase
+                val success = submitQuizUseCase(result)
+                
+                if (success) {
+                    _quizResult.value = result
+                    _isFinished.value = true
+                } else {
+                    _errorMessage.value = "No se pudo guardar el resultado. Verifica tu conexión."
+                }
+            } catch (e: Exception) {
+                Log.e("QuizViewModel", "Error submitting quiz", e)
+                _errorMessage.value = "Error al finalizar el quiz: ${e.localizedMessage}"
+            } finally {
+                _isSubmitting.value = false
             }
-            val result = QuizResult(quizId = quizId, score = (correctCount.toFloat() / totalQuestions) * 10, correctAnswers = correctCount, totalQuestions = totalQuestions, completedAt = System.currentTimeMillis())
-            submitQuizUseCase(result)
-            _quizResult.value = result
-            _isFinished.value = true
-            _isSubmitting.value = false
         }
     }
 

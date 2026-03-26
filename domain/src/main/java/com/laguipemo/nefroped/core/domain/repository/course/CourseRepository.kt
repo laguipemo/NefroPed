@@ -16,6 +16,7 @@ interface CourseRepository {
     fun observeQuizByTopic(topicId: String): Flow<Quiz?>
     fun observeQuizById(quizId: String): Flow<Quiz?>
     fun observeQuizResult(quizId: String): Flow<QuizResult?>
+    fun observeAllQuizResults(): Flow<List<QuizResult>>
     
     suspend fun syncTopics(): Result<Unit>
     suspend fun syncLessons(topicId: String): Result<Unit>
