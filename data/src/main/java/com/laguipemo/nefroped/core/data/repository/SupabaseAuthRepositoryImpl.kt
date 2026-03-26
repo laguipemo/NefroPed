@@ -68,7 +68,7 @@ class SupabaseAuthRepositoryImpl(
             supabase.auth.signInAnonymously()
             NefroResult.Success(Unit)
         } catch (e: Exception) {
-            Log.i("CHACHY::: nononymoues()", e.stackTraceToString())
+            Log.e("AuthRepo", "Anonymous login failed", e)
             NefroResult.Error(e.toAuthError())
         }
     }
@@ -99,12 +99,14 @@ class SupabaseAuthRepositoryImpl(
 
     override suspend fun loginWithGoogle(idToken: String): NefroResult<Unit, AuthError> {
         return try {
+            Log.d("AuthRepo", "Attempting Google Login with token length: ${idToken.length}")
             supabase.auth.signInWith(IDToken) {
                 this.idToken = idToken
                 provider = Google
             }
             NefroResult.Success(Unit)
         } catch (e: Exception) {
+            Log.e("AuthRepo", "Google Login Failed: ${e.message}", e)
             NefroResult.Error(e.toAuthError())
         }
     }
@@ -172,6 +174,7 @@ class SupabaseAuthRepositoryImpl(
     private fun Throwable.toAuthError(): AuthError =
         when (this) {
             is AuthRestException -> {
+                Log.e("AuthRepo", "Supabase Auth Error: ${this.error} - ${this.message}")
                 if (this.error == "same_password" || this.message?.contains("same_password", ignoreCase = true) == true) {
                     AuthError.SamePassword
                 } else {
