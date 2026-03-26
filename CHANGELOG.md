@@ -27,7 +27,13 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
-## [1.0.1] - 2026-03-22
+## [1.0.2] - 2026-03-26
+### Fixed
+- Mejora aspecto del botón para lanzar autoevaluación.
+- Centra el nombre completo y el email del usuario en la pantalla Profile
+
+
+## [1.0.1] - 2026-03-26
 ### Fixed
 - Restablece la condición de que la autoevalución solo puede lanzarse si se han compleatado
   todas las lecciones del tema.
