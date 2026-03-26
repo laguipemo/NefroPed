@@ -104,7 +104,8 @@ fun ProfileScreen(
                     CourseProgressCard(
                         completedLessons = state.completedLessons,
                         totalLessons = state.totalLessons,
-                        progress = state.overallProgress
+                        progress = state.overallProgress,
+                        quizAverage = state.quizAverage
                     )
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))

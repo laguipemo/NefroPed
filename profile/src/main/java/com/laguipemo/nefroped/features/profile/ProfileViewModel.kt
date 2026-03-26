@@ -12,6 +12,7 @@ import com.laguipemo.nefroped.core.domain.usecase.logout.LogoutUseCase
 import com.laguipemo.nefroped.core.domain.usecase.session.ObserveSessionStateUseCase
 import com.laguipemo.nefroped.core.domain.usecase.profile.UpdateAvatarUseCase
 import com.laguipemo.nefroped.core.domain.usecase.course.GetCourseProgressUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.GetQuizAverageUseCase
 import com.laguipemo.nefroped.core.domain.util.ValidationConstants.MINIMAL_PASS_LENGTH
 import com.laguipemo.nefroped.core.domain.util.ValidationConstants.isValidEmail
 import kotlinx.coroutines.flow.*
@@ -24,6 +25,7 @@ class ProfileViewModel(
     private val linkEmailPasswordUseCase: LinkEmailPasswordUseCase,
     private val updateAvatarUseCase: UpdateAvatarUseCase,
     private val getCourseProgressUseCase: GetCourseProgressUseCase,
+    private val getQuizAverageUseCase: GetQuizAverageUseCase,
     getAppVersionUseCase: GetAppVersionUseCase
 ) : ViewModel() {
 
@@ -39,6 +41,7 @@ class ProfileViewModel(
         combine(
             observeSessionState(),
             getCourseProgressUseCase(),
+            getQuizAverageUseCase(),
             _isLoading,
             _formEmail,
             _formPassword,
@@ -47,14 +50,16 @@ class ProfileViewModel(
             _showBottomSheet
         ) { args ->
             val sessionState = args[0] as SessionState
+            @Suppress("UNCHECKED_CAST")
             val progress = args[1] as Pair<Int, Int>
-            val isLoading = args[2] as Boolean
-            val formEmail = args[3] as String
-            val formPassword = args[4] as String
-            val emailError = args[5] as ValidationError?
-            val passwordError = args[6] as ValidationError?
-            val showBottomSheet = args[7] as Boolean
-
+            val quizAvg = args[2] as Float?
+            val isLoading = args[3] as Boolean
+            val formEmail = args[4] as String
+            val formPassword = args[5] as String
+            val emailError = args[6] as ValidationError?
+            val passwordError = args[7] as ValidationError?
+            val showBottomSheet = args[8] as Boolean
+            
             when (sessionState) {
                 SessionState.Initializing -> ProfileUiState.Loading
                 is SessionState.User -> {
@@ -69,6 +74,7 @@ class ProfileViewModel(
                         completedLessons = completed,
                         totalLessons = total,
                         overallProgress = if (total > 0) completed.toFloat() / total else 0f,
+                        quizAverage = quizAvg,
                         formEmail = formEmail,
                         formPassword = formPassword,
                         emailError = emailError,
@@ -77,7 +83,6 @@ class ProfileViewModel(
                         appVersion = appVersion
                     )
                 }
-
                 else -> ProfileUiState.Loading
             }
         }

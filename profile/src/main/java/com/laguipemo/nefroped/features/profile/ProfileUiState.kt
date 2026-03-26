@@ -15,6 +15,7 @@ sealed interface ProfileUiState {
         val completedLessons: Int = 0,
         val totalLessons: Int = 0,
         val overallProgress: Float = 0f,
+        val quizAverage: Float? = null, // Nueva: Nota media de autoevaluaciones
         // Campos del formulario de vinculación
         val formEmail: String = "",
         val formPassword: String = "",
