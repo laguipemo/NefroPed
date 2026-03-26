@@ -18,7 +18,7 @@ Cada versión debería:
 
 ## [Unreleased]
 ### Added
-- Migrar contenidos de las lecciones, casos clínicos, etc de github a supabase.
+-
 ### Refactor
 - 
 ### Fix
@@ -26,6 +26,18 @@ Cada versión debería:
   del token. En principio era un bug del ChannelFlow en Supabase 3.3.0 que debería estar
   corregido en la versión actual 3.4.1
 
+
+## [1.0.0] - 2026-03-26
+### Added
+- Mejora la feature Profile, añadiendo el progreso del curso (lecciones completadas) y la
+  media de las autoevaluaciones.
+### Refactor
+- Finaliza migración de los datos de lecciones, casos clínicos, quiz y otras features
+  para que Supabase sea la única fuente de verdad remota.
+- Extracción de recursos y de componentes reutilizables.
+### Fixed
+- Fortalece el manejo y sincronización de preguntas, test y su calificación.
+- Mejora la visibilidad en la pantalla Profile 
 
 ## [0.10.0] - 2026-03-22
 ### Added
