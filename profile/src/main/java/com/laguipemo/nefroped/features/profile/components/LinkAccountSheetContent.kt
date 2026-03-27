@@ -33,8 +33,9 @@ fun LinkAccountSheetContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .navigationBarsPadding() // Asegura que el contenido no quede bajo los botones del sistema
             .padding(horizontal = dimensionResource(R.dimen.space_l))
-            .padding(bottom = 48.dp)
+            .padding(bottom = 32.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -74,7 +75,8 @@ fun LinkAccountSheetContent(
                 ValidationError.EmptyEmail -> stringResource(R.string.auth_error_email_required)
                 ValidationError.InvalidEmailFormat -> stringResource(R.string.auth_error_email_invalid)
                 else -> null
-            }
+            },
+            isDarkBackground = false
         )
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
@@ -89,7 +91,8 @@ fun LinkAccountSheetContent(
                 else -> null
             },
             onImeDone = onLinkEmailPassword,
-            label = stringResource(R.string.auth_new_password_label)
+            label = stringResource(R.string.auth_new_password_label),
+            isDarkBackground = false
         )
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))

@@ -27,7 +27,8 @@ fun PasswordTextField(
     supportingText: String?,
     onImeDone: () -> Unit,
     modifier: Modifier = Modifier,
-    label: String = "Password"
+    label: String = "Password",
+    isDarkBackground: Boolean = true // Añadido parámetro
 ) {
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     AuthTextField(
@@ -63,6 +64,7 @@ fun PasswordTextField(
                 Icon(icon, contentDescription = null)
             }
         },
-        modifier = modifier
+        modifier = modifier,
+        isDarkBackground = isDarkBackground // Pasado a AuthTextField
     )
 }

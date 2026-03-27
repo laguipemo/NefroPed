@@ -43,7 +43,7 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val darkTheme = isSystemInDarkTheme()
 
     SystemBarsController(
@@ -100,7 +100,6 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
 
-                    // NUEVA: Tarjeta de Progreso
                     CourseProgressCard(
                         completedLessons = state.completedLessons,
                         totalLessons = state.totalLessons,
@@ -155,8 +154,17 @@ fun ProfileScreen(
                     if (state.showBottomSheet) {
                         ModalBottomSheet(
                             onDismissRequest = { viewModel.onShowBottomSheet(false) },
-                            sheetState = sheetState
+                            sheetState = sheetState,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            // Insets vacíos para que el color fluya bajo la barra del sistema
+                            contentWindowInsets = { WindowInsets(0) }
                         ) {
+                            // Local controller dentro del sheet para asegurar iconos oscuros sobre primaryContainer
+                            SystemBarsController(
+                                useStatusDarkIcons = !darkTheme, 
+                                useNavigationDarkIcons = !darkTheme
+                            )
+
                             LinkAccountSheetContent(
                                 state = state,
                                 onEmailChanged = viewModel::onEmailChanged,
@@ -187,7 +195,6 @@ private fun ProfileSection(
             .fillMaxWidth()
             .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
     ) {
-        // Título de sección con fondo traslúcido para legibilidad
         Surface(
             color = Color.White.copy(alpha = 0.15f),
             shape = RoundedCornerShape(8.dp),

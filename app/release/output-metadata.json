@@ -12,7 +12,11 @@
       "filters": [],
       "attributes": [],
       "versionCode": 1,
+<<<<<<< HEAD
       "versionName": "1.0.1",
+=======
+      "versionName": "1.0.2",
+>>>>>>> hotfix/lession-list-screen
       "outputFile": "app-release.apk"
     }
   ],

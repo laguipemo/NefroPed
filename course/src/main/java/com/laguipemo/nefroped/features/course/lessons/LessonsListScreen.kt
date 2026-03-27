@@ -42,6 +42,7 @@ fun LessonsListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val darkTheme = isSystemInDarkTheme()
+    val quizTitle = stringResource(R.string.quiz_title)
 
     SystemBarsController(
         useStatusDarkIcons = false,
@@ -76,20 +77,41 @@ fun LessonsListScreen(
                 val allCompleted = lessons.isNotEmpty() && lessons.all { it.isCompleted }
                 
                 ExtendedFloatingActionButton(
-                    onClick = { if(allCompleted) onQuizClick(topicId, "Autoevaluación") },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = if (allCompleted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.secondary.copy(alpha=0.7f),
-                    shape = RoundedCornerShape(16.dp),
+                    onClick = { 
+                        if (allCompleted) {
+                            onQuizClick(topicId, quizTitle)
+                        }
+                    },
+                    containerColor = if (allCompleted) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        // Sólido y sutil para evitar sombras transparentes
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
+                    },
+                    contentColor = if (allCompleted) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    },
+                    elevation = if (allCompleted) {
+                        FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+                    } else {
+                        // Sin elevación cuando está bloqueado para que no haya sombras debajo
+                        FloatingActionButtonDefaults.elevation(defaultElevation = 0.dp)
+                    },
+                    shape = RoundedCornerShape(20.dp),
                     icon = { 
                         Icon(
                             imageVector = if (allCompleted) Icons.Default.Quiz else Icons.Default.Lock, 
-                            contentDescription = null 
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
                         ) 
                     },
                     text = { 
                         Text(
-                            text = if (allCompleted) stringResource(R.string.quiz_title) else stringResource(R.string.quiz_unfinished_lessons),
-                            style = MaterialTheme.typography.labelLarge
+                            text = if (allCompleted) quizTitle else stringResource(R.string.quiz_unfinished_lessons),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
                         ) 
                     }
                 )
@@ -112,7 +134,7 @@ fun LessonsListScreen(
                 is LessonsUiState.Content -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 80.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.lessons) { lesson ->
