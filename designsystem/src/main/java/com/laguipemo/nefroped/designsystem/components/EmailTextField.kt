@@ -15,7 +15,8 @@ fun EmailTextField(
     value: String,
     onValueChange: (String) -> Unit,
     isError: Boolean,
-    supportingText: String?
+    supportingText: String?,
+    isDarkBackground: Boolean = true // Añadido parámetro
 ) {
     AuthTextField(
         value = value,
@@ -47,5 +48,6 @@ fun EmailTextField(
                 }
             }
         },
+        isDarkBackground = isDarkBackground // Pasado a AuthTextField
     )
 }

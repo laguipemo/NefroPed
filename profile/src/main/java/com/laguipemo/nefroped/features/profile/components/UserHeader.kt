@@ -17,6 +17,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.features.profile.ProfileUiState
@@ -30,6 +32,7 @@ fun UserHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
             .padding(vertical = dimensionResource(R.dimen.space_l)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -84,14 +87,18 @@ fun UserHeader(
             text = state.userDisplayName,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold,
-            color = Color.White
+            color = Color.White,
+            textAlign = TextAlign.Center, // Corregido: Centra el texto si hay varias líneas
+            modifier = Modifier.fillMaxWidth()
         )
         
         if (!state.isGuest) {
             Text(
                 text = state.userEmail,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.7f)
+                color = Color.White.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         }
         
