@@ -20,6 +20,7 @@
             <option value="$PROJECT_DIR$/domain" />
             <option value="$PROJECT_DIR$/local" />
             <option value="$PROJECT_DIR$/navigation" />
+            <option value="$PROJECT_DIR$/notifications" />
             <option value="$PROJECT_DIR$/onboarding" />
             <option value="$PROJECT_DIR$/profile" />
           </set>

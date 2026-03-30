@@ -18,6 +18,8 @@ import com.laguipemo.nefroped.features.course.lessons.LessonsListScreen
 import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailScreen
 import com.laguipemo.nefroped.features.course.quiz.QuizScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
+import com.laguipemo.nefroped.core.domain.model.notification.NotificationType
+import com.laguipemo.nefroped.features.profile.notifications.NotificationsScreen
 
 @Composable
 fun AuthenticatedNavGraph(
@@ -39,7 +41,6 @@ fun AuthenticatedNavGraph(
                     navController.navigate(AuthenticatedRoute.Lessons(topicId))
                 },
                 onChatClick = { conversationId, topicTitle ->
-                    // Corregido: Ahora pasamos ambos parámetros a la ruta
                     navController.navigate(
                         AuthenticatedRoute.Chat(
                             conversationId = conversationId,
@@ -49,6 +50,9 @@ fun AuthenticatedNavGraph(
                 },
                 onClinicalCasesClick = { topicId ->
                     navController.navigate(AuthenticatedRoute.ClinicalCaseList(topicId))
+                },
+                onNotificationsClick = {
+                    navController.navigate(AuthenticatedRoute.Notifications)
                 }
             )
         }
@@ -105,6 +109,24 @@ fun AuthenticatedNavGraph(
             
             ChatScreen(
                 onBackClick = if (showBack) { { navController.popBackStack() } } else null
+            )
+        }
+
+        composable<AuthenticatedRoute.Notifications> {
+            NotificationsScreen(
+                onBackClick = { navController.popBackStack() },
+                onNotificationClick = { notification ->
+                    when (notification.type) {
+                        NotificationType.CHAT_REPLY -> {
+                            val chatId = notification.payload["conversation_id"] ?: "general"
+                            navController.navigate(AuthenticatedRoute.Chat(conversationId = chatId))
+                        }
+                        NotificationType.NEW_CONTENT -> {
+                            navController.navigate(AuthenticatedRoute.Course)
+                        }
+                        else -> { /* Solo marcar como leída */ }
+                    }
+                }
             )
         }
 

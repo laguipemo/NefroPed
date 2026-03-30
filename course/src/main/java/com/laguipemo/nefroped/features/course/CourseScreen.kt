@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import com.laguipemo.nefroped.features.course.components.TopicCard
+import com.laguipemo.nefroped.features.profile.notifications.NotificationViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,13 +37,16 @@ import org.koin.androidx.compose.koinViewModel
 fun CourseScreen(
     modifier: Modifier = Modifier,
     viewModel: CourseViewModel = koinViewModel(),
+    notificationViewModel: NotificationViewModel = koinViewModel(), // Inyectado para el badge
     onTopicClick: (String) -> Unit,
-    onChatClick: (String, String) -> Unit, // Cambiado para recibir id y título
-    onClinicalCasesClick: (String) -> Unit
+    onChatClick: (String, String) -> Unit,
+    onClinicalCasesClick: (String) -> Unit,
+    onNotificationsClick: () -> Unit // Nuevo parámetro
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery: String by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isSearchActive: Boolean by viewModel.isSearchActive.collectAsStateWithLifecycle()
+    val unreadNotifications by notificationViewModel.unreadCount.collectAsStateWithLifecycle()
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val darkTheme = isSystemInDarkTheme()
@@ -64,6 +69,26 @@ fun CourseScreen(
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
+            },
+            navigationIcon = {
+                BadgedBox(
+                    modifier = Modifier.padding(start = 8.dp),
+                    badge = {
+                        if (unreadNotifications > 0) {
+                            Badge {
+                                Text(text = unreadNotifications.toString())
+                            }
+                        }
+                    }
+                ) {
+                    IconButton(onClick = onNotificationsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notificaciones",
+                            tint = Color.White
+                        )
+                    }
+                }
             },
             actions = {
                 IconButton(onClick = { viewModel.onSearchActiveChange(!isSearchActive) }) {
@@ -199,7 +224,7 @@ private fun TopicsList(
                     },
                     onChatClick = { 
                         topic.conversationId?.let { id -> 
-                            onChatClick(id, topic.title) // Pasamos el título real
+                            onChatClick(id, topic.title)
                         } 
                     }
                 )
