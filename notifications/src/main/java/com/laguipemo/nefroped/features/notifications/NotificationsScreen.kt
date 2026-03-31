@@ -1,5 +1,6 @@
 package com.laguipemo.nefroped.features.notifications
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,20 +10,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.notification.Notification
+import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import org.koin.androidx.compose.koinViewModel
 
@@ -45,12 +48,12 @@ fun NotificationsScreen(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Notificaciones", fontWeight = FontWeight.Bold, color = Color.White) },
+                title = { Text(stringResource(R.string.notifications_title), fontWeight = FontWeight.Bold, color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = Color.White
                         )
                     }
@@ -59,7 +62,7 @@ fun NotificationsScreen(
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (notifications.isEmpty()) {
                 EmptyNotifications()
             } else {
@@ -69,8 +72,9 @@ fun NotificationsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(notifications, key = { it.id }) { notification ->
-                        NotificationItem(
+                        SwipeToDismissItem(
                             notification = notification,
+                            onDismiss = { viewModel.onNotificationDelete(notification.id) },
                             onClick = {
                                 viewModel.onNotificationRead(notification.id)
                                 onNotificationClick(notification)
@@ -80,6 +84,50 @@ fun NotificationsScreen(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SwipeToDismissItem(
+    notification: Notification,
+    onDismiss: () -> Unit,
+    onClick: () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = {
+            if (it == SwipeToDismissBoxValue.EndToStart) {
+                onDismiss()
+                true
+            } else false
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            val color = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = Color.White
+                )
+            }
+        }
+    ) {
+        NotificationItem(
+            notification = notification,
+            onClick = onClick
+        )
     }
 }
 
@@ -94,12 +142,14 @@ fun NotificationItem(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
+            // CORRECCIÓN: Usamos colores sólidos (opacos) para que no se vea el fondo rojo al deslizar
             containerColor = if (notification.isRead) {
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                MaterialTheme.colorScheme.surfaceVariant
             } else {
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                MaterialTheme.colorScheme.surface
             }
-        )
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -112,7 +162,7 @@ fun NotificationItem(
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(
-                        if (notification.isRead) MaterialTheme.colorScheme.surfaceVariant
+                        if (notification.isRead) MaterialTheme.colorScheme.outlineVariant
                         else MaterialTheme.colorScheme.primaryContainer
                     ),
                 contentAlignment = Alignment.Center
@@ -133,7 +183,8 @@ fun NotificationItem(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = if (notification.isRead) FontWeight.Medium else FontWeight.Bold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = notification.body,
@@ -147,7 +198,8 @@ fun NotificationItem(
             if (!notification.isRead) {
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
+                        .padding(start = 8.dp)
+                        .size(10.dp)
                         .background(MaterialTheme.colorScheme.primary, CircleShape)
                 )
             }
@@ -170,7 +222,7 @@ fun EmptyNotifications() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No tienes notificaciones",
+            text = stringResource(R.string.notifications_empty),
             style = MaterialTheme.typography.titleMedium,
             color = Color.White.copy(alpha = 0.5f)
         )

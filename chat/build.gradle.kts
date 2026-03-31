@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":designsystem"))
     implementation(project(":navigation"))
+    implementation(project(":notifications")) // Añadido para gestionar notificaciones de chat
 
     // Koin
     implementation(libs.koin.android)

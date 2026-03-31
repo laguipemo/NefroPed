@@ -48,6 +48,7 @@ val domainKoinModule = module {
     factoryOf(::ObserveNotificationsUseCase)
     factoryOf(::MarkNotificationAsReadUseCase)
     factoryOf(::DeleteNotificationUseCase)
+    factoryOf(::MarkConversationAsReadUseCase)
     
     // Clinical Cases (Tema 4)
     factoryOf(::ObserveClinicalCasesUseCase)

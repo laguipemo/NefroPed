@@ -19,7 +19,7 @@ import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailScreen
 import com.laguipemo.nefroped.features.course.quiz.QuizScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
 import com.laguipemo.nefroped.core.domain.model.notification.NotificationType
-import com.laguipemo.nefroped.features.profile.notifications.NotificationsScreen
+import com.laguipemo.nefroped.features.notifications.NotificationsScreen
 
 @Composable
 fun AuthenticatedNavGraph(
@@ -119,7 +119,15 @@ fun AuthenticatedNavGraph(
                     when (notification.type) {
                         NotificationType.CHAT_REPLY -> {
                             val chatId = notification.payload["conversation_id"] ?: "general"
-                            navController.navigate(AuthenticatedRoute.Chat(conversationId = chatId))
+                            val topicTitle = notification.payload["topic_title"] ?: "Tema"
+                            
+                            // CORRECCIÓN: Ahora pasamos el topicTitle para que el ChatScreen lo muestre
+                            navController.navigate(
+                                AuthenticatedRoute.Chat(
+                                    conversationId = chatId,
+                                    topicTitle = topicTitle
+                                )
+                            )
                         }
                         NotificationType.NEW_CONTENT -> {
                             navController.navigate(AuthenticatedRoute.Course)

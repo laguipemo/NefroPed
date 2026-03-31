@@ -33,7 +33,6 @@ class SupabaseChatRepositoryImpl(
 
         val json = Json { ignoreUnknownKeys = true }
 
-        // Carga inicial ordenada
         val initialMessages = supabase
             .from("messages")
             .select {
@@ -46,21 +45,17 @@ class SupabaseChatRepositoryImpl(
         val messages = initialMessages.toMutableList()
         send(messages.toList())
 
-        // Canal realtime
         val channelName = "messages-$conversationId"
-        // 2. LIMPIEZA TOTAL (v3.3.0)
-        // Recuperamos el canal si ya existe en la caché global de Supabase
         val existingChannel =
             supabase.realtime.subscriptions.getOrDefault(channelName, null)
         if (existingChannel != null) {
-            // Forzamos la salida y borrado para que el estado pase a UNSUBSCRIBED
             existingChannel.unsubscribe()
             supabase.realtime.removeChannel(existingChannel)
         }
-        // 3. CREACIÓN LIMPIA
+        
         val channel = supabase.realtime.channel(channelName)
 
-        // 4. REGISTRO (Debe ser antes de subscribe)
+        // REGISTRO DEL FLUJO (DEBE SER ANTES DE SUBSCRIBE)
         val realtimeFlow =
             channel.postgresChangeFlow<PostgresAction.Insert>(
                 schema = "public"
@@ -72,32 +67,26 @@ class SupabaseChatRepositoryImpl(
                     conversationId
                 )
             }
-        // 5. SUSCRIPCIÓN
+            
+        // AHORA SÍ: SUSCRIBIR AL FINAL
         channel.subscribe()
 
-        // 6. RECOLECCIÓN (Siempre activa mientras el Flow de la UI viva)
         val job = launch {
             realtimeFlow.collect { action ->
                 val dto =
                     json.decodeFromJsonElement<MessageDto>(action.record)
                 val newMessage = dto.toDomain()
 
-                // 2. Lógica de "UPSERT" local (Update or Insert)
-                // Buscamos si ya existe un mensaje con ese clientId (enviado por nosotros)
-                // o con ese id (enviado por otros).
                 val index = messages.indexOfFirst {
                     it.clientId == newMessage.clientId || (it.id != null && it.id == newMessage.id)
                 }
 
                 if (index != -1) {
-                    // Si ya existe (ej: era un mensaje local "enviando"), lo actualizamos con los datos de DB
                     messages[index] = newMessage
                 } else {
-                    // Si es totalmente nuevo (de otro usuario), lo añadimos
                     messages.add(newMessage)
                 }
 
-                // 3. Reordenamos y emitimos una copia de la lista
                 messages.sortBy { it.createdAt }
                 send(messages.toList())
             }
@@ -105,7 +94,6 @@ class SupabaseChatRepositoryImpl(
 
         awaitClose {
             job.cancel()
-            // Cleanup asíncrono para evitar el crash de Garbage Collection
             runBlocking {
                 channel.unsubscribe()
                 supabase.realtime.removeChannel(channel)

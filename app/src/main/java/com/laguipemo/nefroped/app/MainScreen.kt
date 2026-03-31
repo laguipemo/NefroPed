@@ -21,7 +21,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.laguipemo.nefroped.features.profile.notifications.NotificationViewModel
+import com.laguipemo.nefroped.features.notifications.NotificationViewModel
 import com.laguipemo.nefroped.navigation.AuthenticatedNavGraph
 import com.laguipemo.nefroped.navigation.AuthenticatedRoute
 import com.laguipemo.nefroped.navigation.bottomNavItems
@@ -34,7 +34,9 @@ fun MainScreen(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val unreadNotifications by notificationViewModel.unreadCount.collectAsStateWithLifecycle()
+    
+    // CORRECCIÓN: Usamos el conteo filtrado para el chat general
+    val generalUnreadCount by notificationViewModel.generalUnreadCount.collectAsStateWithLifecycle()
     
     val isKeyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
@@ -78,9 +80,11 @@ fun MainScreen(
                                 icon = {
                                     BadgedBox(
                                         badge = {
-                                            if (item.route is AuthenticatedRoute.Chat && unreadNotifications > 0) {
+                                            // El badge de la BottomBar ahora es INTELIGENTE:
+                                            // Solo aparece si la ruta es el Chat y hay notificaciones GENERALES
+                                            if (item.route is AuthenticatedRoute.Chat && generalUnreadCount > 0) {
                                                 Badge {
-                                                    Text(text = unreadNotifications.toString())
+                                                    Text(text = generalUnreadCount.toString())
                                                 }
                                             }
                                         }

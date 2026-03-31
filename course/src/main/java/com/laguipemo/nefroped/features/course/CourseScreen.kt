@@ -29,7 +29,7 @@ import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import com.laguipemo.nefroped.features.course.components.TopicCard
-import com.laguipemo.nefroped.features.profile.notifications.NotificationViewModel
+import com.laguipemo.nefroped.features.notifications.NotificationViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,11 +37,11 @@ import org.koin.androidx.compose.koinViewModel
 fun CourseScreen(
     modifier: Modifier = Modifier,
     viewModel: CourseViewModel = koinViewModel(),
-    notificationViewModel: NotificationViewModel = koinViewModel(), // Inyectado para el badge
+    notificationViewModel: NotificationViewModel = koinViewModel(),
     onTopicClick: (String) -> Unit,
     onChatClick: (String, String) -> Unit,
     onClinicalCasesClick: (String) -> Unit,
-    onNotificationsClick: () -> Unit // Nuevo parámetro
+    onNotificationsClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery: String by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -61,36 +61,38 @@ fun CourseScreen(
             .fillMaxSize()
             .background(Color.Transparent)
     ) {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = {
                 Text(
                     text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    color = Color.White
                 )
             },
-            navigationIcon = {
-                BadgedBox(
-                    modifier = Modifier.padding(start = 8.dp),
-                    badge = {
-                        if (unreadNotifications > 0) {
-                            Badge {
-                                Text(text = unreadNotifications.toString())
+            actions = {
+                // Notificaciones: Estructura corregida para badge pegado al icono
+                IconButton(onClick = onNotificationsClick) {
+                    BadgedBox(
+                        badge = {
+                            if (unreadNotifications > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = Color.White
+                                ) {
+                                    Text(text = unreadNotifications.toString())
+                                }
                             }
                         }
-                    }
-                ) {
-                    IconButton(onClick = onNotificationsClick) {
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notificaciones",
+                            contentDescription = stringResource(R.string.notifications_title),
                             tint = Color.White
                         )
                     }
                 }
-            },
-            actions = {
+
+                // Búsqueda
                 IconButton(onClick = { viewModel.onSearchActiveChange(!isSearchActive) }) {
                     Icon(
                         imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
@@ -99,10 +101,8 @@ fun CourseScreen(
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                titleContentColor = Color.White,
-                actionIconContentColor = Color.White
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Color.Transparent
             )
         )
 
