@@ -5,6 +5,7 @@ import com.laguipemo.nefroped.core.domain.usecase.chat.*
 import com.laguipemo.nefroped.core.domain.usecase.course.*
 import com.laguipemo.nefroped.core.domain.usecase.login.*
 import com.laguipemo.nefroped.core.domain.usecase.logout.*
+import com.laguipemo.nefroped.core.domain.usecase.notification.*
 import com.laguipemo.nefroped.core.domain.usecase.onboarding.*
 import com.laguipemo.nefroped.core.domain.usecase.profile.*
 import com.laguipemo.nefroped.core.domain.usecase.recoverpassword.*
@@ -42,6 +43,12 @@ val domainKoinModule = module {
     factoryOf(::MarkLessonAsCompletedUseCase)
     factoryOf(::GetCourseProgressUseCase)
     factoryOf(::GetQuizAverageUseCase)
+    
+    // Notifications
+    factoryOf(::ObserveNotificationsUseCase)
+    factoryOf(::MarkNotificationAsReadUseCase)
+    factoryOf(::DeleteNotificationUseCase)
+    factoryOf(::MarkConversationAsReadUseCase)
     
     // Clinical Cases (Tema 4)
     factoryOf(::ObserveClinicalCasesUseCase)

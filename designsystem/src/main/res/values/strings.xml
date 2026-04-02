@@ -63,6 +63,11 @@
     <string name="profile_progress_title">Progreso del curso</string>
     <string name="profile_progress_detail">%1$d de %2$d lecciones completadas</string>
 
+    <!-- Notifications -->
+    <string name="notifications_title">Notificaciones</string>
+    <string name="notifications_empty">No tienes notificaciones por ahora</string>
+    <string name="notifications_back_description">Volver al curso</string>
+
     <!-- Course -->
     <string name="course_search_placeholder">buscar tema...</string>
     <string name="course_topics_title">Temas de Nefrología Pediátrica</string>

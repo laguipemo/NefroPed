@@ -1,6 +1,5 @@
 package com.laguipemo.nefroped.features.chat
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -95,7 +94,7 @@ class ChatViewModel(
                         sendMessageUseCase(conversationId, content, clientId)
                         _localMessages.update { list -> list.filterNot { it.clientId == clientId } }
                     } catch (e: Exception) {
-                        Log.e("ChatViewModel", "Error sending message", e)
+                        // Error: Lo mantenemos pero marcamos el error para que el usuario vea el icono rojo
                         _localMessages.update { list ->
                             list.map {
                                 if (it.clientId == clientId)

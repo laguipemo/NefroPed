@@ -39,6 +39,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":designsystem"))
     implementation(project(":navigation"))
+    implementation(project(":notifications")) // Corregido: Dependencia del nuevo módulo
 
     // Koin
     implementation(libs.koin.android)
