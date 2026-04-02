@@ -27,6 +27,21 @@ Cada versión debería:
   corregido en la versión actual 3.4.1
 
 
+## [1.1.0] - 2026-04-02
+### Added
+- Implementa el sistema de motificaciones:
+  - En la topbar con el ícono de campana se muestran el número de notificaciones no leíadas.
+    - Hacer clic en él nos lleva a la pantalla con la lista de notificaciones existente, estando
+      marcadas las que están sin leer.
+    - Haciendo swipe se puede eliminar una notificación.
+  - En la barra de navegación, en el botón Consultas se muestra el número de notificaciones
+    de tipo mensajes correspondientes al chat general (consultas) sin leer.
+    - Presionar en ese ícono nos conduce al chat general para ver los mensajes y reinicia a
+      cero el número de notificaciones de este tipo.
+  - La funcionalidad de las notificaciones es en tiempo real, en cuanto se envía un mesaje o 
+    el profesor añadade un tema nuevo, se lanza un trigger en la base de datos, que inserta
+    una notificación para los usuarios involucrados.
+
 ## [1.0.2] - 2026-03-26
 ### Fixed
 - Mejora aspecto del botón para lanzar autoevaluación.
