@@ -30,8 +30,11 @@ sealed interface AuthenticatedRoute {
     @Serializable
     data class Chat(
         val conversationId: String,
-        val topicTitle: String? = null // Para mostrar "Chat: Glomerulopatias"
+        val topicTitle: String? = null
     ) : AuthenticatedRoute
+
+    @Serializable
+    data object Notifications : AuthenticatedRoute
 
     @Serializable
     data object ResetPassword : AuthenticatedRoute

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -20,16 +21,22 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.laguipemo.nefroped.features.notifications.NotificationViewModel
 import com.laguipemo.nefroped.navigation.AuthenticatedNavGraph
 import com.laguipemo.nefroped.navigation.AuthenticatedRoute
 import com.laguipemo.nefroped.navigation.bottomNavItems
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MainScreen(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    notificationViewModel: NotificationViewModel = koinViewModel()
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    
+    // CORRECCIÓN: Usamos el conteo filtrado para el chat general
+    val generalUnreadCount by notificationViewModel.generalUnreadCount.collectAsStateWithLifecycle()
     
     val isKeyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
@@ -60,7 +67,6 @@ fun MainScreen(
                         windowInsets = WindowInsets.navigationBars
                     ) {
                         bottomNavItems.forEach { item ->
-                            // Selección precisa: solo "Consultas" se marca si el ID es "general"
                             val selected = currentDestination?.hierarchy?.any { dest ->
                                 if (dest.hasRoute<AuthenticatedRoute.Chat>()) {
                                     val route = navBackStackEntry?.toRoute<AuthenticatedRoute.Chat>()
@@ -72,11 +78,23 @@ fun MainScreen(
 
                             NavigationBarItem(
                                 icon = {
-                                    Icon(
-                                        imageVector = item.icon,
-                                        contentDescription = item.title,
-                                        tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    BadgedBox(
+                                        badge = {
+                                            // El badge de la BottomBar ahora es INTELIGENTE:
+                                            // Solo aparece si la ruta es el Chat y hay notificaciones GENERALES
+                                            if (item.route is AuthenticatedRoute.Chat && generalUnreadCount > 0) {
+                                                Badge {
+                                                    Text(text = generalUnreadCount.toString())
+                                                }
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = item.icon,
+                                            contentDescription = item.title,
+                                            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 },
                                 label = {
                                     Text(
@@ -94,13 +112,12 @@ fun MainScreen(
                                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 onClick = {
-                                    // Al cambiar de pestaña, forzamos la vuelta a la raíz de esa pestaña
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = false // NO guardamos estado para evitar el "secuestro"
+                                            saveState = false
                                         }
                                         launchSingleTop = true
-                                        restoreState = false // NO restauramos estado de pantallas secundarias
+                                        restoreState = false
                                     }
                                 }
                             )

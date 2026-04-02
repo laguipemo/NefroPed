@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import com.laguipemo.nefroped.features.course.components.TopicCard
+import com.laguipemo.nefroped.features.notifications.NotificationViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,13 +37,16 @@ import org.koin.androidx.compose.koinViewModel
 fun CourseScreen(
     modifier: Modifier = Modifier,
     viewModel: CourseViewModel = koinViewModel(),
+    notificationViewModel: NotificationViewModel = koinViewModel(),
     onTopicClick: (String) -> Unit,
-    onChatClick: (String, String) -> Unit, // Cambiado para recibir id y título
-    onClinicalCasesClick: (String) -> Unit
+    onChatClick: (String, String) -> Unit,
+    onClinicalCasesClick: (String) -> Unit,
+    onNotificationsClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery: String by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isSearchActive: Boolean by viewModel.isSearchActive.collectAsStateWithLifecycle()
+    val unreadNotifications by notificationViewModel.unreadCount.collectAsStateWithLifecycle()
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val darkTheme = isSystemInDarkTheme()
@@ -56,16 +61,38 @@ fun CourseScreen(
             .fillMaxSize()
             .background(Color.Transparent)
     ) {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = {
                 Text(
                     text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    color = Color.White
                 )
             },
             actions = {
+                // Notificaciones: Estructura corregida para badge pegado al icono
+                IconButton(onClick = onNotificationsClick) {
+                    BadgedBox(
+                        badge = {
+                            if (unreadNotifications > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = Color.White
+                                ) {
+                                    Text(text = unreadNotifications.toString())
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = stringResource(R.string.notifications_title),
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                // Búsqueda
                 IconButton(onClick = { viewModel.onSearchActiveChange(!isSearchActive) }) {
                     Icon(
                         imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
@@ -74,10 +101,8 @@ fun CourseScreen(
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                titleContentColor = Color.White,
-                actionIconContentColor = Color.White
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Color.Transparent
             )
         )
 
@@ -199,7 +224,7 @@ private fun TopicsList(
                     },
                     onChatClick = { 
                         topic.conversationId?.let { id -> 
-                            onChatClick(id, topic.title) // Pasamos el título real
+                            onChatClick(id, topic.title)
                         } 
                     }
                 )

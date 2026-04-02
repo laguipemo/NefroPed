@@ -3,16 +3,14 @@ import com.android.build.api.dsl.LibraryExtension
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlinx.serialization)
 }
 
 configure<LibraryExtension> {
-    namespace = "com.laguipemo.nefroped.features.course"
+    namespace = "com.laguipemo.nefroped.features.notifications"
     compileSdk = 36
 
     defaultConfig {
         minSdk = 26
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -39,7 +37,6 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":designsystem"))
     implementation(project(":navigation"))
-    implementation(project(":notifications")) // Corregido: Dependencia del nuevo módulo
 
     // Koin
     implementation(libs.koin.android)
@@ -57,17 +54,6 @@ dependencies {
     
     // Navigation
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.kotlinx.serialization.json)
-    
-    // Ktor OkHttp Engine
-    implementation(libs.ktor.client.okhttp)
-    
-    // Coil for images
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network.ktor3)
-
-    // Markdown
-    implementation(libs.compose.markdown)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

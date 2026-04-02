@@ -33,6 +33,7 @@ import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import com.laguipemo.nefroped.features.chat.components.DateSeparator
 import com.laguipemo.nefroped.features.chat.components.MessageItem
 import com.laguipemo.nefroped.features.chat.util.formatDateHeader
+import com.laguipemo.nefroped.features.notifications.NotificationViewModel
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -43,7 +44,8 @@ import org.koin.androidx.compose.koinViewModel
 fun ChatScreen(
     modifier: Modifier = Modifier,
     onBackClick: (() -> Unit)? = null,
-    viewModel: ChatViewModel = koinViewModel()
+    viewModel: ChatViewModel = koinViewModel(),
+    notificationViewModel: NotificationViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var content by remember { mutableStateOf("") }
@@ -53,6 +55,11 @@ fun ChatScreen(
 
     val reversedMessages = remember(uiState) {
         (uiState as? ChatUiState.Active)?.messages?.asReversed() ?: emptyList()
+    }
+
+    // Efecto para marcar la conversación como leída al entrar
+    LaunchedEffect(viewModel.conversationId) {
+        notificationViewModel.onEnterConversation(viewModel.conversationId)
     }
 
     // Efecto para scroll automático al recibir o enviar mensajes

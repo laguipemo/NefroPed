@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":profile"))
     implementation(project(":course"))
     implementation(project(":data"))
+    implementation(project(":notifications")) // Nuevo módulo añadido
 
     implementation(libs.androidx.core.splashscreen)
 

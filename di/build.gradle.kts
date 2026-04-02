@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":onboarding"))
     implementation(project(":profile"))
     implementation(project(":course"))
+    implementation(project(":notifications"))
 
     // Koin
     implementation(libs.koin.android)
