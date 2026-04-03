@@ -2,8 +2,13 @@ package com.laguipemo.nefroped.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,8 +25,8 @@ import com.laguipemo.nefroped.features.course.quiz.QuizScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
 import com.laguipemo.nefroped.core.domain.model.notification.NotificationType
 import com.laguipemo.nefroped.features.admin.AdminDashboardScreen
+import com.laguipemo.nefroped.features.admin.topics.AdminTopicsScreen
 import com.laguipemo.nefroped.features.notifications.NotificationsScreen
-
 
 @Composable
 fun AuthenticatedNavGraph(
@@ -144,10 +149,31 @@ fun AuthenticatedNavGraph(
         composable<AuthenticatedRoute.Admin> {
             AdminDashboardScreen(
                 onBackClick = { navController.popBackStack() },
-                onManageTopicsClick = { /* TODO: Navegar a gestión de temas */ },
-                onManageQuizzesClick = { /* TODO: Navegar a gestión de quizzes */ },
-                onManageClinicalCasesClick = { /* TODO: Navegar a gestión de casos */ }
+                onManageTopicsClick = { 
+                    navController.navigate(AuthenticatedRoute.AdminTopics)
+                },
+                onManageQuizzesClick = { /* TODO */ },
+                onManageClinicalCasesClick = { /* TODO */ }
             )
+        }
+
+        composable<AuthenticatedRoute.AdminTopics> {
+            AdminTopicsScreen(
+                onBackClick = { navController.popBackStack() },
+                onAddTopicClick = { 
+                    navController.navigate(AuthenticatedRoute.AdminTopicForm(null)) 
+                },
+                onTopicClick = { topicId ->
+                    navController.navigate(AuthenticatedRoute.AdminTopicForm(topicId))
+                }
+            )
+        }
+
+        composable<AuthenticatedRoute.AdminTopicForm> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.AdminTopicForm>()
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = "Formulario de Tema: ${route.topicId ?: "Nuevo"}", color = Color.White)
+            }
         }
 
         composable<AuthenticatedRoute.ResetPassword>(
