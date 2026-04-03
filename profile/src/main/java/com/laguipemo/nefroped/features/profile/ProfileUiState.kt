@@ -1,5 +1,6 @@
 package com.laguipemo.nefroped.features.profile
 
+import com.laguipemo.nefroped.core.domain.model.user.UserRole
 import com.laguipemo.nefroped.core.domain.model.util.ValidationError
 
 sealed interface ProfileUiState {
@@ -8,6 +9,7 @@ sealed interface ProfileUiState {
         val userDisplayName: String = "",
         val userEmail: String = "",
         val avatarUrl: String? = null,
+        val role: UserRole = UserRole.STUDENT, // Nuevo: Rol del usuario
         val isGuest: Boolean = false,
         val isLoading: Boolean = false,
         val appVersion: String = "",
@@ -15,7 +17,7 @@ sealed interface ProfileUiState {
         val completedLessons: Int = 0,
         val totalLessons: Int = 0,
         val overallProgress: Float = 0f,
-        val quizAverage: Float? = null, // Nueva: Nota media de autoevaluaciones
+        val quizAverage: Float? = null,
         // Campos del formulario de vinculación
         val formEmail: String = "",
         val formPassword: String = "",

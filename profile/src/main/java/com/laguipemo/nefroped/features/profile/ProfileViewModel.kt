@@ -69,6 +69,7 @@ class ProfileViewModel(
                         userDisplayName = name,
                         userEmail = sessionState.user.email ?: "",
                         avatarUrl = sessionState.user.avatarUrl,
+                        role = sessionState.user.role, // Extraemos el rol real desde la sesión
                         isGuest = sessionState.isAnonymous,
                         isLoading = isLoading,
                         completedLessons = completed,
