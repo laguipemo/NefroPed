@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.laguipemo.nefroped.core.domain.model.user.UserRole
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.*
 import com.laguipemo.nefroped.features.profile.components.CourseProgressCard
@@ -38,7 +40,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = koinViewModel(),
-    onOpenChat: () -> Unit
+    onOpenChat: () -> Unit,
+    onNavigateToAdmin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -109,6 +112,19 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
 
+                    if (state.role == UserRole.TEACHER || state.role == UserRole.ADMIN) {
+                        ProfileSection(title = stringResource(R.string.profile_section_admin)) {
+                            ProfileOptionItem(
+                                icon = Icons.Default.AdminPanelSettings,
+                                title = stringResource(R.string.profile_action_manage_content),
+                                subtitle = stringResource(R.string.profile_action_manage_content_desc),
+                                onClick = onNavigateToAdmin,
+                                iconColor = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
+                    }
+
                     ProfileSection(title = stringResource(R.string.profile_section_account)) {
                         if (state.isGuest) {
                             ProfileOptionItem(
@@ -155,11 +171,10 @@ fun ProfileScreen(
                         ModalBottomSheet(
                             onDismissRequest = { viewModel.onShowBottomSheet(false) },
                             sheetState = sheetState,
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            // Insets vacíos para que el color fluya bajo la barra del sistema
-                            contentWindowInsets = { WindowInsets(0) }
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
                         ) {
-                            // Local controller dentro del sheet para asegurar iconos oscuros sobre primaryContainer
+                            // Al no usar windowInsets en la firma, el SystemBarsController
+                            // dentro del contenido se encargará de la transparencia.
                             SystemBarsController(
                                 useStatusDarkIcons = !darkTheme, 
                                 useNavigationDarkIcons = !darkTheme
