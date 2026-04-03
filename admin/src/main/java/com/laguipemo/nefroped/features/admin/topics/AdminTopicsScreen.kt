@@ -1,5 +1,6 @@
 package com.laguipemo.nefroped.features.admin.topics
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,14 +34,17 @@ fun AdminTopicsScreen(
     viewModel: AdminTopicsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val darkTheme = isSystemInDarkTheme()
 
+    // Configuración inmersiva: iconos claros sobre degradado oscuro
     SystemBarsController(
         useStatusDarkIcons = false,
-        useNavigationDarkIcons = false
+        useNavigationDarkIcons = !darkTheme
     )
 
     Scaffold(
         containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0), // Inmersivo total
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Gestionar Temas", fontWeight = FontWeight.Bold, color = Color.White) },
@@ -49,27 +53,40 @@ fun AdminTopicsScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent
+                )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddTopicClick,
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.navigationBarsPadding() // Asegura que el FAB no quede tras los botones
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Añadir Tema")
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding) // Crucial para insets manuales
+        ) {
             when (val state = uiState) {
                 AdminTopicsUiState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.White)
                 is AdminTopicsUiState.Error -> Text(state.message, color = MaterialTheme.colorScheme.error, modifier = Modifier.align(Alignment.Center))
                 is AdminTopicsUiState.Content -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
+                        contentPadding = PaddingValues(
+                            start = 16.dp, 
+                            end = 16.dp, 
+                            top = 16.dp, 
+                            bottom = 88.dp // Padding extra para el FAB y la barra del sistema
+                        ),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.topics) { topic ->
