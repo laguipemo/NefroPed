@@ -2,8 +2,13 @@ package com.laguipemo.nefroped.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -99,6 +104,9 @@ fun AuthenticatedNavGraph(
             ProfileScreen(
                 onOpenChat = {
                     navController.navigate(AuthenticatedRoute.Chat(conversationId = "general"))
+                },
+                onNavigateToAdmin = {
+                    navController.navigate(AuthenticatedRoute.Admin)
                 }
             )
         }
@@ -120,8 +128,6 @@ fun AuthenticatedNavGraph(
                         NotificationType.CHAT_REPLY -> {
                             val chatId = notification.payload["conversation_id"] ?: "general"
                             val topicTitle = notification.payload["topic_title"] ?: "Tema"
-                            
-                            // CORRECCIÓN: Ahora pasamos el topicTitle para que el ChatScreen lo muestre
                             navController.navigate(
                                 AuthenticatedRoute.Chat(
                                     conversationId = chatId,
@@ -136,6 +142,13 @@ fun AuthenticatedNavGraph(
                     }
                 }
             )
+        }
+
+        composable<AuthenticatedRoute.Admin> {
+            // Placeholder para la pantalla de Administración
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Panel del Profesor - Próximamente", color = Color.White)
+            }
         }
 
         composable<AuthenticatedRoute.ResetPassword>(

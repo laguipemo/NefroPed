@@ -45,30 +45,38 @@ class SupabaseAuthRepositoryImpl(
                                 return@flow
                             }
                             
-                            // Consultamos el rol desde la tabla profiles
-                            val role = try {
-                                val profile = supabase.from("profiles")
-                                    .select { filter { eq("id", user.id) } }
-                                    .decodeSingleOrNull<ProfileDto>()
-                                
-                                when (profile?.role?.uppercase()) {
-                                    "TEACHER" -> UserRole.TEACHER
-                                    "ADMIN" -> UserRole.ADMIN
-                                    else -> UserRole.STUDENT
-                                }
-                            } catch (e: Exception) {
-                                Log.e("AuthRepo", "Error fetching user role", e)
-                                UserRole.STUDENT
-                            }
-
                             val isAnonymous = user.identities.isNullOrEmpty()
                             val isResetFlow = sessionStatus.session.type == "recovery"
 
-                            emit(AuthState.Authenticated(
-                                user.toDomain().copy(role = role),
-                                isAnonymous,
-                                isResetPasswordFlow = isResetFlow
-                            ))
+                            // 1. EMISIÓN INICIAL RÁPIDA: Entra como STUDENT para no bloquear la UI
+                            val initialUser = user.toDomain().copy(role = UserRole.STUDENT)
+                            emit(AuthState.Authenticated(initialUser, isAnonymous, isResetFlow))
+
+                            // 2. ENRIQUECIMIENTO (Solo si no es invitado): Consultamos el rol real
+                            if (!isAnonymous) {
+                                try {
+                                    val profile = supabase.from("profiles")
+                                        .select { filter { eq("id", user.id) } }
+                                        .decodeSingleOrNull<ProfileDto>()
+                                    
+                                    val realRole = when (profile?.role?.uppercase()) {
+                                        "TEACHER" -> UserRole.TEACHER
+                                        "ADMIN" -> UserRole.ADMIN
+                                        else -> UserRole.STUDENT
+                                    }
+                                    
+                                    // Si el rol es especial, emitimos el estado actualizado
+                                    if (realRole != UserRole.STUDENT) {
+                                        emit(AuthState.Authenticated(
+                                            initialUser.copy(role = realRole),
+                                            isAnonymous,
+                                            isResetFlow
+                                        ))
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("AuthRepo", "Silent error fetching role, staying as STUDENT", e)
+                                }
+                            }
                         }
                         is SessionStatus.Initializing -> emit(AuthState.Initializing)
                         else -> emit(AuthState.Unauthenticated)

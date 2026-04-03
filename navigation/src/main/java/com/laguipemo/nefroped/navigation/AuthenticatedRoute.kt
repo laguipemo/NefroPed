@@ -37,5 +37,8 @@ sealed interface AuthenticatedRoute {
     data object Notifications : AuthenticatedRoute
 
     @Serializable
+    data object Admin : AuthenticatedRoute
+
+    @Serializable
     data object ResetPassword : AuthenticatedRoute
 }
