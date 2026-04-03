@@ -2,13 +2,8 @@ package com.laguipemo.nefroped.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,7 +19,9 @@ import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailScreen
 import com.laguipemo.nefroped.features.course.quiz.QuizScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
 import com.laguipemo.nefroped.core.domain.model.notification.NotificationType
+import com.laguipemo.nefroped.features.admin.AdminDashboardScreen
 import com.laguipemo.nefroped.features.notifications.NotificationsScreen
+
 
 @Composable
 fun AuthenticatedNavGraph(
@@ -145,10 +142,12 @@ fun AuthenticatedNavGraph(
         }
 
         composable<AuthenticatedRoute.Admin> {
-            // Placeholder para la pantalla de Administración
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Panel del Profesor - Próximamente", color = Color.White)
-            }
+            AdminDashboardScreen(
+                onBackClick = { navController.popBackStack() },
+                onManageTopicsClick = { /* TODO: Navegar a gestión de temas */ },
+                onManageQuizzesClick = { /* TODO: Navegar a gestión de quizzes */ },
+                onManageClinicalCasesClick = { /* TODO: Navegar a gestión de casos */ }
+            )
         }
 
         composable<AuthenticatedRoute.ResetPassword>(

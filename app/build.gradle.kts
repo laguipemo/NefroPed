@@ -53,7 +53,8 @@ dependencies {
     implementation(project(":profile"))
     implementation(project(":course"))
     implementation(project(":data"))
-    implementation(project(":notifications")) // Nuevo módulo añadido
+    implementation(project(":notifications"))
+    implementation(project(":admin")) // Nuevo módulo de administración añadido
 
     implementation(libs.androidx.core.splashscreen)
 
