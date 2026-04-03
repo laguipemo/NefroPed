@@ -26,6 +26,7 @@ import com.laguipemo.nefroped.features.profile.ProfileScreen
 import com.laguipemo.nefroped.core.domain.model.notification.NotificationType
 import com.laguipemo.nefroped.features.admin.AdminDashboardScreen
 import com.laguipemo.nefroped.features.admin.topics.AdminTopicsScreen
+import com.laguipemo.nefroped.features.admin.topics.AdminTopicFormScreen
 import com.laguipemo.nefroped.features.notifications.NotificationsScreen
 
 @Composable
@@ -171,9 +172,11 @@ fun AuthenticatedNavGraph(
 
         composable<AuthenticatedRoute.AdminTopicForm> { backStackEntry ->
             val route = backStackEntry.toRoute<AuthenticatedRoute.AdminTopicForm>()
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Formulario de Tema: ${route.topicId ?: "Nuevo"}", color = Color.White)
-            }
+            AdminTopicFormScreen(
+                topicId = route.topicId,
+                onBackClick = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
         }
 
         composable<AuthenticatedRoute.ResetPassword>(
