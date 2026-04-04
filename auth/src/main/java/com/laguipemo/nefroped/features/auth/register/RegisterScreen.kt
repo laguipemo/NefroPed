@@ -57,13 +57,16 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .consumeWindowInsets(padding)
+                .imePadding()
+                .padding(bottom = dimensionResource(R.dimen.space_m))
+                .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
         ) {
             val minHeight = maxHeight
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(

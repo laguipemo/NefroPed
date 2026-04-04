@@ -112,7 +112,7 @@ fun AdminTopicFormScreen(
                 .padding(padding)
                 .consumeWindowInsets(padding)
                 .imePadding() // Ajusta el Box al teclado
-                .padding(bottom = 8.dp) // GARANTÍA DE AIRE: El área visible termina 8dp antes del teclado
+                .padding(bottom = 16.dp)
         ) {
             Column(
                 modifier = Modifier
