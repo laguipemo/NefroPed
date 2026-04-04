@@ -51,13 +51,20 @@ fun ResetPasswordScreen(
         },
         containerColor = Color.Transparent
     ) { padding ->
-        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding)
+                .imePadding()
+                .padding(bottom = dimensionResource(R.dimen.space_m))
+                .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
+        ) {
             val minHeight = maxHeight
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(
