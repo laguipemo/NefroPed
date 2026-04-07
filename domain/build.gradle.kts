@@ -1,6 +1,7 @@
 plugins {
     id("java-library")
     alias(libs.plugins.jetbrains.kotlin.jvm)
+    alias(libs.plugins.kotlinx.serialization)
 }
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -19,4 +20,5 @@ dependencies {
     // Coroutines para Flow y suspend functions
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.serialization.core)
 }
