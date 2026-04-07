@@ -45,6 +45,8 @@ class AdminTopicFormViewModel(
     private val _uiState = MutableStateFlow(TopicFormUiState())
     val uiState: StateFlow<TopicFormUiState> = _uiState.asStateFlow()
 
+    private var originalTopic: Topic? = null
+
     init {
         topicId?.let { id ->
             loadTopic(id)
@@ -53,7 +55,8 @@ class AdminTopicFormViewModel(
 
     private fun loadTopic(id: String) {
         viewModelScope.launch {
-            observeTopic(id).filterNotNull().firstOrNull()?.let { topic ->
+            observeTopic(id).filterNotNull().first().let { topic ->
+                originalTopic = topic
                 _uiState.update {
                     it.copy(
                         title = topic.title,
@@ -101,21 +104,23 @@ class AdminTopicFormViewModel(
                     title = _uiState.value.title,
                     description = _uiState.value.description,
                     imageUrl = finalImageUrl,
-                    imagePlaceholder = null,
+                    imagePlaceholder = originalTopic?.imagePlaceholder,
                     contentUrl = _uiState.value.contentUrl,
-                    indexContent = _uiState.value.indexContent,
+                    indexContent = originalTopic?.indexContent, // Preservamos si ya estaba descargado
                     order = _uiState.value.order,
                     type = _uiState.value.type,
                     conversationId = _uiState.value.conversationId,
-                    lessonsCount = 0,
-                    completedLessonsCount = 0
+                    lessonsCount = originalTopic?.lessonsCount ?: 0,
+                    completedLessonsCount = originalTopic?.completedLessonsCount ?: 0
                 )
 
                 // 3. Guardar en Supabase
                 saveTopic(topic).getOrThrow()
+                android.util.Log.d("AdminTopicForm", "Save successful for topic: ${topic.title}")
                 _uiState.update { it.copy(isLoading = false, isSaveSuccess = true) }
                 
             } catch (e: Exception) {
+                android.util.Log.e("AdminTopicForm", "Error saving topic", e)
                 _uiState.update { it.copy(isLoading = false, error = e.message ?: "Error al guardar") }
             }
         }

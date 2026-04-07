@@ -203,6 +203,10 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun saveTopic(topic: Topic): Result<Unit> {
         return try {
+            Log.d("CourseRepo", "--- INICIO GUARDADO TEMA ---")
+            Log.d("CourseRepo", "ID: ${topic.id}")
+            Log.d("CourseRepo", "Título: ${topic.title}")
+            
             val dto = TopicDto(
                 id = topic.id,
                 title = topic.title,
@@ -214,13 +218,18 @@ class SupabaseCourseRepositoryImpl(
                 type = if (topic.type == TopicType.CLINICAL_CASES) "clinical_cases" else "lessons",
                 conversationId = topic.conversationId
             )
+            
+            Log.d("CourseRepo", "Enviando UPSERT a Supabase...")
             supabase.from("topics").upsert(dto)
+            Log.d("CourseRepo", "¡UPSERT exitoso en Supabase!")
             
             // Sincronizamos localmente tras el guardado
+            Log.d("CourseRepo", "Actualizando base de datos local (Room)...")
             courseDao.insertTopics(listOf(dto.toEntity(topic.lessonsCount, topic.completedLessonsCount, topic.indexContent)))
+            Log.d("CourseRepo", "--- FIN GUARDADO TEMA (ÉXITO) ---")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("CourseRepo", "Error saving topic", e)
+            Log.e("CourseRepo", "!!! ERROR GUARDANDO TEMA !!!", e)
             Result.failure(e)
         }
     }
@@ -235,12 +244,15 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun uploadTopicImage(byteArray: ByteArray, fileName: String): Result<String> {
         return try {
-            val bucket = supabase.storage.from("topic_images")
-            val path = "covers/$fileName"
+            Log.d("CourseRepo", "Subiendo imagen a storage: $fileName")
+            val bucket = supabase.storage.from("content")
+            val path = "topics/images/$fileName"
             bucket.upload(path, byteArray) { upsert = true }
-            Result.success(bucket.publicUrl(path))
+            val url = bucket.publicUrl(path)
+            Log.d("CourseRepo", "Imagen subida. URL pública: $url")
+            Result.success(url)
         } catch (e: Exception) {
-            Log.e("CourseRepo", "Error uploading topic image", e)
+            Log.e("CourseRepo", "Error subiendo imagen", e)
             Result.failure(e)
         }
     }
