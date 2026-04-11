@@ -43,6 +43,7 @@
     <string name="profile_section_account">Cuenta</string>
     <string name="profile_section_assistance">Asistencia</string>
     <string name="profile_section_about">Sobre NefroPed</string>
+    <string name="profile_section_admin">Administración</string>
 
     <string name="profile_action_link_account">Vincular cuenta</string>
     <string name="profile_action_link_account_desc">No pierdas tu progreso</string>
@@ -50,6 +51,9 @@
     <string name="profile_action_chat">Abrir Chat de ayuda</string>
     <string name="profile_action_chat_desc">Consulta tus dudas</string>
     <string name="profile_app_version">Versión de la app</string>
+
+    <string name="profile_action_manage_content">Gestionar Curso</string>
+    <string name="profile_action_manage_content_desc">Añadir temas, lecciones o quizzes</string>
 
     <string name="profile_guest_mode">Modo Invitado</string>
     <string name="profile_guest_warning">Estás usando una cuenta de invitado. Vincula tu cuenta para no perder tu progreso.</string>

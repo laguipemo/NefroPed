@@ -18,7 +18,11 @@ Cada versión debería:
 
 ## [Unreleased]
 ### Added
--
+- Implementar la gestión del curso por parte de usuarios con role de TEACHER y de ADMIN
+  - Implementar la creación de nuevos test de autoevaluación o edición de los existentes
+  - Implementar la creación de nuevos casos clínicos o edición de los existentes
+  - Implementa la adición/edición de enlaces a recursos complementarios externos.
+
 ### Refactor
 - 
 ### Fix
@@ -26,6 +30,14 @@ Cada versión debería:
   del token. En principio era un bug del ChannelFlow en Supabase 3.3.0 que debería estar
   corregido en la versión actual 3.4.1
 
+
+## [1.2.0] - 2026-04-11
+### Added
+- Implementa gestión del curso:
+  - Implementa toda la estructura para diferenciar los usuarios según los roles: STUDENT
+    TEACHER y ADMIN.
+  - Implementa la parte visual y todo el flujo para la creación de nuevos temas y lecciones
+    y la edición de los ya existentes por parte de usuarios con roles de TEACHER y ADMIN
 
 ## [1.1.0] - 2026-04-02
 ### Added

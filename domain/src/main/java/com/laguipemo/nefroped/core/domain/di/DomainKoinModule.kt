@@ -36,6 +36,7 @@ val domainKoinModule = module {
     
     // Course
     factoryOf(::ObserveTopicsUseCase)
+    factoryOf(::ObserveTopicUseCase) // Registrado
     factoryOf(::ObserveLessonsUseCase)
     factoryOf(::ObserveLessonUseCase)
     factoryOf(::SyncTopicsUseCase)
@@ -43,6 +44,7 @@ val domainKoinModule = module {
     factoryOf(::MarkLessonAsCompletedUseCase)
     factoryOf(::GetCourseProgressUseCase)
     factoryOf(::GetQuizAverageUseCase)
+    factoryOf(::SaveTopicUseCase) // Registrado
     
     // Notifications
     factoryOf(::ObserveNotificationsUseCase)

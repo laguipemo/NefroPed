@@ -2,8 +2,13 @@ package com.laguipemo.nefroped.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,6 +24,10 @@ import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailScreen
 import com.laguipemo.nefroped.features.course.quiz.QuizScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
 import com.laguipemo.nefroped.core.domain.model.notification.NotificationType
+import com.laguipemo.nefroped.features.admin.AdminDashboardScreen
+import com.laguipemo.nefroped.features.admin.topics.AdminTopicsScreen
+import com.laguipemo.nefroped.features.admin.lessons.AdminLessonFormScreen
+import com.laguipemo.nefroped.features.admin.topics.AdminTopicFormScreen
 import com.laguipemo.nefroped.features.notifications.NotificationsScreen
 
 @Composable
@@ -99,6 +108,9 @@ fun AuthenticatedNavGraph(
             ProfileScreen(
                 onOpenChat = {
                     navController.navigate(AuthenticatedRoute.Chat(conversationId = "general"))
+                },
+                onNavigateToAdmin = {
+                    navController.navigate(AuthenticatedRoute.Admin)
                 }
             )
         }
@@ -120,8 +132,6 @@ fun AuthenticatedNavGraph(
                         NotificationType.CHAT_REPLY -> {
                             val chatId = notification.payload["conversation_id"] ?: "general"
                             val topicTitle = notification.payload["topic_title"] ?: "Tema"
-                            
-                            // CORRECCIÓN: Ahora pasamos el topicTitle para que el ChatScreen lo muestre
                             navController.navigate(
                                 AuthenticatedRoute.Chat(
                                     conversationId = chatId,
@@ -135,6 +145,54 @@ fun AuthenticatedNavGraph(
                         else -> { /* Solo marcar como leída */ }
                     }
                 }
+            )
+        }
+
+        composable<AuthenticatedRoute.Admin> {
+            AdminDashboardScreen(
+                onBackClick = { navController.popBackStack() },
+                onManageTopicsClick = { 
+                    navController.navigate(AuthenticatedRoute.AdminTopics)
+                },
+                onManageQuizzesClick = { /* TODO */ },
+                onManageClinicalCasesClick = { /* TODO */ }
+            )
+        }
+
+        composable<AuthenticatedRoute.AdminTopics> {
+            AdminTopicsScreen(
+                onBackClick = { navController.popBackStack() },
+                onAddTopicClick = { 
+                    navController.navigate(AuthenticatedRoute.AdminTopicForm(null)) 
+                },
+                onTopicClick = { topicId ->
+                    navController.navigate(AuthenticatedRoute.AdminTopicForm(topicId))
+                }
+            )
+        }
+
+        composable<AuthenticatedRoute.AdminTopicForm> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.AdminTopicForm>()
+            AdminTopicFormScreen(
+                topicId = route.topicId,
+                onBackClick = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() },
+                onAddLesson = { topicId ->
+                    navController.navigate(AuthenticatedRoute.AdminLessonForm(topicId = topicId, lessonId = null))
+                },
+                onEditLesson = { topicId, lessonId ->
+                    navController.navigate(AuthenticatedRoute.AdminLessonForm(topicId = topicId, lessonId = lessonId))
+                }
+            )
+        }
+
+        composable<AuthenticatedRoute.AdminLessonForm> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.AdminLessonForm>()
+            AdminLessonFormScreen(
+                topicId = route.topicId,
+                lessonId = route.lessonId,
+                onBackClick = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
             )
         }
 

@@ -9,6 +9,7 @@ import com.laguipemo.nefroped.features.course.di.courseKoinModule
 import com.laguipemo.nefroped.features.notifications.di.notificationsKoinModule
 import com.laguipemo.nefroped.features.onboarding.di.onboardingKoinModule
 import com.laguipemo.nefroped.features.profile.di.profileKoinModule
+import com.laguipemo.nefroped.features.admin.di.adminKoinModule
 import org.koin.dsl.module
 
 val koinAppModule = module {
@@ -21,6 +22,7 @@ val koinAppModule = module {
         onboardingKoinModule,
         profileKoinModule,
         courseKoinModule,
-        notificationsKoinModule
+        notificationsKoinModule,
+        adminKoinModule
     )
 }

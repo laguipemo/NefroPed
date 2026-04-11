@@ -6,11 +6,7 @@ plugins {
 
 configure<LibraryExtension> {
     namespace = "com.laguipemo.nefroped.di"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -45,6 +41,7 @@ dependencies {
     implementation(project(":profile"))
     implementation(project(":course"))
     implementation(project(":notifications"))
+    implementation(project(":admin")) // Nuevo módulo de administración añadido
 
     // Koin
     implementation(libs.koin.android)

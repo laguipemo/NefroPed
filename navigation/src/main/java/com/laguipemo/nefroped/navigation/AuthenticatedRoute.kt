@@ -37,5 +37,21 @@ sealed interface AuthenticatedRoute {
     data object Notifications : AuthenticatedRoute
 
     @Serializable
+    data object Admin : AuthenticatedRoute
+
+    // Rutas de Administración de Contenidos
+    @Serializable
+    data object AdminTopics : AuthenticatedRoute
+
+    @Serializable
+    data class AdminTopicForm(val topicId: String? = null) : AuthenticatedRoute
+
+    @Serializable
+    data class AdminLessonForm(
+        val topicId: String,
+        val lessonId: String? = null
+    ) : AuthenticatedRoute
+
+    @Serializable
     data object ResetPassword : AuthenticatedRoute
 }

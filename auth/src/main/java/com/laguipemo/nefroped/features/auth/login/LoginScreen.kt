@@ -1,6 +1,7 @@
 package com.laguipemo.nefroped.features.auth.login
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -75,13 +76,16 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .consumeWindowInsets(padding)
+                .imePadding()
+                .padding( bottom = dimensionResource(R.dimen.space_m))
+                .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
         ) {
             val minHeight = maxHeight
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(
@@ -112,9 +116,9 @@ fun LoginScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
                     HorizontalDiv()
-                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_l)))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_m)))
 
                     SocialLoginSection(
                         onContinueAsGuest = { viewModel.onEvent(LoginUserEvent.ContinueAsGuest) },
@@ -260,7 +264,9 @@ private suspend fun handleGoogleLogin(context: Context, viewModel: LoginViewMode
     try {
         val result = credentialManager.getCredential(context = context, request = request)
         handleCredential(result, viewModel)
-    } catch (_: Exception) {}
+    } catch (e: Exception) {
+        Log.e("LoginScreen", "Google Login Exception: ${e.message}", e)
+    }
 }
 
 private fun handleCredential(result: androidx.credentials.GetCredentialResponse, viewModel: LoginViewModel) {
@@ -269,6 +275,10 @@ private fun handleCredential(result: androidx.credentials.GetCredentialResponse,
         try {
             val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
             viewModel.onEvent(LoginUserEvent.LoginWithGoogle(googleIdTokenCredential.idToken))
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.e("LoginScreen", "Handle Credential Error: ${e.message}", e)
+        }
+    } else {
+        Log.d("LoginScreen", "Unexpected credential type: ${credential.type}")
     }
 }
