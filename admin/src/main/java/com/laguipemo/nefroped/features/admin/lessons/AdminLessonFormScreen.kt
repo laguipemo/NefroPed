@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,14 +18,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.AuthTextField
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
@@ -93,6 +97,23 @@ fun AdminLessonFormScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri -> handleResourceUpload(uri, ResourceType.AUDIO) }
 
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            try {
+                val inputStream = context.contentResolver.openInputStream(it)
+                val bytes = inputStream?.readBytes()
+                val fileName = "lesson_img_${System.currentTimeMillis()}.jpg"
+                if (bytes != null) {
+                    viewModel.onEvent(LessonFormEvent.UploadImage(bytes, fileName))
+                }
+            } catch (e: Exception) {
+                // Manejar error
+            }
+        }
+    }
+
     LaunchedEffect(uiState.isSaveSuccess) {
         if (uiState.isSaveSuccess) {
             onSaveSuccess()
@@ -111,7 +132,7 @@ fun AdminLessonFormScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = if (lessonId == null) "Nueva Lección" else "Editar Lección",
+                        text = if (lessonId == null || lessonId == "null") "Nueva Lección" else "Editar Lección",
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
@@ -137,180 +158,239 @@ fun AdminLessonFormScreen(
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .consumeWindowInsets(padding)
-                .imePadding()
         ) {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .imePadding()
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Información Básica
-                AuthTextField(
-                    value = uiState.title,
-                    onValueChange = { viewModel.onEvent(LessonFormEvent.TitleChanged(it)) },
-                    label = "Título de la Lección",
-                    isDarkBackground = true
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AuthTextField(
-                        value = uiState.order.toString(),
-                        onValueChange = { 
-                            val value = it.toIntOrNull() ?: 0
-                            viewModel.onEvent(LessonFormEvent.OrderChanged(value)) 
-                        },
-                        label = "Orden",
-                        isDarkBackground = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    Box(modifier = Modifier.weight(2f)) {
-                        AuthTextField(
-                            value = uiState.description ?: "",
-                            onValueChange = { viewModel.onEvent(LessonFormEvent.DescriptionChanged(it)) },
-                            label = "Descripción corta",
-                            isDarkBackground = true,
-                            singleLine = false,
-                            minLines = 2,
-                            maxLines = 3
-                        )
-                    }
-                }
-
-                // Editor de Contenido (Markdown)
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Contenido (Markdown)",
-                            color = Color.White.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        
-                        TextButton(
-                            onClick = { filePickerLauncher.launch("*/*") },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                            colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.UploadFile,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text("Cargar archivo", style = MaterialTheme.typography.labelMedium)
-                        }
-                    }
-                    
-                    AuthTextField(
-                        value = uiState.content,
-                        onValueChange = { viewModel.onEvent(LessonFormEvent.ContentChanged(it)) },
-                        label = "Redacta o sube un archivo Markdown...",
-                        isDarkBackground = true,
-                        singleLine = false,
-                        minLines = 10,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // Recursos Multimedia (Sección agrupada para ahorrar espacio)
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
-                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(
-                        "Recursos Adicionales",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    
-                    ResourceField(
-                        value = uiState.videoUrl ?: "",
-                        onValueChange = { viewModel.onEvent(LessonFormEvent.VideoUrlChanged(it)) },
-                        label = "URL Video",
-                        icon = Icons.Default.PlayCircle,
-                        tint = MaterialTheme.colorScheme.primary,
-                        isUploading = uiState.isUploadingResource,
-                        onUploadClick = { videoPickerLauncher.launch("video/*") }
-                    )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    ResourceField(
-                        value = uiState.pdfUrl ?: "",
-                        onValueChange = { viewModel.onEvent(LessonFormEvent.PdfUrlChanged(it)) },
-                        label = "URL Documento PDF",
-                        icon = Icons.Default.Description,
-                        tint = Color(0xFFE57373),
-                        isUploading = uiState.isUploadingResource,
-                        onUploadClick = { pdfPickerLauncher.launch("application/pdf") }
-                    )
-
-                    ResourceField(
-                        value = uiState.audioUrl ?: "",
-                        onValueChange = { viewModel.onEvent(LessonFormEvent.AudioUrlChanged(it)) },
-                        label = "URL Audio",
-                        icon = Icons.Default.Audiotrack,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        isUploading = uiState.isUploadingResource,
-                        onUploadClick = { audioPickerLauncher.launch("audio/*") }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = { viewModel.onEvent(LessonFormEvent.Submit) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.button_height)),
-                    enabled = !uiState.isLoading,
-                    shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer, 
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
-                    } else {
-                        Text(if (lessonId == null) "GUARDAR LECCIÓN" else "ACTUALIZAR LECCIÓN", fontWeight = FontWeight.ExtraBold)
+                    // Selector de Imagen de Cabecera
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.1f))
+                            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                            .clickable { imagePickerLauncher.launch("image/*") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (uiState.imageUrl != null) {
+                            AsyncImage(
+                                model = uiState.imageUrl,
+                                contentDescription = "Imagen de la lección",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                            // Overlay para indicar que se puede cambiar
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.3f)),
+                                contentAlignment = Alignment.BottomEnd
+                            ) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
+                        } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.AddPhotoAlternate,
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "Añadir imagen de portada",
+                                    color = Color.White.copy(alpha = 0.5f),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
+                        }
+                        
+                        if (uiState.isUploadingResource && uiState.imageUrl == null) {
+                            CircularProgressIndicator(color = Color.White)
+                        }
                     }
-                }
 
-                if (uiState.error != null) {
-                    Text(
-                        text = uiState.error!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                    // Información Básica
+                    AuthTextField(
+                        value = uiState.title,
+                        onValueChange = { viewModel.onEvent(LessonFormEvent.TitleChanged(it)) },
+                        label = "Título de la Lección",
+                        isDarkBackground = true
                     )
-                }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        AuthTextField(
+                            value = uiState.order.toString(),
+                            onValueChange = { 
+                                val value = it.toIntOrNull() ?: 0
+                                viewModel.onEvent(LessonFormEvent.OrderChanged(value)) 
+                            },
+                            label = "Orden",
+                            isDarkBackground = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.weight(1f)
+                        )
+                        
+                        Box(modifier = Modifier.weight(2f)) {
+                            AuthTextField(
+                                value = uiState.description ?: "",
+                                onValueChange = { viewModel.onEvent(LessonFormEvent.DescriptionChanged(it)) },
+                                label = "Descripción corta",
+                                isDarkBackground = true,
+                                singleLine = false,
+                                minLines = 2,
+                                maxLines = 3
+                            )
+                        }
+                    }
+
+                    // Editor de Contenido (Markdown)
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Contenido (Markdown)",
+                                color = Color.White.copy(alpha = 0.7f),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            
+                            TextButton(
+                                onClick = { filePickerLauncher.launch("*/*") },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.UploadFile,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text("Cargar archivo", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                        
+                        AuthTextField(
+                            value = uiState.content,
+                            onValueChange = { viewModel.onEvent(LessonFormEvent.ContentChanged(it)) },
+                            label = "Redacta o sube un archivo Markdown...",
+                            isDarkBackground = true,
+                            singleLine = false,
+                            minLines = 10,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // Recursos Multimedia (Sección agrupada para ahorrar espacio)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            "Recursos Adicionales",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        ResourceField(
+                            value = uiState.videoUrl ?: "",
+                            onValueChange = { viewModel.onEvent(LessonFormEvent.VideoUrlChanged(it)) },
+                            label = "URL Video",
+                            icon = Icons.Default.PlayCircle,
+                            tint = MaterialTheme.colorScheme.primary,
+                            isUploading = uiState.isUploadingResource,
+                            onUploadClick = { videoPickerLauncher.launch("video/*") }
+                        )
+
+                        ResourceField(
+                            value = uiState.pdfUrl ?: "",
+                            onValueChange = { viewModel.onEvent(LessonFormEvent.PdfUrlChanged(it)) },
+                            label = "URL Documento PDF",
+                            icon = Icons.Default.Description,
+                            tint = Color(0xFFE57373),
+                            isUploading = uiState.isUploadingResource,
+                            onUploadClick = { pdfPickerLauncher.launch("application/pdf") }
+                        )
+
+                        ResourceField(
+                            value = uiState.audioUrl ?: "",
+                            onValueChange = { viewModel.onEvent(LessonFormEvent.AudioUrlChanged(it)) },
+                            label = "URL Audio",
+                            icon = Icons.Default.Audiotrack,
+                            tint = MaterialTheme.colorScheme.secondary,
+                            isUploading = uiState.isUploadingResource,
+                            onUploadClick = { audioPickerLauncher.launch("audio/*") }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = { viewModel.onEvent(LessonFormEvent.Submit) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(dimensionResource(R.dimen.button_height)),
+                        enabled = !uiState.isLoading,
+                        shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer, 
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        if (uiState.isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
+                        } else {
+                            Text(if (lessonId == null || lessonId == "null") "GUARDAR LECCIÓN" else "ACTUALIZAR LECCIÓN", fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+
+                    if (uiState.error != null) {
+                        Text(
+                            text = uiState.error!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(40.dp))
+                }
             }
         }
     }

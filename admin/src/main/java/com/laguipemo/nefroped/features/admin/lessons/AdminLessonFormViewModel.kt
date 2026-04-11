@@ -13,6 +13,7 @@ data class LessonFormUiState(
     val description: String? = null,
     val order: Int = 0,
     val content: String = "",
+    val imageUrl: String? = null,
     val videoUrl: String? = null,
     val pdfUrl: String? = null,
     val audioUrl: String? = null,
@@ -27,16 +28,18 @@ sealed interface LessonFormEvent {
     data class DescriptionChanged(val description: String) : LessonFormEvent
     data class OrderChanged(val order: Int) : LessonFormEvent
     data class ContentChanged(val content: String) : LessonFormEvent
+    data class ImageUrlChanged(val url: String?) : LessonFormEvent
     data class VideoUrlChanged(val url: String) : LessonFormEvent
     data class PdfUrlChanged(val url: String) : LessonFormEvent
     data class AudioUrlChanged(val url: String) : LessonFormEvent
     data class LessonFileContentSelected(val content: String) : LessonFormEvent
     data class UploadResource(val byteArray: ByteArray, val fileName: String, val type: ResourceType) : LessonFormEvent
+    data class UploadImage(val byteArray: ByteArray, val fileName: String) : LessonFormEvent
     data object Submit : LessonFormEvent
 }
 
 enum class ResourceType {
-    VIDEO, PDF, AUDIO
+    VIDEO, PDF, AUDIO, IMAGE
 }
 
 class AdminLessonFormViewModel(
@@ -51,7 +54,7 @@ class AdminLessonFormViewModel(
     private var originalLesson: Lesson? = null
 
     init {
-        if (lessonId != null) {
+        if (!lessonId.isNullOrBlank() && lessonId != "null") {
             loadLesson(lessonId)
         } else {
             // Calcular el siguiente orden sugerido
@@ -60,9 +63,16 @@ class AdminLessonFormViewModel(
     }
 
     private fun loadLesson(id: String) {
+        if (id.isBlank() || id == "null") return
+        
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            repository.observeLessons(topicId).first().find { it.id == id }?.let { lesson ->
+            
+            // Obtenemos la primera emisión de la lista de lecciones
+            val lessons = repository.observeLessons(topicId).firstOrNull() ?: emptyList()
+            val lesson = lessons.find { it.id == id }
+            
+            if (lesson != null) {
                 originalLesson = lesson
                 _uiState.update {
                     it.copy(
@@ -70,14 +80,17 @@ class AdminLessonFormViewModel(
                         description = lesson.description,
                         order = lesson.order,
                         content = lesson.content,
+                        imageUrl = lesson.imageUrl,
                         videoUrl = lesson.videoUrl,
                         pdfUrl = lesson.pdfUrl,
                         audioUrl = lesson.audioUrl,
                         isLoading = false
                     )
                 }
-            } ?: run {
-                _uiState.update { it.copy(isLoading = false, error = "No se encontró la lección") }
+            } else {
+                // Si no se encuentra, desactivamos la carga
+                // No ponemos error aquí para evitar el mensaje molesto si es un ID recién creado o inválido
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -96,12 +109,27 @@ class AdminLessonFormViewModel(
             is LessonFormEvent.DescriptionChanged -> _uiState.update { it.copy(description = event.description) }
             is LessonFormEvent.OrderChanged -> _uiState.update { it.copy(order = event.order) }
             is LessonFormEvent.ContentChanged -> _uiState.update { it.copy(content = event.content) }
+            is LessonFormEvent.ImageUrlChanged -> _uiState.update { it.copy(imageUrl = event.url) }
             is LessonFormEvent.VideoUrlChanged -> _uiState.update { it.copy(videoUrl = event.url.ifBlank { null }) }
             is LessonFormEvent.PdfUrlChanged -> _uiState.update { it.copy(pdfUrl = event.url.ifBlank { null }) }
             is LessonFormEvent.AudioUrlChanged -> _uiState.update { it.copy(audioUrl = event.url.ifBlank { null }) }
             is LessonFormEvent.LessonFileContentSelected -> _uiState.update { it.copy(content = event.content) }
             is LessonFormEvent.UploadResource -> uploadResource(event.byteArray, event.fileName, event.type)
+            is LessonFormEvent.UploadImage -> uploadImage(event.byteArray, event.fileName)
             LessonFormEvent.Submit -> saveLesson()
+        }
+    }
+
+    private fun uploadImage(byteArray: ByteArray, fileName: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingResource = true, error = null) }
+            repository.uploadLessonImage(byteArray, fileName)
+                .onSuccess { url ->
+                    _uiState.update { it.copy(imageUrl = url, isUploadingResource = false) }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isUploadingResource = false, error = "Error al subir imagen: ${e.message}") }
+                }
         }
     }
 
@@ -112,6 +140,7 @@ class AdminLessonFormViewModel(
                 ResourceType.VIDEO -> "videos"
                 ResourceType.PDF -> "documents"
                 ResourceType.AUDIO -> "audio"
+                ResourceType.IMAGE -> "images"
             }
             
             repository.uploadLessonResource(byteArray, fileName, folder)
@@ -121,6 +150,7 @@ class AdminLessonFormViewModel(
                             ResourceType.VIDEO -> state.copy(videoUrl = url, isUploadingResource = false)
                             ResourceType.PDF -> state.copy(pdfUrl = url, isUploadingResource = false)
                             ResourceType.AUDIO -> state.copy(audioUrl = url, isUploadingResource = false)
+                            ResourceType.IMAGE -> state.copy(imageUrl = url, isUploadingResource = false)
                         }
                     }
                 }
@@ -141,7 +171,7 @@ class AdminLessonFormViewModel(
             _uiState.update { it.copy(isLoading = true, error = null) }
             
             val lesson = Lesson(
-                id = lessonId ?: UUID.randomUUID().toString(),
+                id = if (!lessonId.isNullOrBlank() && lessonId != "null") lessonId else UUID.randomUUID().toString(),
                 topicId = topicId,
                 title = currentState.title,
                 description = currentState.description,
@@ -150,7 +180,7 @@ class AdminLessonFormViewModel(
                 videoUrl = currentState.videoUrl,
                 pdfUrl = currentState.pdfUrl,
                 audioUrl = currentState.audioUrl,
-                imageUrl = originalLesson?.imageUrl, // Por ahora mantenemos la imagen si existe
+                imageUrl = currentState.imageUrl,
                 isCompleted = originalLesson?.isCompleted ?: false
             )
 

@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Edit
@@ -397,11 +398,11 @@ private fun AdminLessonItem(
                 modifier = Modifier.size(40.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = lesson.order.toString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary
+                    Icon(
+                        imageVector = Icons.Default.Book,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -417,22 +418,40 @@ private fun AdminLessonItem(
                 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(top = 4.dp)
                 ) {
-                    if (lesson.videoUrl != null) {
-                        Icon(Icons.Default.PlayCircle, "Video", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
-                    }
-                    if (lesson.audioUrl != null) {
-                        Icon(Icons.Default.Audiotrack, "Audio", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
-                    }
-                    if (lesson.pdfUrl != null) {
-                        Icon(Icons.Default.Description, "PDF", modifier = Modifier.size(14.dp), tint = Color(0xFFE57373))
-                    }
+                    // Video Icon
+                    Icon(
+                        imageVector = Icons.Default.PlayCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (lesson.videoUrl?.isNotBlank() == true) 
+                            MaterialTheme.colorScheme.primary 
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                    )
                     
-                    Text(
-                        text = if (lesson.videoUrl == null && lesson.audioUrl == null && lesson.pdfUrl == null) "Solo lectura" else "Recursos multimedia",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    // Audio Icon
+                    Icon(
+                        imageVector = Icons.Default.Audiotrack,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (lesson.audioUrl?.isNotBlank() == true) 
+                            MaterialTheme.colorScheme.secondary 
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                    )
+                    
+                    // PDF Icon
+                    Icon(
+                        imageVector = Icons.Default.Description,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (lesson.pdfUrl?.isNotBlank() == true) 
+                            Color(0xFFE57373) 
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                     )
                 }
             }
