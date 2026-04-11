@@ -18,6 +18,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,19 +33,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.laguipemo.nefroped.core.domain.model.course.Lesson
 import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.filled.Audiotrack
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.text.style.TextOverflow
 import com.laguipemo.nefroped.designsystem.components.AuthTextField
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import org.koin.androidx.compose.koinViewModel
@@ -129,7 +126,6 @@ fun AdminTopicFormScreen(
                 .padding(padding)
                 .consumeWindowInsets(padding)
         ) {
-            // Pestañas (solo si el tema ya existe)
             if (topicId != null) {
                 TabRow(
                     selectedTabIndex = selectedTab,
@@ -171,7 +167,6 @@ fun AdminTopicFormScreen(
                     .imePadding()
             ) {
                 if (selectedTab == 0 || topicId == null) {
-                    // Pestaña de Información General
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -182,7 +177,6 @@ fun AdminTopicFormScreen(
                     ) {
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // Selector de Imagen
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -230,7 +224,6 @@ fun AdminTopicFormScreen(
                             }
                         }
 
-                        // Campos del Formulario
                         AuthTextField(
                             value = uiState.title,
                             onValueChange = { viewModel.onEvent(TopicFormEvent.TitleChanged(it)) },
@@ -246,7 +239,6 @@ fun AdminTopicFormScreen(
                             modifier = Modifier.heightIn(min = 120.dp)
                         )
 
-                        // Fila de Orden y Selector de Tipo
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m)),
@@ -313,79 +305,63 @@ fun AdminTopicFormScreen(
                         Spacer(modifier = Modifier.height(32.dp))
                     }
                 } else {
-                    // Pestaña de Lecciones / Casos
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = 16.dp,
-                                end = 16.dp,
-                                top = 16.dp,
-                                bottom = 100.dp // Espacio extra para legibilidad y FAB/Botones
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = if (uiState.type == TopicType.LESSONS) "Lecciones del Tema" else "Casos Clínicos",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-
-                                    TextButton(
-                                        onClick = { onAddLesson(topicId) },
-                                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primaryContainer)
-                                    ) {
-                                        Icon(Icons.Default.Add, contentDescription = null)
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Añadir")
-                                    }
-                                }
-                            }
-
-                            if (uiState.lessons.isEmpty()) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 40.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            "No hay contenido aún",
-                                            color = Color.White.copy(alpha = 0.5f),
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
-                                }
-                            } else {
-                                items(uiState.lessons) { lesson ->
-                                    AdminLessonItem(
-                                        lesson = lesson,
-                                        onClick = { onEditLesson(topicId, lesson.id) }
-                                    )
-                                }
+                            Text(
+                                text = if (uiState.type == TopicType.LESSONS) "Lecciones del Tema" else "Casos Clínicos",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            
+                            TextButton(
+                                onClick = { onAddLesson(topicId) },
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Añadir")
                             }
                         }
 
-                        // Scrim inferior para mejorar legibilidad sobre el degradado
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .height(80.dp)
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))
-                                    )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (uiState.lessons.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 40.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "No hay contenido aún",
+                                    color = Color.White.copy(alpha = 0.5f),
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
-                        )
+                            }
+                        } else {
+                            uiState.lessons.forEach { lesson ->
+                                AdminLessonItem(
+                                    lesson = lesson,
+                                    onClick = { onEditLesson(topicId, lesson.id) }
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(88.dp)) // Margen suficiente para el FAB/Suelo de la pantalla
                     }
                 }
             }
@@ -401,6 +377,7 @@ private fun AdminLessonItem(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 6.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
@@ -414,7 +391,6 @@ private fun AdminLessonItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Círculo con el orden (estilo más profesional)
             Surface(
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(8.dp),
@@ -443,7 +419,6 @@ private fun AdminLessonItem(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Indicadores de recursos disponibles
                     if (lesson.videoUrl != null) {
                         Icon(Icons.Default.PlayCircle, "Video", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
                     }
@@ -454,19 +429,11 @@ private fun AdminLessonItem(
                         Icon(Icons.Default.Description, "PDF", modifier = Modifier.size(14.dp), tint = Color(0xFFE57373))
                     }
                     
-                    if (lesson.videoUrl == null && lesson.audioUrl == null && lesson.pdfUrl == null) {
-                        Text(
-                            text = "Solo lectura",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Text(
-                            text = "Recursos multimedia",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = if (lesson.videoUrl == null && lesson.audioUrl == null && lesson.pdfUrl == null) "Solo lectura" else "Recursos multimedia",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
