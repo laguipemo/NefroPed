@@ -7,24 +7,61 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,7 +97,7 @@ fun AdminTopicFormScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val darkTheme = isSystemInDarkTheme()
-    
+
     var selectedTab by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(uiState.isSaveSuccess) {
@@ -102,13 +139,21 @@ fun AdminTopicFormScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
                     }
                 },
                 actions = {
                     if (!uiState.isLoading) {
                         IconButton(onClick = { viewModel.onEvent(TopicFormEvent.Submit) }) {
-                            Icon(Icons.Default.Save, contentDescription = "Guardar", tint = Color.White)
+                            Icon(
+                                Icons.Default.Save,
+                                contentDescription = "Guardar",
+                                tint = Color.White
+                            )
                         }
                     }
                 },
@@ -128,34 +173,39 @@ fun AdminTopicFormScreen(
                 .consumeWindowInsets(padding)
         ) {
             if (topicId != null) {
-                TabRow(
+                SecondaryTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = Color.Transparent,
                     contentColor = MaterialTheme.colorScheme.primaryContainer,
-                    indicator = { tabPositions ->
-                        if (selectedTab < tabPositions.size) {
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            )
-                        }
+                    indicator = {
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(
+                                selectedTabIndex = selectedTab
+                            ),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        )
                     },
                     divider = { HorizontalDivider(color = Color.White.copy(alpha = 0.1f)) }
                 ) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("INFORMACIÓN", fontWeight = FontWeight.Bold) },
+                        text = {
+                            Text(
+                                "INFORMACIÓN",
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
                         unselectedContentColor = Color.White.copy(alpha = 0.6f)
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { 
+                        text = {
                             Text(
-                                if (uiState.type == TopicType.LESSONS) "LECCIONES" else "CASOS", 
+                                if (uiState.type == TopicType.LESSONS) "LECCIONES" else "CASOS",
                                 fontWeight = FontWeight.Bold
-                            ) 
+                            )
                         },
                         unselectedContentColor = Color.White.copy(alpha = 0.6f)
                     )
@@ -184,15 +234,22 @@ fun AdminTopicFormScreen(
                                 .height(160.dp)
                                 .clip(RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius)))
                                 .background(Color.White.copy(alpha = 0.1f))
-                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius)))
+                                .border(
+                                    1.dp,
+                                    Color.White.copy(alpha = 0.2f),
+                                    RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius))
+                                )
                                 .clickable {
                                     photoPickerLauncher.launch(
-                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        PickVisualMediaRequest(
+                                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                                        )
                                     )
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                            val displayImage = uiState.selectedImageUri ?: uiState.imageUrl
+                            val displayImage =
+                                uiState.selectedImageUri ?: uiState.imageUrl
                             if (displayImage != null) {
                                 AsyncImage(
                                     model = displayImage,
@@ -206,7 +263,12 @@ fun AdminTopicFormScreen(
                                         .background(Color.Black.copy(alpha = 0.3f)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(Icons.Default.CloudUpload, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
+                                    Icon(
+                                        Icons.Default.CloudUpload,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(32.dp)
+                                    )
                                 }
                             } else {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -227,14 +289,26 @@ fun AdminTopicFormScreen(
 
                         AuthTextField(
                             value = uiState.title,
-                            onValueChange = { viewModel.onEvent(TopicFormEvent.TitleChanged(it)) },
+                            onValueChange = {
+                                viewModel.onEvent(
+                                    TopicFormEvent.TitleChanged(
+                                        it
+                                    )
+                                )
+                            },
                             label = "Título del Tema",
                             isDarkBackground = true
                         )
 
                         AuthTextField(
                             value = uiState.description,
-                            onValueChange = { viewModel.onEvent(TopicFormEvent.DescriptionChanged(it)) },
+                            onValueChange = {
+                                viewModel.onEvent(
+                                    TopicFormEvent.DescriptionChanged(
+                                        it
+                                    )
+                                )
+                            },
                             label = "Descripción",
                             isDarkBackground = true,
                             modifier = Modifier.heightIn(min = 120.dp)
@@ -242,14 +316,20 @@ fun AdminTopicFormScreen(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m)),
-                            verticalAlignment = Alignment.Bottom 
+                            horizontalArrangement = Arrangement.spacedBy(
+                                dimensionResource(R.dimen.space_m)
+                            ),
+                            verticalAlignment = Alignment.Bottom
                         ) {
                             AuthTextField(
                                 value = uiState.order.toString(),
-                                onValueChange = { 
+                                onValueChange = {
                                     val value = it.toIntOrNull() ?: 0
-                                    viewModel.onEvent(TopicFormEvent.OrderChanged(value)) 
+                                    viewModel.onEvent(
+                                        TopicFormEvent.OrderChanged(
+                                            value
+                                        )
+                                    )
                                 },
                                 label = "Orden",
                                 isDarkBackground = true,
@@ -263,20 +343,35 @@ fun AdminTopicFormScreen(
                                     .height(56.dp),
                                 shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
                                 color = Color.White.copy(alpha = 0.1f),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    Color.White.copy(alpha = 0.2f)
+                                )
                             ) {
                                 Row(modifier = Modifier.fillMaxSize()) {
                                     TopicTypeOption(
                                         text = "Lecciones",
                                         isSelected = uiState.type == TopicType.LESSONS,
                                         modifier = Modifier.weight(1f),
-                                        onClick = { viewModel.onEvent(TopicFormEvent.TypeChanged(TopicType.LESSONS)) }
+                                        onClick = {
+                                            viewModel.onEvent(
+                                                TopicFormEvent.TypeChanged(
+                                                    TopicType.LESSONS
+                                                )
+                                            )
+                                        }
                                     )
                                     TopicTypeOption(
                                         text = "Casos",
                                         isSelected = uiState.type == TopicType.CLINICAL_CASES,
                                         modifier = Modifier.weight(1f),
-                                        onClick = { viewModel.onEvent(TopicFormEvent.TypeChanged(TopicType.CLINICAL_CASES)) }
+                                        onClick = {
+                                            viewModel.onEvent(
+                                                TopicFormEvent.TypeChanged(
+                                                    TopicType.CLINICAL_CASES
+                                                )
+                                            )
+                                        }
                                     )
                                 }
                             }
@@ -292,14 +387,21 @@ fun AdminTopicFormScreen(
                             enabled = !uiState.isLoading,
                             shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer, 
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
                             if (uiState.isLoading) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(
+                                        24.dp
+                                    ), color = MaterialTheme.colorScheme.primary
+                                )
                             } else {
-                                Text(if (topicId == null) "CREAR TEMA" else "GUARDAR CAMBIOS", fontWeight = FontWeight.ExtraBold)
+                                Text(
+                                    if (topicId == null) "CREAR TEMA" else "GUARDAR CAMBIOS",
+                                    fontWeight = FontWeight.ExtraBold
+                                )
                             }
                         }
 
@@ -315,7 +417,7 @@ fun AdminTopicFormScreen(
                         verticalArrangement = Arrangement.Top
                     ) {
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -327,12 +429,17 @@ fun AdminTopicFormScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
-                            
+
                             TextButton(
                                 onClick = { onAddLesson(topicId) },
-                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primaryContainer)
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.primaryContainer
+                                )
                             ) {
-                                Icon(Icons.Default.Add, contentDescription = null)
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = null
+                                )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text("Añadir")
                             }
@@ -357,7 +464,12 @@ fun AdminTopicFormScreen(
                             uiState.lessons.forEach { lesson ->
                                 AdminLessonItem(
                                     lesson = lesson,
-                                    onClick = { onEditLesson(topicId, lesson.id) }
+                                    onClick = {
+                                        onEditLesson(
+                                            topicId,
+                                            lesson.id
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -415,7 +527,7 @@ private fun AdminLessonItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -426,32 +538,38 @@ private fun AdminLessonItem(
                         imageVector = Icons.Default.PlayCircle,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = if (lesson.videoUrl?.isNotBlank() == true) 
-                            MaterialTheme.colorScheme.primary 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                        tint = if (lesson.videoUrl?.isNotBlank() == true)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.2f
+                            )
                     )
-                    
+
                     // Audio Icon
                     Icon(
                         imageVector = Icons.Default.Audiotrack,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = if (lesson.audioUrl?.isNotBlank() == true) 
-                            MaterialTheme.colorScheme.secondary 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                        tint = if (lesson.audioUrl?.isNotBlank() == true)
+                            MaterialTheme.colorScheme.secondary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.2f
+                            )
                     )
-                    
+
                     // PDF Icon
                     Icon(
                         imageVector = Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = if (lesson.pdfUrl?.isNotBlank() == true) 
-                            Color(0xFFE57373) 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                        tint = if (lesson.pdfUrl?.isNotBlank() == true)
+                            Color(0xFFE57373)
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.2f
+                            )
                     )
                 }
             }
