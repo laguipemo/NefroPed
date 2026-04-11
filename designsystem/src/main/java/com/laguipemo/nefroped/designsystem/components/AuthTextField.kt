@@ -28,7 +28,10 @@ fun AuthTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
-    isDarkBackground: Boolean = true
+    isDarkBackground: Boolean = true,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE
 ) {
     val colors = if (isDarkBackground) {
         OutlinedTextFieldDefaults.colors(
@@ -77,7 +80,9 @@ fun AuthTextField(
             onValueChange = onValueChange,
             label = { Text(label) },
             isError = isError,
-            singleLine = true,
+            singleLine = singleLine,
+            minLines = minLines,
+            maxLines = maxLines,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             visualTransformation = visualTransformation,

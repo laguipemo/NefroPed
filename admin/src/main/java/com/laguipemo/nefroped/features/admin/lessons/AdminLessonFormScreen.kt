@@ -1,5 +1,7 @@
 package com.laguipemo.nefroped.features.admin.lessons
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -8,12 +10,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -99,6 +105,7 @@ fun AdminLessonFormScreen(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Información Básica
                 AuthTextField(
                     value = uiState.title,
                     onValueChange = { viewModel.onEvent(LessonFormEvent.TitleChanged(it)) },
@@ -106,70 +113,96 @@ fun AdminLessonFormScreen(
                     isDarkBackground = true
                 )
 
-                AuthTextField(
-                    value = uiState.description ?: "",
-                    onValueChange = { viewModel.onEvent(LessonFormEvent.DescriptionChanged(it)) },
-                    label = "Descripción corta (opcional)",
-                    isDarkBackground = true
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    AuthTextField(
+                        value = uiState.order.toString(),
+                        onValueChange = { 
+                            val value = it.toIntOrNull() ?: 0
+                            viewModel.onEvent(LessonFormEvent.OrderChanged(value)) 
+                        },
+                        label = "Orden",
+                        isDarkBackground = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    Box(modifier = Modifier.weight(2f)) {
+                        AuthTextField(
+                            value = uiState.description ?: "",
+                            onValueChange = { viewModel.onEvent(LessonFormEvent.DescriptionChanged(it)) },
+                            label = "Descripción corta",
+                            isDarkBackground = true,
+                            singleLine = false,
+                            minLines = 2,
+                            maxLines = 3
+                        )
+                    }
+                }
 
-                AuthTextField(
-                    value = uiState.order.toString(),
-                    onValueChange = { 
-                        val value = it.toIntOrNull() ?: 0
-                        viewModel.onEvent(LessonFormEvent.OrderChanged(value)) 
-                    },
-                    label = "Orden",
-                    isDarkBackground = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
+                // Editor de Contenido (Markdown)
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Contenido (Markdown)",
+                        color = Color.White.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    AuthTextField(
+                        value = uiState.content,
+                        onValueChange = { viewModel.onEvent(LessonFormEvent.ContentChanged(it)) },
+                        label = "Redacta el contenido educativo aquí...",
+                        isDarkBackground = true,
+                        singleLine = false,
+                        minLines = 10,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
-                HorizontalDivider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 8.dp))
-                
-                Text(
-                    "Contenido (Markdown)",
-                    color = Color.White.copy(alpha = 0.6f),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.align(Alignment.Start)
-                )
+                // Recursos Multimedia (Sección agrupada para ahorrar espacio)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "Recursos Adicionales",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    ResourceField(
+                        value = uiState.videoUrl ?: "",
+                        onValueChange = { viewModel.onEvent(LessonFormEvent.VideoUrlChanged(it)) },
+                        label = "URL Video",
+                        icon = Icons.Default.PlayCircle,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
 
-                AuthTextField(
-                    value = uiState.content,
-                    onValueChange = { viewModel.onEvent(LessonFormEvent.ContentChanged(it)) },
-                    label = "Escribe aquí el contenido...",
-                    isDarkBackground = true,
-                    modifier = Modifier.heightIn(min = 300.dp)
-                )
+                    ResourceField(
+                        value = uiState.pdfUrl ?: "",
+                        onValueChange = { viewModel.onEvent(LessonFormEvent.PdfUrlChanged(it)) },
+                        label = "URL Documento PDF",
+                        icon = Icons.Default.Description,
+                        tint = Color(0xFFE57373)
+                    )
 
-                HorizontalDivider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 8.dp))
-
-                Text(
-                    "Recursos Adicionales (URLs opcionales)",
-                    color = Color.White.copy(alpha = 0.6f),
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.align(Alignment.Start)
-                )
-
-                AuthTextField(
-                    value = uiState.videoUrl ?: "",
-                    onValueChange = { viewModel.onEvent(LessonFormEvent.VideoUrlChanged(it)) },
-                    label = "URL Video (YouTube/Vimeo)",
-                    isDarkBackground = true
-                )
-
-                AuthTextField(
-                    value = uiState.pdfUrl ?: "",
-                    onValueChange = { viewModel.onEvent(LessonFormEvent.PdfUrlChanged(it)) },
-                    label = "URL PDF",
-                    isDarkBackground = true
-                )
-
-                AuthTextField(
-                    value = uiState.audioUrl ?: "",
-                    onValueChange = { viewModel.onEvent(LessonFormEvent.AudioUrlChanged(it)) },
-                    label = "URL Audio",
-                    isDarkBackground = true
-                )
+                    ResourceField(
+                        value = uiState.audioUrl ?: "",
+                        onValueChange = { viewModel.onEvent(LessonFormEvent.AudioUrlChanged(it)) },
+                        label = "URL Audio",
+                        icon = Icons.Default.Audiotrack,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -188,7 +221,7 @@ fun AdminLessonFormScreen(
                     if (uiState.isLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
                     } else {
-                        Text(if (lessonId == null) "CREAR LECCIÓN" else "GUARDAR CAMBIOS", fontWeight = FontWeight.ExtraBold)
+                        Text(if (lessonId == null) "GUARDAR LECCIÓN" else "ACTUALIZAR LECCIÓN", fontWeight = FontWeight.ExtraBold)
                     }
                 }
 
@@ -201,8 +234,31 @@ fun AdminLessonFormScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(40.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun ResourceField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    icon: ImageVector,
+    tint: Color
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
+        AuthTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = label,
+            isDarkBackground = true,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
