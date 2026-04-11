@@ -12,5 +12,5 @@ internal data class NotificationDto(
     val type: String,
     @SerialName("is_read") val isRead: Boolean = false,
     @SerialName("created_at") val createdAt: String,
-    val payload: Map<String, String>? = null
+    val payload: Map<String, String?>? = null
 )

@@ -9,7 +9,9 @@ import com.laguipemo.nefroped.core.local.room.dao.CourseDao
 import com.laguipemo.nefroped.core.local.room.entity.*
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.storage.storage
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -25,6 +27,11 @@ class SupabaseCourseRepositoryImpl(
 
     override fun observeTopics(): Flow<List<Topic>> = 
         courseDao.observeTopics().map { entities -> entities.map { it.toDomain() } }
+
+    override fun observeTopicsAdmin(): Flow<List<Topic>> = observeTopics()
+
+    override fun observeTopic(id: String): Flow<Topic?> = 
+        courseDao.observeTopics().map { list -> list.find { it.id == id }?.toDomain() }
 
     override fun observeLessons(topicId: String): Flow<List<Lesson>> = 
         courseDao.observeLessonsByTopic(topicId).map { entities -> entities.map { it.toDomain() } }
@@ -53,13 +60,13 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun syncTopics(): Result<Unit> {
         return try {
             val userId = supabase.auth.currentUserOrNull()?.id ?: ""
-            val topicsDto = supabase.postgrest["topics"].select().decodeList<TopicDto>()
+            val topicsDto = supabase.from("topics").select().decodeList<TopicDto>()
             val userProgress = if (userId.isNotEmpty()) {
-                supabase.postgrest["user_progress"].select { filter { eq("user_id", userId) } }.decodeList<UserProgressDto>().map { it.lessonId }.toSet()
+                supabase.from("user_progress").select { filter { eq("user_id", userId) } }.decodeList<UserProgressDto>().map { it.lessonId }.toSet()
             } else emptySet()
             
             val entities = topicsDto.map { dto ->
-                val lessons = supabase.postgrest["lessons"].select { filter { eq("topic_id", dto.id) } }.decodeList<LessonDto>()
+                val lessons = supabase.from("lessons").select { filter { eq("topic_id", dto.id) } }.decodeList<LessonDto>()
                 
                 val indexContent = dto.contentUrl?.let { url ->
                     try {
@@ -83,17 +90,25 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun syncLessons(topicId: String): Result<Unit> {
         return try {
+            Log.d("CourseRepo", "Sincronizando lecciones para topicId: $topicId")
             val userId = supabase.auth.currentUserOrNull()?.id ?: ""
-            val lessonsDto = supabase.postgrest["lessons"].select { filter { eq("topic_id", topicId) } }.decodeList<LessonDto>()
+            val lessonsDto = supabase.from("lessons").select { filter { eq("topic_id", topicId) } }.decodeList<LessonDto>()
+            Log.d("CourseRepo", "Lecciones encontradas en Supabase: ${lessonsDto.size}")
+
             val userProgress = if (userId.isNotEmpty()) {
-                supabase.postgrest["user_progress"].select { filter { eq("user_id", userId) } }.decodeList<UserProgressDto>().map { it.lessonId }.toSet()
+                supabase.from("user_progress").select { filter { eq("user_id", userId) } }.decodeList<UserProgressDto>().map { it.lessonId }.toSet()
             } else emptySet()
             
             val entities = lessonsDto.map { dto ->
-                val contentText = try {
-                    httpClient.get(dto.contentUrl).bodyAsText()
-                } catch (e: Exception) {
-                    Log.e("CourseRepo", "Error downloading lesson markdown: ${dto.title}", e)
+                val contentText = if (dto.contentUrl.isNotEmpty()) {
+                    try {
+                        httpClient.get(dto.contentUrl).bodyAsText()
+                    } catch (e: Exception) {
+                        Log.e("CourseRepo", "Error downloading lesson markdown from: ${dto.contentUrl}", e)
+                        ""
+                    }
+                } else {
+                    Log.w("CourseRepo", "Lesson ${dto.title} has empty contentUrl")
                     ""
                 }
                 
@@ -106,12 +121,15 @@ class SupabaseCourseRepositoryImpl(
             courseDao.insertLessons(entities)
             courseDao.refreshTopicProgress(topicId)
             Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
+        } catch (e: Exception) { 
+            Log.e("CourseRepo", "Error en syncLessons", e)
+            Result.failure(e) 
+        }
     }
 
     override suspend fun syncQuiz(topicId: String): Result<Unit> {
         return try {
-            val quizDto = supabase.postgrest["quizzes"].select { filter { eq("topic_id", topicId) } }.decodeSingleOrNull<QuizDto>() ?: return Result.failure(Exception("Quiz not found"))
+            val quizDto = supabase.from("quizzes").select { filter { eq("topic_id", topicId) } }.decodeSingleOrNull<QuizDto>() ?: return Result.failure(Exception("Quiz not found"))
             syncQuestionsAndResult(quizDto)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
@@ -119,20 +137,20 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun syncQuizById(quizId: String): Result<Unit> {
         return try {
-            val quizDto = supabase.postgrest["quizzes"].select { filter { eq("id", quizId) } }.decodeSingleOrNull<QuizDto>() ?: return Result.failure(Exception("Quiz not found"))
+            val quizDto = supabase.from("quizzes").select { filter { eq("id", quizId) } }.decodeSingleOrNull<QuizDto>() ?: return Result.failure(Exception("Quiz not found"))
             syncQuestionsAndResult(quizDto)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
 
     private suspend fun syncQuestionsAndResult(quizDto: QuizDto) {
-        val questionsDto = supabase.postgrest["questions"].select { filter { eq("quiz_id", quizDto.id) } }.decodeList<QuestionDto>()
+        val questionsDto = supabase.from("questions").select { filter { eq("quiz_id", quizDto.id) } }.decodeList<QuestionDto>()
         courseDao.insertQuiz(quizDto.toEntity())
         courseDao.insertQuestions(questionsDto.map { it.toEntity() })
 
         val userId = supabase.auth.currentUserOrNull()?.id
         if (userId != null) {
-            val resultDto = supabase.postgrest["quiz_results"].select {
+            val resultDto = supabase.from("quiz_results").select {
                 filter { eq("quiz_id", quizDto.id); eq("user_id", userId) }
             }.decodeSingleOrNull<QuizResultDto>()
 
@@ -145,8 +163,8 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun syncClinicalData(topicId: String): Result<Unit> {
         return try {
-            val casesDto = supabase.postgrest["clinical_cases"].select { filter { eq("topic_id", topicId) } }.decodeList<ClinicalCaseDto>()
-            val resourcesDto = supabase.postgrest["complementary_resources"].select { filter { eq("topic_id", topicId) } }.decodeList<ComplementaryResourceDto>()
+            val casesDto = supabase.from("clinical_cases").select { filter { eq("topic_id", topicId) } }.decodeList<ClinicalCaseDto>()
+            val resourcesDto = supabase.from("complementary_resources").select { filter { eq("topic_id", topicId) } }.decodeList<ComplementaryResourceDto>()
             courseDao.insertClinicalCases(casesDto.map { it.toEntity() })
             courseDao.insertComplementaryResources(resourcesDto.map { it.toEntity() })
             Result.success(Unit)
@@ -156,7 +174,7 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun markLessonAsCompleted(lessonId: String): Boolean {
         val userId = supabase.auth.currentUserOrNull()?.id ?: return false
         return try {
-            supabase.postgrest["user_progress"].upsert(UserProgressDto(userId, lessonId))
+            supabase.from("user_progress").upsert(UserProgressDto(userId, lessonId))
             val lesson = courseDao.getLessonById(lessonId)
             courseDao.updateLessonCompletion(lessonId, true)
             lesson?.topicId?.let { courseDao.refreshTopicProgress(it) }
@@ -176,7 +194,7 @@ class SupabaseCourseRepositoryImpl(
                 totalQuestions = result.totalQuestions, 
                 completedAt = instant.toString()
             )
-            supabase.postgrest["quiz_results"].upsert(dto)
+            supabase.from("quiz_results").upsert(dto)
             
             courseDao.insertQuizResult(QuizResultEntity(
                 quizId = dto.quizId, 
@@ -190,5 +208,150 @@ class SupabaseCourseRepositoryImpl(
             Log.e("CourseRepo", "Error saving quiz result to Supabase", e)
             false
         }
+    }
+
+    // --- IMPLEMENTACIÓN DE ADMINISTRACIÓN ---
+
+    override suspend fun saveTopic(topic: Topic): Result<Unit> {
+        return try {
+            Log.d("CourseRepo", "--- INICIO GUARDADO TEMA ---")
+            Log.d("CourseRepo", "ID: ${topic.id}, Título: ${topic.title}")
+            
+            var finalContentUrl = topic.contentUrl ?: ""
+            
+            // 1. Subir el contenido Markdown (indexContent) a Storage si existe
+            val indexContent = topic.indexContent
+            if (!indexContent.isNullOrEmpty()) {
+                val fileName = "topic_${topic.id}.md"
+                val path = "topics/content/$fileName"
+                val bucket = supabase.storage.from("content")
+                
+                Log.d("CourseRepo", "Subiendo indexContent MD a $path")
+                bucket.upload(path, indexContent.toByteArray()) { upsert = true }
+                finalContentUrl = bucket.publicUrl(path)
+                Log.d("CourseRepo", "indexContent MD subido. URL: $finalContentUrl")
+            }
+            
+            val dto = TopicDto(
+                id = topic.id,
+                title = topic.title,
+                description = topic.description,
+                imageUrl = topic.imageUrl,
+                imagePlaceholder = topic.imagePlaceholder,
+                contentUrl = finalContentUrl,
+                order = topic.order,
+                type = if (topic.type == TopicType.CLINICAL_CASES) "clinical_cases" else "lessons",
+                conversationId = topic.conversationId
+            )
+            
+            Log.d("CourseRepo", "Enviando UPSERT a Supabase...")
+            supabase.from("topics").upsert(dto)
+            Log.d("CourseRepo", "¡UPSERT exitoso en Supabase!")
+            
+            // Sincronizamos localmente tras el guardado
+            Log.d("CourseRepo", "Actualizando base de datos local (Room)...")
+            courseDao.insertTopics(listOf(dto.toEntity(topic.lessonsCount, topic.completedLessonsCount, topic.indexContent)))
+            Log.d("CourseRepo", "--- FIN GUARDADO TEMA (ÉXITO) ---")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("CourseRepo", "!!! ERROR GUARDANDO TEMA !!!", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteTopic(id: String): Result<Unit> {
+        return try {
+            supabase.from("topics").delete { filter { eq("id", id) } }
+            // Opcional: limpiar Room
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun uploadTopicImage(byteArray: ByteArray, fileName: String): Result<String> {
+        return try {
+            Log.d("CourseRepo", "Subiendo imagen a storage: $fileName")
+            val bucket = supabase.storage.from("content")
+            val path = "topics/images/$fileName"
+            bucket.upload(path, byteArray) { upsert = true }
+            val url = bucket.publicUrl(path)
+            Log.d("CourseRepo", "Imagen subida. URL pública: $url")
+            Result.success(url)
+        } catch (e: Exception) {
+            Log.e("CourseRepo", "Error subiendo imagen", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun saveLesson(lesson: Lesson): Result<Unit> {
+        return try {
+            Log.d("CourseRepo", "--- INICIO GUARDADO LECCIÓN ---")
+            Log.d("CourseRepo", "ID: ${lesson.id}, Title: ${lesson.title}")
+            
+            var contentUrl = ""
+            
+            // 1. Subir el contenido Markdown a Storage si existe
+            if (lesson.content.isNotEmpty()) {
+                val fileName = "lesson_${lesson.id}.md"
+                val path = "lessons/content/$fileName"
+                val bucket = supabase.storage.from("content")
+                
+                Log.d("CourseRepo", "Subiendo contenido MD a $path")
+                bucket.upload(path, lesson.content.toByteArray()) { upsert = true }
+                contentUrl = bucket.publicUrl(path)
+                Log.d("CourseRepo", "Contenido MD subido. URL: $contentUrl")
+            }
+
+            val dto = LessonDto(
+                id = lesson.id,
+                topicId = lesson.topicId,
+                title = lesson.title,
+                description = lesson.description,
+                order = lesson.order,
+                contentUrl = contentUrl,
+                imageUrl = lesson.imageUrl,
+                videoUrl = lesson.videoUrl,
+                audioUrl = lesson.audioUrl,
+                pdfUrl = lesson.pdfUrl
+            )
+            
+            Log.d("CourseRepo", "Enviando UPSERT de lección a Supabase...")
+            supabase.from("lessons").upsert(dto)
+            
+            // 2. Actualizar local (Room)
+            Log.d("CourseRepo", "Actualizando Room...")
+            courseDao.insertLessons(listOf(dto.toEntity(lesson.isCompleted, lesson.content)))
+            courseDao.refreshTopicProgress(lesson.topicId)
+            
+            Log.d("CourseRepo", "--- FIN GUARDADO LECCIÓN (ÉXITO) ---")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("CourseRepo", "!!! ERROR GUARDANDO LECCIÓN !!!", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteLesson(id: String): Result<Unit> {
+        return try {
+            supabase.from("lessons").delete { filter { eq("id", id) } }
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun uploadLessonImage(byteArray: ByteArray, fileName: String): Result<String> {
+        return try {
+            val bucket = supabase.storage.from("content")
+            val path = "lessons/images/$fileName"
+            bucket.upload(path, byteArray) { upsert = true }
+            Result.success(bucket.publicUrl(path))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun uploadLessonResource(byteArray: ByteArray, fileName: String, folder: String): Result<String> {
+        return try {
+            val bucket = supabase.storage.from("content")
+            val path = "lessons/$folder/$fileName"
+            bucket.upload(path, byteArray) { upsert = true }
+            Result.success(bucket.publicUrl(path))
+        } catch (e: Exception) { Result.failure(e) }
     }
 }

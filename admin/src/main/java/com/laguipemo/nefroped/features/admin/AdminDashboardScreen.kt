@@ -1,5 +1,6 @@
 package com.laguipemo.nefroped.features.admin
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,13 +30,17 @@ fun AdminDashboardScreen(
     onManageQuizzesClick: () -> Unit,
     onManageClinicalCasesClick: () -> Unit
 ) {
+    val darkTheme = isSystemInDarkTheme()
+
+    // Configuración inmersiva para que los iconos contrasten con el degradado oscuro
     SystemBarsController(
         useStatusDarkIcons = false,
-        useNavigationDarkIcons = false
+        useNavigationDarkIcons = !darkTheme
     )
 
     Scaffold(
         containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0), // Inmersión total
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
@@ -64,6 +69,7 @@ fun AdminDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .consumeWindowInsets(padding) // Crucial para que el contenido fluya bajo las barras
                 .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding))
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m))
@@ -97,6 +103,8 @@ fun AdminDashboardScreen(
                 onClick = onManageClinicalCasesClick
             )
             
+            // Añadimos padding para la barra de navegación
+            Spacer(modifier = Modifier.navigationBarsPadding())
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.space_xl)))
         }
     }
@@ -110,12 +118,12 @@ private fun AdminMenuCard(
     onClick: () -> Unit
 ) {
     ElevatedCard(
-        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-        )
+        ),
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
