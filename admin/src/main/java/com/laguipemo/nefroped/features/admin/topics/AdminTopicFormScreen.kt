@@ -36,6 +36,13 @@ import coil3.compose.AsyncImage
 import com.laguipemo.nefroped.core.domain.model.course.Lesson
 import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.style.TextOverflow
 import com.laguipemo.nefroped.designsystem.components.AuthTextField
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import org.koin.androidx.compose.koinViewModel
@@ -306,64 +313,79 @@ fun AdminTopicFormScreen(
                         Spacer(modifier = Modifier.height(32.dp))
                     }
                 } else {
-                    // Pestaña de Lecciones
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState()) // Scroll independiente para lecciones
-                            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
-                    ) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    // Pestaña de Lecciones / Casos
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 16.dp,
+                                bottom = 100.dp // Espacio extra para legibilidad y FAB/Botones
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text(
-                                text = if (uiState.type == TopicType.LESSONS) "Lecciones del Tema" else "Casos Clínicos",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            
-                            TextButton(
-                                onClick = { onAddLesson(topicId) },
-                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primaryContainer)
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = null)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Añadir")
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (uiState.type == TopicType.LESSONS) "Lecciones del Tema" else "Casos Clínicos",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+
+                                    TextButton(
+                                        onClick = { onAddLesson(topicId) },
+                                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primaryContainer)
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Añadir")
+                                    }
+                                }
+                            }
+
+                            if (uiState.lessons.isEmpty()) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 40.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "No hay contenido aún",
+                                            color = Color.White.copy(alpha = 0.5f),
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                            } else {
+                                items(uiState.lessons) { lesson ->
+                                    AdminLessonItem(
+                                        lesson = lesson,
+                                        onClick = { onEditLesson(topicId, lesson.id) }
+                                    )
+                                }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        if (uiState.lessons.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 40.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "No hay contenido aún",
-                                    color = Color.White.copy(alpha = 0.5f),
-                                    style = MaterialTheme.typography.bodyMedium
+                        // Scrim inferior para mejorar legibilidad sobre el degradado
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .height(80.dp)
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))
+                                    )
                                 )
-                            }
-                        } else {
-                            uiState.lessons.forEach { lesson ->
-                                AdminLessonItem(
-                                    lesson = lesson,
-                                    onClick = { onEditLesson(topicId, lesson.id) }
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(32.dp))
+                        )
                     }
                 }
             }
@@ -376,14 +398,14 @@ private fun AdminLessonItem(
     lesson: Lesson,
     onClick: () -> Unit
 ) {
-    Surface(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
             .clickable { onClick() },
-        color = Color.White.copy(alpha = 0.05f),
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -392,44 +414,67 @@ private fun AdminLessonItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Círculo con el orden
+            // Círculo con el orden (estilo más profesional)
             Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(40.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = lesson.order.toString(),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = lesson.title,
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                lesson.description?.let {
-                    Text(
-                        text = it,
-                        color = Color.White.copy(alpha = 0.6f),
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1
-                    )
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Indicadores de recursos disponibles
+                    if (lesson.videoUrl != null) {
+                        Icon(Icons.Default.PlayCircle, "Video", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                    }
+                    if (lesson.audioUrl != null) {
+                        Icon(Icons.Default.Audiotrack, "Audio", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
+                    }
+                    if (lesson.pdfUrl != null) {
+                        Icon(Icons.Default.Description, "PDF", modifier = Modifier.size(14.dp), tint = Color(0xFFE57373))
+                    }
+                    
+                    if (lesson.videoUrl == null && lesson.audioUrl == null && lesson.pdfUrl == null) {
+                        Text(
+                            text = "Solo lectura",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Text(
+                            text = "Recursos multimedia",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
-            
+
             Icon(
                 imageVector = Icons.Default.Edit,
                 contentDescription = "Editar",
-                tint = Color.White.copy(alpha = 0.5f),
-                modifier = Modifier.size(20.dp)
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                modifier = Modifier.size(24.dp)
             )
         }
     }
