@@ -14,8 +14,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.laguipemo.nefroped.core.domain.model.course.Lesson
 import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
 import com.laguipemo.nefroped.designsystem.components.AuthTextField
@@ -43,12 +47,16 @@ fun AdminTopicFormScreen(
     topicId: String? = null,
     onBackClick: () -> Unit,
     onSaveSuccess: () -> Unit,
+    onAddLesson: (String) -> Unit,
+    onEditLesson: (String, String) -> Unit,
     viewModel: AdminTopicFormViewModel = koinViewModel { parametersOf(topicId) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val darkTheme = isSystemInDarkTheme()
+    
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(uiState.isSaveSuccess) {
         if (uiState.isSaveSuccess) {
@@ -108,154 +116,321 @@ fun AdminTopicFormScreen(
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .consumeWindowInsets(padding)
-                .imePadding() // Ajusta el Box al teclado
-                .padding(bottom = 16.dp)
         ) {
-            Column(
+            // Pestañas (solo si el tema ya existe)
+            if (topicId != null) {
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.primaryContainer,
+                    indicator = { tabPositions ->
+                        if (selectedTab < tabPositions.size) {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        }
+                    },
+                    divider = { HorizontalDivider(color = Color.White.copy(alpha = 0.1f)) }
+                ) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        text = { Text("INFORMACIÓN", fontWeight = FontWeight.Bold) },
+                        unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        text = { 
+                            Text(
+                                if (uiState.type == TopicType.LESSONS) "LECCIONES" else "CASOS", 
+                                fontWeight = FontWeight.Bold
+                            ) 
+                        },
+                        unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                    )
+                }
+            }
+
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m))
+                    .imePadding()
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
+                if (selectedTab == 0 || topicId == null) {
+                    // Pestaña de Información General
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                // Selector de Imagen
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.topic_card_image_height))
-                        .clip(RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius)))
-                        .background(Color.White.copy(alpha = 0.1f))
-                        .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius)))
-                        .clickable {
-                            photoPickerLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    val displayImage = uiState.selectedImageUri ?: uiState.imageUrl
-                    if (displayImage != null) {
-                        AsyncImage(
-                            model = displayImage,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                        // Selector de Imagen
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.3f)),
+                                .fillMaxWidth()
+                                .height(160.dp)
+                                .clip(RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius)))
+                                .background(Color.White.copy(alpha = 0.1f))
+                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius)))
+                                .clickable {
+                                    photoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.CloudUpload, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
+                            val displayImage = uiState.selectedImageUri ?: uiState.imageUrl
+                            if (displayImage != null) {
+                                AsyncImage(
+                                    model = displayImage,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = 0.3f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.CloudUpload, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
+                                }
+                            } else {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        imageVector = Icons.Default.CloudUpload,
+                                        contentDescription = null,
+                                        tint = Color.White.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                    Text(
+                                        "Tocar para subir portada",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
+                            }
                         }
-                    } else {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.CloudUpload,
-                                contentDescription = null,
-                                tint = Color.White.copy(alpha = 0.6f),
-                                modifier = Modifier.size(48.dp)
+
+                        // Campos del Formulario
+                        AuthTextField(
+                            value = uiState.title,
+                            onValueChange = { viewModel.onEvent(TopicFormEvent.TitleChanged(it)) },
+                            label = "Título del Tema",
+                            isDarkBackground = true
+                        )
+
+                        AuthTextField(
+                            value = uiState.description,
+                            onValueChange = { viewModel.onEvent(TopicFormEvent.DescriptionChanged(it)) },
+                            label = "Descripción",
+                            isDarkBackground = true,
+                            modifier = Modifier.heightIn(min = 120.dp)
+                        )
+
+                        // Fila de Orden y Selector de Tipo
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m)),
+                            verticalAlignment = Alignment.Bottom 
+                        ) {
+                            AuthTextField(
+                                value = uiState.order.toString(),
+                                onValueChange = { 
+                                    val value = it.toIntOrNull() ?: 0
+                                    viewModel.onEvent(TopicFormEvent.OrderChanged(value)) 
+                                },
+                                label = "Orden",
+                                isDarkBackground = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.weight(1f)
                             )
-                            Text(
-                                "Tocar para subir portada",
-                                color = Color.White.copy(alpha = 0.6f),
-                                style = MaterialTheme.typography.labelLarge
-                            )
+
+                            Surface(
+                                modifier = Modifier
+                                    .weight(2f)
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+                                color = Color.White.copy(alpha = 0.1f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                            ) {
+                                Row(modifier = Modifier.fillMaxSize()) {
+                                    TopicTypeOption(
+                                        text = "Lecciones",
+                                        isSelected = uiState.type == TopicType.LESSONS,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = { viewModel.onEvent(TopicFormEvent.TypeChanged(TopicType.LESSONS)) }
+                                    )
+                                    TopicTypeOption(
+                                        text = "Casos",
+                                        isSelected = uiState.type == TopicType.CLINICAL_CASES,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = { viewModel.onEvent(TopicFormEvent.TypeChanged(TopicType.CLINICAL_CASES)) }
+                                    )
+                                }
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Button(
+                            onClick = { viewModel.onEvent(TopicFormEvent.Submit) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(dimensionResource(R.dimen.button_height)),
+                            enabled = !uiState.isLoading,
+                            shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer, 
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            if (uiState.isLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
+                            } else {
+                                Text(if (topicId == null) "CREAR TEMA" else "GUARDAR CAMBIOS", fontWeight = FontWeight.ExtraBold)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
-                }
-
-                // Campos del Formulario
-                AuthTextField(
-                    value = uiState.title,
-                    onValueChange = { viewModel.onEvent(TopicFormEvent.TitleChanged(it)) },
-                    label = "Título del Tema",
-                    isDarkBackground = true
-                )
-
-                AuthTextField(
-                    value = uiState.description,
-                    onValueChange = { viewModel.onEvent(TopicFormEvent.DescriptionChanged(it)) },
-                    label = "Descripción",
-                    isDarkBackground = true,
-                    modifier = Modifier.heightIn(min = 120.dp)
-                )
-
-                // Fila de Orden y Selector de Tipo
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m)),
-                    verticalAlignment = Alignment.Bottom 
-                ) {
-                    AuthTextField(
-                        value = uiState.order.toString(),
-                        onValueChange = { 
-                            val value = it.toIntOrNull() ?: 0
-                            viewModel.onEvent(TopicFormEvent.OrderChanged(value)) 
-                        },
-                        label = "Orden",
-                        isDarkBackground = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Surface(
+                } else {
+                    // Pestaña de Lecciones
+                    Column(
                         modifier = Modifier
-                            .weight(2f)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
-                        color = Color.White.copy(alpha = 0.1f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()) // Scroll independiente para lecciones
+                            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
                     ) {
-                        Row(modifier = Modifier.fillMaxSize()) {
-                            TopicTypeOption(
-                                text = "Lecciones",
-                                isSelected = uiState.type == TopicType.LESSONS,
-                                modifier = Modifier.weight(1f),
-                                onClick = { viewModel.onEvent(TopicFormEvent.TypeChanged(TopicType.LESSONS)) }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (uiState.type == TopicType.LESSONS) "Lecciones del Tema" else "Casos Clínicos",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
-                            TopicTypeOption(
-                                text = "Casos",
-                                isSelected = uiState.type == TopicType.CLINICAL_CASES,
-                                modifier = Modifier.weight(1f),
-                                onClick = { viewModel.onEvent(TopicFormEvent.TypeChanged(TopicType.CLINICAL_CASES)) }
-                            )
+                            
+                            TextButton(
+                                onClick = { onAddLesson(topicId) },
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Añadir")
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (uiState.lessons.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 40.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "No hay contenido aún",
+                                    color = Color.White.copy(alpha = 0.5f),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        } else {
+                            uiState.lessons.forEach { lesson ->
+                                AdminLessonItem(
+                                    lesson = lesson,
+                                    onClick = { onEditLesson(topicId, lesson.id) }
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = { viewModel.onEvent(TopicFormEvent.Submit) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.button_height)),
-                    enabled = !uiState.isLoading,
-                    shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer, 
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
-                    } else {
-                        Text("GUARDAR CAMBIOS", fontWeight = FontWeight.ExtraBold)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun AdminLessonItem(
+    lesson: Lesson,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { onClick() },
+        color = Color.White.copy(alpha = 0.05f),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Círculo con el orden
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.size(32.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = lesson.order.toString(),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = lesson.title,
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                lesson.description?.let {
+                    Text(
+                        text = it,
+                        color = Color.White.copy(alpha = 0.6f),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1
+                    )
+                }
+            }
+            
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Editar",
+                tint = Color.White.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

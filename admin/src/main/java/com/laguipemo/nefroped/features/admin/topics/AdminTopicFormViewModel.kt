@@ -1,7 +1,9 @@
 package com.laguipemo.nefroped.features.admin.topics
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.laguipemo.nefroped.core.domain.model.course.Lesson
 import com.laguipemo.nefroped.core.domain.model.course.Topic
 import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.core.domain.usecase.course.ObserveTopicUseCase
@@ -21,6 +23,7 @@ data class TopicFormUiState(
     val indexContent: String? = null,
     val conversationId: String? = null,
     val selectedImageUri: ByteArray? = null,
+    val lessons: List<Lesson> = emptyList(),
     val isLoading: Boolean = false,
     val isSaveSuccess: Boolean = false,
     val error: String? = null
@@ -55,6 +58,7 @@ class AdminTopicFormViewModel(
 
     private fun loadTopic(id: String) {
         viewModelScope.launch {
+            // Observar el tema
             observeTopic(id).filterNotNull().first().let { topic ->
                 originalTopic = topic
                 _uiState.update {
@@ -69,6 +73,22 @@ class AdminTopicFormViewModel(
                         conversationId = topic.conversationId
                     )
                 }
+            }
+        }
+
+        // Observar las lecciones del tema
+        viewModelScope.launch {
+            Log.d("AdminTopicVM", "Iniciando sincronización de lecciones para tema: $id")
+            // Forzar sincronización con Supabase para asegurar que tenemos los datos en local
+            repository.syncLessons(id).onFailure { error ->
+                Log.e("AdminTopicVM", "Error en syncLessons: ${error.message}", error)
+                _uiState.update { it.copy(error = "Error al sincronizar lecciones: ${error.message}") }
+            }
+
+            repository.observeLessons(id).collect { lessons ->
+                Log.d("AdminTopicVM", "Lecciones recibidas de Room: ${lessons.size}")
+                lessons.forEach { Log.d("AdminTopicVM", "  - Lección: ${it.title} (ID: ${it.id}), Order: ${it.order}") }
+                _uiState.update { it.copy(lessons = lessons.sortedBy { l -> l.order }) }
             }
         }
     }

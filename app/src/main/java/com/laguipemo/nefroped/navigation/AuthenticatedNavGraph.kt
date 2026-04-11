@@ -26,6 +26,7 @@ import com.laguipemo.nefroped.features.profile.ProfileScreen
 import com.laguipemo.nefroped.core.domain.model.notification.NotificationType
 import com.laguipemo.nefroped.features.admin.AdminDashboardScreen
 import com.laguipemo.nefroped.features.admin.topics.AdminTopicsScreen
+import com.laguipemo.nefroped.features.admin.lessons.AdminLessonFormScreen
 import com.laguipemo.nefroped.features.admin.topics.AdminTopicFormScreen
 import com.laguipemo.nefroped.features.notifications.NotificationsScreen
 
@@ -174,6 +175,22 @@ fun AuthenticatedNavGraph(
             val route = backStackEntry.toRoute<AuthenticatedRoute.AdminTopicForm>()
             AdminTopicFormScreen(
                 topicId = route.topicId,
+                onBackClick = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() },
+                onAddLesson = { topicId ->
+                    navController.navigate(AuthenticatedRoute.AdminLessonForm(topicId = topicId, lessonId = null))
+                },
+                onEditLesson = { topicId, lessonId ->
+                    navController.navigate(AuthenticatedRoute.AdminLessonForm(topicId = topicId, lessonId = lessonId))
+                }
+            )
+        }
+
+        composable<AuthenticatedRoute.AdminLessonForm> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.AdminLessonForm>()
+            AdminLessonFormScreen(
+                topicId = route.topicId,
+                lessonId = route.lessonId,
                 onBackClick = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
             )

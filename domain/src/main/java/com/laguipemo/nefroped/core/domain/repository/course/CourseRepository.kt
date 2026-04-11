@@ -33,4 +33,8 @@ interface CourseRepository {
     suspend fun saveTopic(topic: Topic): Result<Unit>
     suspend fun deleteTopic(id: String): Result<Unit>
     suspend fun uploadTopicImage(byteArray: ByteArray, fileName: String): Result<String>
+    
+    suspend fun saveLesson(lesson: Lesson): Result<Unit>
+    suspend fun deleteLesson(id: String): Result<Unit>
+    suspend fun uploadLessonImage(byteArray: ByteArray, fileName: String): Result<String>
 }
