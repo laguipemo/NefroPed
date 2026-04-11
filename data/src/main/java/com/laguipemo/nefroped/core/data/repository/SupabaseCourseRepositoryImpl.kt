@@ -345,4 +345,13 @@ class SupabaseCourseRepositoryImpl(
             Result.success(bucket.publicUrl(path))
         } catch (e: Exception) { Result.failure(e) }
     }
+
+    override suspend fun uploadLessonResource(byteArray: ByteArray, fileName: String, folder: String): Result<String> {
+        return try {
+            val bucket = supabase.storage.from("content")
+            val path = "lessons/$folder/$fileName"
+            bucket.upload(path, byteArray) { upsert = true }
+            Result.success(bucket.publicUrl(path))
+        } catch (e: Exception) { Result.failure(e) }
+    }
 }

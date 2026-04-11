@@ -17,6 +17,7 @@ data class LessonFormUiState(
     val pdfUrl: String? = null,
     val audioUrl: String? = null,
     val isLoading: Boolean = false,
+    val isUploadingResource: Boolean = false,
     val isSaveSuccess: Boolean = false,
     val error: String? = null
 )
@@ -29,7 +30,13 @@ sealed interface LessonFormEvent {
     data class VideoUrlChanged(val url: String) : LessonFormEvent
     data class PdfUrlChanged(val url: String) : LessonFormEvent
     data class AudioUrlChanged(val url: String) : LessonFormEvent
+    data class LessonFileContentSelected(val content: String) : LessonFormEvent
+    data class UploadResource(val byteArray: ByteArray, val fileName: String, val type: ResourceType) : LessonFormEvent
     data object Submit : LessonFormEvent
+}
+
+enum class ResourceType {
+    VIDEO, PDF, AUDIO
 }
 
 class AdminLessonFormViewModel(
@@ -92,7 +99,34 @@ class AdminLessonFormViewModel(
             is LessonFormEvent.VideoUrlChanged -> _uiState.update { it.copy(videoUrl = event.url.ifBlank { null }) }
             is LessonFormEvent.PdfUrlChanged -> _uiState.update { it.copy(pdfUrl = event.url.ifBlank { null }) }
             is LessonFormEvent.AudioUrlChanged -> _uiState.update { it.copy(audioUrl = event.url.ifBlank { null }) }
+            is LessonFormEvent.LessonFileContentSelected -> _uiState.update { it.copy(content = event.content) }
+            is LessonFormEvent.UploadResource -> uploadResource(event.byteArray, event.fileName, event.type)
             LessonFormEvent.Submit -> saveLesson()
+        }
+    }
+
+    private fun uploadResource(byteArray: ByteArray, fileName: String, type: ResourceType) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingResource = true, error = null) }
+            val folder = when (type) {
+                ResourceType.VIDEO -> "videos"
+                ResourceType.PDF -> "documents"
+                ResourceType.AUDIO -> "audio"
+            }
+            
+            repository.uploadLessonResource(byteArray, fileName, folder)
+                .onSuccess { url ->
+                    _uiState.update { state ->
+                        when (type) {
+                            ResourceType.VIDEO -> state.copy(videoUrl = url, isUploadingResource = false)
+                            ResourceType.PDF -> state.copy(pdfUrl = url, isUploadingResource = false)
+                            ResourceType.AUDIO -> state.copy(audioUrl = url, isUploadingResource = false)
+                        }
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isUploadingResource = false, error = "Error al subir: ${e.message}") }
+                }
         }
     }
 
