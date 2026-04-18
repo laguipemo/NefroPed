@@ -25,6 +25,9 @@ sealed interface AuthenticatedRoute {
     data class ClinicalCaseList(val topicId: String) : AuthenticatedRoute
 
     @Serializable
+    data class SupportResources(val topicId: String) : AuthenticatedRoute
+
+    @Serializable
     data object Profile : AuthenticatedRoute
 
     @Serializable
@@ -44,12 +47,27 @@ sealed interface AuthenticatedRoute {
     data object AdminTopics : AuthenticatedRoute
 
     @Serializable
+    data object AdminQuizList : AuthenticatedRoute
+
+    @Serializable
     data class AdminTopicForm(val topicId: String? = null) : AuthenticatedRoute
 
     @Serializable
     data class AdminLessonForm(
         val topicId: String,
         val lessonId: String? = null
+    ) : AuthenticatedRoute
+
+    @Serializable
+    data class AdminQuizForm(
+        val topicId: String,
+        val quizId: String? = null
+    ) : AuthenticatedRoute
+
+    @Serializable
+    data class AdminClinicalCaseForm(
+        val topicId: String,
+        val caseId: String? = null
     ) : AuthenticatedRoute
 
     @Serializable

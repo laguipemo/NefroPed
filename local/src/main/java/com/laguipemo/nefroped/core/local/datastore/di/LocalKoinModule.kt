@@ -30,6 +30,7 @@ val localKoinModule = module {
     }
     
     single { get<NefroDatabase>().courseDao() }
+    single { get<NefroDatabase>().supportDao() }
     
     singleOf(::DatastoreAppEntryRepositoryImpl) { bind<AppEntryRepository>() }
 }

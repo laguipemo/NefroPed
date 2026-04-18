@@ -7,61 +7,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Audiotrack
-import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,8 +28,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.laguipemo.nefroped.core.domain.model.course.ClinicalCase
+import com.laguipemo.nefroped.core.domain.model.course.ExternalLink
 import com.laguipemo.nefroped.core.domain.model.course.Lesson
 import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
@@ -82,6 +40,7 @@ import com.laguipemo.nefroped.designsystem.components.AuthTextField
 import com.laguipemo.nefroped.designsystem.components.SystemBarsController
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +50,8 @@ fun AdminTopicFormScreen(
     onSaveSuccess: () -> Unit,
     onAddLesson: (String) -> Unit,
     onEditLesson: (String, String) -> Unit,
+    onAddClinicalCase: (String) -> Unit,
+    onEditClinicalCase: (String, String) -> Unit,
     viewModel: AdminTopicFormViewModel = koinViewModel { parametersOf(topicId) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -99,6 +60,8 @@ fun AdminTopicFormScreen(
     val darkTheme = isSystemInDarkTheme()
 
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showLinkDialog by remember { mutableStateOf(false) }
+    var selectedLink by remember { mutableStateOf<ExternalLink?>(null) }
 
     LaunchedEffect(uiState.isSaveSuccess) {
         if (uiState.isSaveSuccess) {
@@ -203,7 +166,11 @@ fun AdminTopicFormScreen(
                         onClick = { selectedTab = 1 },
                         text = {
                             Text(
-                                if (uiState.type == TopicType.LESSONS) "LECCIONES" else "CASOS",
+                                when (uiState.type) {
+                                    TopicType.THEORY -> "LECCIONES"
+                                    TopicType.PRACTICE -> "CASOS"
+                                    TopicType.SUPPORT -> "RECURSOS"
+                                },
                                 fontWeight = FontWeight.Bold
                             )
                         },
@@ -218,268 +185,470 @@ fun AdminTopicFormScreen(
                     .imePadding()
             ) {
                 if (selectedTab == 0 || topicId == null) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(scrollState)
-                            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp)
-                                .clip(RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius)))
-                                .background(Color.White.copy(alpha = 0.1f))
-                                .border(
-                                    1.dp,
-                                    Color.White.copy(alpha = 0.2f),
-                                    RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius))
-                                )
-                                .clickable {
-                                    photoPickerLauncher.launch(
-                                        PickVisualMediaRequest(
-                                            ActivityResultContracts.PickVisualMedia.ImageOnly
-                                        )
-                                    )
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val displayImage =
-                                uiState.selectedImageUri ?: uiState.imageUrl
-                            if (displayImage != null) {
-                                AsyncImage(
-                                    model = displayImage,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(Color.Black.copy(alpha = 0.3f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.CloudUpload,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                }
-                            } else {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.Default.CloudUpload,
-                                        contentDescription = null,
-                                        tint = Color.White.copy(alpha = 0.6f),
-                                        modifier = Modifier.size(48.dp)
-                                    )
-                                    Text(
-                                        "Tocar para subir portada",
-                                        color = Color.White.copy(alpha = 0.6f),
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
-                                }
-                            }
-                        }
-
-                        AuthTextField(
-                            value = uiState.title,
-                            onValueChange = {
-                                viewModel.onEvent(
-                                    TopicFormEvent.TitleChanged(
-                                        it
-                                    )
-                                )
-                            },
-                            label = "Título del Tema",
-                            isDarkBackground = true
-                        )
-
-                        AuthTextField(
-                            value = uiState.description,
-                            onValueChange = {
-                                viewModel.onEvent(
-                                    TopicFormEvent.DescriptionChanged(
-                                        it
-                                    )
-                                )
-                            },
-                            label = "Descripción",
-                            isDarkBackground = true,
-                            modifier = Modifier.heightIn(min = 120.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(
-                                dimensionResource(R.dimen.space_m)
-                            ),
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            AuthTextField(
-                                value = uiState.order.toString(),
-                                onValueChange = {
-                                    val value = it.toIntOrNull() ?: 0
-                                    viewModel.onEvent(
-                                        TopicFormEvent.OrderChanged(
-                                            value
-                                        )
-                                    )
-                                },
-                                label = "Orden",
-                                isDarkBackground = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            Surface(
-                                modifier = Modifier
-                                    .weight(2f)
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
-                                color = Color.White.copy(alpha = 0.1f),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    Color.White.copy(alpha = 0.2f)
-                                )
-                            ) {
-                                Row(modifier = Modifier.fillMaxSize()) {
-                                    TopicTypeOption(
-                                        text = "Lecciones",
-                                        isSelected = uiState.type == TopicType.LESSONS,
-                                        modifier = Modifier.weight(1f),
-                                        onClick = {
-                                            viewModel.onEvent(
-                                                TopicFormEvent.TypeChanged(
-                                                    TopicType.LESSONS
-                                                )
-                                            )
-                                        }
-                                    )
-                                    TopicTypeOption(
-                                        text = "Casos",
-                                        isSelected = uiState.type == TopicType.CLINICAL_CASES,
-                                        modifier = Modifier.weight(1f),
-                                        onClick = {
-                                            viewModel.onEvent(
-                                                TopicFormEvent.TypeChanged(
-                                                    TopicType.CLINICAL_CASES
-                                                )
-                                            )
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = { viewModel.onEvent(TopicFormEvent.Submit) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(dimensionResource(R.dimen.button_height)),
-                            enabled = !uiState.isLoading,
-                            shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            if (uiState.isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(
-                                        24.dp
-                                    ), color = MaterialTheme.colorScheme.primary
-                                )
-                            } else {
-                                Text(
-                                    if (topicId == null) "CREAR TEMA" else "GUARDAR CAMBIOS",
-                                    fontWeight = FontWeight.ExtraBold
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
+                    TopicInfoForm(
+                        uiState = uiState,
+                        topicId = topicId,
+                        photoPickerLauncher = photoPickerLauncher,
+                        onEvent = viewModel::onEvent
+                    )
                 } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
-                    ) {
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = if (uiState.type == TopicType.LESSONS) "Lecciones del Tema" else "Casos Clínicos",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-
-                            TextButton(
-                                onClick = { onAddLesson(topicId) },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.primaryContainer
-                                )
-                            ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = null
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Añadir")
-                            }
+                    TopicContentSection(
+                        uiState = uiState,
+                        topicId = topicId,
+                        onAddLesson = onAddLesson,
+                        onEditLesson = onEditLesson,
+                        onAddClinicalCase = onAddClinicalCase,
+                        onEditClinicalCase = onEditClinicalCase,
+                        onAddLink = { 
+                            selectedLink = null
+                            showLinkDialog = true 
+                        },
+                        onEditLink = { link ->
+                            selectedLink = link
+                            showLinkDialog = true
+                        },
+                        onDeleteLink = { linkId ->
+                            viewModel.onEvent(TopicFormEvent.DeleteExternalLink(linkId))
                         }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        if (uiState.lessons.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 40.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "No hay contenido aún",
-                                    color = Color.White.copy(alpha = 0.5f),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        } else {
-                            uiState.lessons.forEach { lesson ->
-                                AdminLessonItem(
-                                    lesson = lesson,
-                                    onClick = {
-                                        onEditLesson(
-                                            topicId,
-                                            lesson.id
-                                        )
-                                    }
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(88.dp)) // Margen suficiente para el FAB/Suelo de la pantalla
-                    }
+                    )
                 }
             }
         }
     }
+
+    if (showLinkDialog) {
+        ExternalLinkDialog(
+            link = selectedLink,
+            topicId = topicId ?: "",
+            onDismiss = { showLinkDialog = false },
+            onSave = { link ->
+                viewModel.onEvent(TopicFormEvent.SaveExternalLink(link))
+                showLinkDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun TopicInfoForm(
+    uiState: TopicFormUiState,
+    topicId: String?,
+    photoPickerLauncher: androidx.activity.result.ActivityResultLauncher<PickVisualMediaRequest>,
+    onEvent: (TopicFormEvent) -> Unit
+) {
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .clip(RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius)))
+                .background(Color.White.copy(alpha = 0.1f))
+                .border(
+                    1.dp,
+                    Color.White.copy(alpha = 0.2f),
+                    RoundedCornerShape(dimensionResource(R.dimen.topic_card_corner_radius))
+                )
+                .clickable {
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(
+                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                        )
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            val displayImage = uiState.selectedImageUri ?: uiState.imageUrl
+            if (displayImage != null) {
+                AsyncImage(
+                    model = displayImage,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.6f),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(
+                        "Tocar para subir portada",
+                        color = Color.White.copy(alpha = 0.6f),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
+        }
+
+        AuthTextField(
+            value = uiState.title,
+            onValueChange = { onEvent(TopicFormEvent.TitleChanged(it)) },
+            label = "Título del Tema",
+            isDarkBackground = true
+        )
+
+        AuthTextField(
+            value = uiState.description,
+            onValueChange = { onEvent(TopicFormEvent.DescriptionChanged(it)) },
+            label = "Descripción",
+            isDarkBackground = true,
+            modifier = Modifier.heightIn(min = 120.dp)
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.space_m)),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            AuthTextField(
+                value = uiState.order.toString(),
+                onValueChange = { onEvent(TopicFormEvent.OrderChanged(it.toIntOrNull() ?: 0)) },
+                label = "Orden",
+                isDarkBackground = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f)
+            )
+
+            Surface(
+                modifier = Modifier
+                    .weight(3f)
+                    .height(56.dp),
+                shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+                color = if (topicId == null) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.05f),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (topicId == null) Color.White.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.1f)
+                )
+            ) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    TopicTypeOption(
+                        text = "Teoría",
+                        isSelected = uiState.type == TopicType.THEORY,
+                        enabled = topicId == null,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onEvent(TopicFormEvent.TypeChanged(TopicType.THEORY)) }
+                    )
+                    TopicTypeOption(
+                        text = "Práctica",
+                        isSelected = uiState.type == TopicType.PRACTICE,
+                        enabled = topicId == null,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onEvent(TopicFormEvent.TypeChanged(TopicType.PRACTICE)) }
+                    )
+                    TopicTypeOption(
+                        text = "Apoyo",
+                        isSelected = uiState.type == TopicType.SUPPORT,
+                        enabled = topicId == null,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onEvent(TopicFormEvent.TypeChanged(TopicType.SUPPORT)) }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = { onEvent(TopicFormEvent.Submit) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.button_height)),
+            enabled = !uiState.isLoading,
+            shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else {
+                Text(
+                    if (topicId == null) "CREAR TEMA" else "GUARDAR CAMBIOS",
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+private fun TopicContentSection(
+    uiState: TopicFormUiState,
+    topicId: String,
+    onAddLesson: (String) -> Unit,
+    onEditLesson: (String, String) -> Unit,
+    onAddClinicalCase: (String) -> Unit,
+    onEditClinicalCase: (String, String) -> Unit,
+    onAddLink: () -> Unit,
+    onEditLink: (ExternalLink) -> Unit,
+    onDeleteLink: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = dimensionResource(R.dimen.screen_horizontal_padding)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = when (uiState.type) {
+                    TopicType.THEORY -> "Lecciones del Tema"
+                    TopicType.PRACTICE -> "Casos Clínicos"
+                    TopicType.SUPPORT -> "Enlaces de Apoyo"
+                },
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            TextButton(
+                onClick = { 
+                    when (uiState.type) {
+                        TopicType.SUPPORT -> onAddLink()
+                        TopicType.PRACTICE -> onAddClinicalCase(topicId)
+                        TopicType.THEORY -> onAddLesson(topicId)
+                    }
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Añadir")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        when (uiState.type) {
+            TopicType.SUPPORT -> {
+                if (uiState.externalLinks.isEmpty()) {
+                    EmptyContentPlaceholder("No hay enlaces de apoyo aún")
+                } else {
+                    uiState.externalLinks.forEach { link ->
+                        AdminLinkItem(
+                            link = link,
+                            onEdit = { onEditLink(link) },
+                            onDelete = { onDeleteLink(link.id) }
+                        )
+                    }
+                }
+            }
+            TopicType.PRACTICE -> {
+                if (uiState.clinicalCases.isEmpty()) {
+                    EmptyContentPlaceholder("No hay casos clínicos aún")
+                } else {
+                    uiState.clinicalCases.forEach { clinicalCase ->
+                        AdminClinicalCaseItem(
+                            clinicalCase = clinicalCase,
+                            onClick = { onEditClinicalCase(topicId, clinicalCase.id) }
+                        )
+                    }
+                }
+            }
+            TopicType.THEORY -> {
+                if (uiState.lessons.isEmpty()) {
+                    EmptyContentPlaceholder("No hay lecciones aún")
+                } else {
+                    uiState.lessons.forEach { lesson ->
+                        AdminLessonItem(
+                            lesson = lesson,
+                            onClick = { onEditLesson(topicId, lesson.id) }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(88.dp))
+    }
+}
+
+@Composable
+private fun AdminClinicalCaseItem(
+    clinicalCase: ClinicalCase,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Surface(
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.HealthAndSafety, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(clinicalCase.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    clinicalCase.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+        }
+    }
+}
+
+@Composable
+private fun EmptyContentPlaceholder(message: String = "No hay contenido aún") {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            message,
+            color = Color.White.copy(alpha = 0.5f),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+private fun AdminLinkItem(
+    link: ExternalLink,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Surface(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Link, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(link.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(link.url, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Borrar", tint = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExternalLinkDialog(
+    link: ExternalLink?,
+    topicId: String,
+    onDismiss: () -> Unit,
+    onSave: (ExternalLink) -> Unit
+) {
+    var title by remember { mutableStateOf(link?.title ?: "") }
+    var description by remember { mutableStateOf(link?.description ?: "") }
+    var url by remember { mutableStateOf(link?.url ?: "") }
+    var order by remember { mutableIntStateOf(link?.order ?: 0) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (link == null) "Nuevo Enlace" else "Editar Enlace") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Título") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descripción (opcional)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = url, onValueChange = { url = it }, label = { Text("URL") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = order.toString(), onValueChange = { order = it.toIntOrNull() ?: 0 }, label = { Text("Orden") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = title.isNotBlank() && url.isNotBlank(),
+                onClick = {
+                    onSave(ExternalLink(
+                        id = link?.id ?: UUID.randomUUID().toString(),
+                        topicId = topicId,
+                        title = title,
+                        description = description,
+                        url = url,
+                        order = order
+                    ))
+                }
+            ) { Text("Guardar") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
 }
 
 @Composable
@@ -498,9 +667,7 @@ private fun AdminLessonItem(
         )
     ) {
         Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -510,76 +677,19 @@ private fun AdminLessonItem(
                 modifier = Modifier.size(40.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Book,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Icon(Icons.Default.Book, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 }
             }
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = lesson.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    // Video Icon
-                    Icon(
-                        imageVector = Icons.Default.PlayCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (lesson.videoUrl?.isNotBlank() == true)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                alpha = 0.2f
-                            )
-                    )
-
-                    // Audio Icon
-                    Icon(
-                        imageVector = Icons.Default.Audiotrack,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (lesson.audioUrl?.isNotBlank() == true)
-                            MaterialTheme.colorScheme.secondary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                alpha = 0.2f
-                            )
-                    )
-
-                    // PDF Icon
-                    Icon(
-                        imageVector = Icons.Default.Description,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (lesson.pdfUrl?.isNotBlank() == true)
-                            Color(0xFFE57373)
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                alpha = 0.2f
-                            )
-                    )
+                Text(lesson.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!lesson.videoUrl.isNullOrBlank()) Icon(Icons.Default.PlayCircle, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                    if (!lesson.audioUrl.isNullOrBlank()) Icon(Icons.Default.Audiotrack, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
+                    if (!lesson.pdfUrl.isNullOrBlank()) Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFFE57373))
                 }
             }
-
-            Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = "Editar",
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                modifier = Modifier.size(24.dp)
-            )
+            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
         }
     }
 }
@@ -588,6 +698,7 @@ private fun AdminLessonItem(
 private fun TopicTypeOption(
     text: String,
     isSelected: Boolean,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -595,15 +706,21 @@ private fun TopicTypeOption(
         modifier = modifier
             .fillMaxHeight()
             .clip(RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)))
-            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-            .clickable { onClick() },
+            .background(
+                if (isSelected) {
+                    if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                } else {
+                    Color.Transparent
+                }
+            )
+            .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.6f)
+            color = if (isSelected) Color.White else (if (enabled) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.3f))
         )
     }
 }

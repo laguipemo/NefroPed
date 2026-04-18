@@ -23,7 +23,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.laguipemo.nefroped.core.domain.model.course.TopicType
 import com.laguipemo.nefroped.designsystem.R
@@ -41,6 +40,7 @@ fun CourseScreen(
     onTopicClick: (String) -> Unit,
     onChatClick: (String, String) -> Unit,
     onClinicalCasesClick: (String) -> Unit,
+    onSupportClick: (String) -> Unit,
     onNotificationsClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -70,7 +70,6 @@ fun CourseScreen(
                 )
             },
             actions = {
-                // Notificaciones: Estructura corregida para badge pegado al icono
                 IconButton(onClick = onNotificationsClick) {
                     BadgedBox(
                         badge = {
@@ -92,7 +91,6 @@ fun CourseScreen(
                     }
                 }
 
-                // Búsqueda
                 IconButton(onClick = { viewModel.onSearchActiveChange(!isSearchActive) }) {
                     Icon(
                         imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
@@ -128,7 +126,8 @@ fun CourseScreen(
                         state = state,
                         onTopicClick = onTopicClick,
                         onChatClick = onChatClick,
-                        onClinicalCasesClick = onClinicalCasesClick
+                        onClinicalCasesClick = onClinicalCasesClick,
+                        onSupportClick = onSupportClick
                     )
                 }
                 is CourseUiState.Error -> Text(
@@ -190,7 +189,8 @@ private fun TopicsList(
     state: CourseUiState.Content,
     onTopicClick: (String) -> Unit,
     onChatClick: (String, String) -> Unit,
-    onClinicalCasesClick: (String) -> Unit
+    onClinicalCasesClick: (String) -> Unit,
+    onSupportClick: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
@@ -216,10 +216,10 @@ private fun TopicsList(
                 TopicCard(
                     topic = topic,
                     onClick = { 
-                        if (topic.type == TopicType.CLINICAL_CASES) {
-                            onClinicalCasesClick(topic.id)
-                        } else {
-                            onTopicClick(topic.id)
+                        when (topic.type) {
+                            TopicType.PRACTICE -> onClinicalCasesClick(topic.id)
+                            TopicType.SUPPORT -> onSupportClick(topic.id)
+                            else -> onTopicClick(topic.id)
                         }
                     },
                     onChatClick = { 

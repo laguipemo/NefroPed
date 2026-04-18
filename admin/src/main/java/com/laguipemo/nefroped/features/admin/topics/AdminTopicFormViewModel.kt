@@ -3,11 +3,12 @@ package com.laguipemo.nefroped.features.admin.topics
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.laguipemo.nefroped.core.domain.model.course.ClinicalCase
+import com.laguipemo.nefroped.core.domain.model.course.ExternalLink
 import com.laguipemo.nefroped.core.domain.model.course.Lesson
 import com.laguipemo.nefroped.core.domain.model.course.Topic
 import com.laguipemo.nefroped.core.domain.model.course.TopicType
-import com.laguipemo.nefroped.core.domain.usecase.course.ObserveTopicUseCase
-import com.laguipemo.nefroped.core.domain.usecase.course.SaveTopicUseCase
+import com.laguipemo.nefroped.core.domain.usecase.course.*
 import com.laguipemo.nefroped.core.domain.repository.course.CourseRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,13 +18,15 @@ data class TopicFormUiState(
     val title: String = "",
     val description: String = "",
     val order: Int = 0,
-    val type: TopicType = TopicType.LESSONS,
+    val type: TopicType = TopicType.THEORY,
     val imageUrl: String? = null,
     val contentUrl: String? = null,
     val indexContent: String? = null,
     val conversationId: String? = null,
     val selectedImageUri: ByteArray? = null,
     val lessons: List<Lesson> = emptyList(),
+    val clinicalCases: List<ClinicalCase> = emptyList(),
+    val externalLinks: List<ExternalLink> = emptyList(),
     val isLoading: Boolean = false,
     val isSaveSuccess: Boolean = false,
     val error: String? = null
@@ -36,12 +39,22 @@ sealed interface TopicFormEvent {
     data class TypeChanged(val type: TopicType) : TopicFormEvent
     data class ImageSelected(val bytes: ByteArray) : TopicFormEvent
     data object Submit : TopicFormEvent
+    
+    // Eventos para Enlaces Externos
+    data class SaveExternalLink(val link: ExternalLink) : TopicFormEvent
+    data class DeleteExternalLink(val linkId: String) : TopicFormEvent
 }
 
 class AdminTopicFormViewModel(
     private val topicId: String?,
     private val observeTopic: ObserveTopicUseCase,
     private val saveTopic: SaveTopicUseCase,
+    private val observeExternalLinks: ObserveExternalLinksUseCase,
+    private val syncExternalLinks: SyncExternalLinksUseCase,
+    private val saveExternalLink: SaveExternalLinkUseCase,
+    private val deleteExternalLink: DeleteExternalLinkUseCase,
+    private val observeClinicalCases: ObserveClinicalCasesUseCase,
+    private val syncClinicalData: SyncClinicalDataUseCase,
     private val repository: CourseRepository
 ) : ViewModel() {
 
@@ -58,8 +71,9 @@ class AdminTopicFormViewModel(
 
     private fun loadTopic(id: String) {
         viewModelScope.launch {
-            // Observar el tema
-            observeTopic(id).filterNotNull().first().let { topic ->
+            // Primero observamos el tema. Si no está en Room, no emitirá nada.
+            observeTopic(id).filterNotNull().collect { topic ->
+                Log.d("AdminTopicFormVM", "Tema detectado en Room: ${topic.id}, Tipo: ${topic.type}")
                 originalTopic = topic
                 _uiState.update {
                     it.copy(
@@ -75,20 +89,49 @@ class AdminTopicFormViewModel(
                 }
             }
         }
+        
+        // Lanzamos las sincronizaciones y observaciones. 
+        // Si el tema no existe en Room, las inserciones de lecciones/casos fallarán por FK.
+        // Pero al ser edición, el tema DEBERÍA existir.
+        loadLessons(id)
+        loadClinicalCases(id)
+        loadExternalLinks(id)
+    }
 
-        // Observar las lecciones del tema
+    private fun loadLessons(id: String) {
         viewModelScope.launch {
-            Log.d("AdminTopicVM", "Iniciando sincronización de lecciones para tema: $id")
-            // Forzar sincronización con Supabase para asegurar que tenemos los datos en local
-            repository.syncLessons(id).onFailure { error ->
-                Log.e("AdminTopicVM", "Error en syncLessons: ${error.message}", error)
-                _uiState.update { it.copy(error = "Error al sincronizar lecciones: ${error.message}") }
-            }
-
+            repository.syncLessons(id)
             repository.observeLessons(id).collect { lessons ->
-                Log.d("AdminTopicVM", "Lecciones recibidas de Room: ${lessons.size}")
-                lessons.forEach { Log.d("AdminTopicVM", "  - Lección: ${it.title} (ID: ${it.id}), Order: ${it.order}") }
+                Log.d("AdminTopicFormVM", "Lecciones cargadas: ${lessons.size}")
                 _uiState.update { it.copy(lessons = lessons.sortedBy { l -> l.order }) }
+            }
+        }
+    }
+
+    private fun loadClinicalCases(id: String) {
+        viewModelScope.launch {
+            Log.d("AdminTopicFormVM", "Iniciando sincronización de casos para: $id")
+            val result = syncClinicalData(id)
+            if (result.isFailure) {
+                Log.e("AdminTopicFormVM", "Error sincronizando casos clínicos", result.exceptionOrNull())
+            }
+            
+            observeClinicalCases(id)
+                .onEach { cases -> 
+                    Log.d("AdminTopicFormVM", "Observados ${cases.size} casos clínicos en Room para $id")
+                }
+                .collect { cases ->
+                    _uiState.update { it.copy(clinicalCases = cases.sortedBy { c -> c.title }) }
+                }
+        }
+    }
+
+    private fun loadExternalLinks(id: String) {
+        viewModelScope.launch {
+            syncExternalLinks(id)
+            observeExternalLinks(id).collect { links ->
+                Log.d("AdminTopicFormVM", "Enlaces externos cargados: ${links.size}")
+                _uiState.update { it.copy(externalLinks = links.sortedBy { l -> l.order }) }
             }
         }
     }
@@ -101,6 +144,20 @@ class AdminTopicFormViewModel(
             is TopicFormEvent.TypeChanged -> _uiState.update { it.copy(type = event.type) }
             is TopicFormEvent.ImageSelected -> _uiState.update { it.copy(selectedImageUri = event.bytes) }
             TopicFormEvent.Submit -> saveTopic()
+            is TopicFormEvent.SaveExternalLink -> saveExternalLink(event.link)
+            is TopicFormEvent.DeleteExternalLink -> deleteExternalLink(event.linkId)
+        }
+    }
+
+    private fun saveExternalLink(link: ExternalLink) {
+        viewModelScope.launch {
+            saveExternalLink.invoke(link)
+        }
+    }
+
+    private fun deleteExternalLink(linkId: String) {
+        viewModelScope.launch {
+            deleteExternalLink.invoke(linkId)
         }
     }
 
@@ -111,14 +168,12 @@ class AdminTopicFormViewModel(
             try {
                 var finalImageUrl = _uiState.value.imageUrl
                 
-                // 1. Subir imagen si se seleccionó una nueva
                 _uiState.value.selectedImageUri?.let { bytes ->
                     val fileName = "topic_${UUID.randomUUID()}.jpg"
                     val uploadResult = repository.uploadTopicImage(bytes, fileName)
                     finalImageUrl = uploadResult.getOrThrow()
                 }
 
-                // 2. Crear objeto Topic con todos los parámetros
                 val topic = Topic(
                     id = topicId ?: UUID.randomUUID().toString(),
                     title = _uiState.value.title,
@@ -126,7 +181,7 @@ class AdminTopicFormViewModel(
                     imageUrl = finalImageUrl,
                     imagePlaceholder = originalTopic?.imagePlaceholder,
                     contentUrl = _uiState.value.contentUrl,
-                    indexContent = originalTopic?.indexContent, // Preservamos si ya estaba descargado
+                    indexContent = originalTopic?.indexContent,
                     order = _uiState.value.order,
                     type = _uiState.value.type,
                     conversationId = _uiState.value.conversationId,
@@ -134,13 +189,10 @@ class AdminTopicFormViewModel(
                     completedLessonsCount = originalTopic?.completedLessonsCount ?: 0
                 )
 
-                // 3. Guardar en Supabase
                 saveTopic(topic).getOrThrow()
-                android.util.Log.d("AdminTopicForm", "Save successful for topic: ${topic.title}")
                 _uiState.update { it.copy(isLoading = false, isSaveSuccess = true) }
                 
             } catch (e: Exception) {
-                android.util.Log.e("AdminTopicForm", "Error saving topic", e)
                 _uiState.update { it.copy(isLoading = false, error = e.message ?: "Error al guardar") }
             }
         }

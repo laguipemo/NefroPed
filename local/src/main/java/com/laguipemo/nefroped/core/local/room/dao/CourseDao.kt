@@ -45,6 +45,9 @@ interface CourseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuiz(quiz: QuizEntity)
 
+    @Query("DELETE FROM quizzes WHERE topicId = :topicId")
+    suspend fun deleteQuizByTopic(topicId: String)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuestions(questions: List<QuestionEntity>)
 
