@@ -50,6 +50,31 @@ fun AdminLessonFormScreen(
     val scrollState = rememberScrollState()
     val darkTheme = isSystemInDarkTheme()
     val context = LocalContext.current
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Eliminar Lección") },
+            text = { Text("¿Estás seguro de que deseas eliminar esta lección? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.onEvent(LessonFormEvent.Delete)
+                        showDeleteConfirm = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     // Launcher para el contenido Markdown (archivo de texto)
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -143,6 +168,11 @@ fun AdminLessonFormScreen(
                     }
                 },
                 actions = {
+                    if (lessonId != null && lessonId != "null" && !uiState.isLoading) {
+                        IconButton(onClick = { showDeleteConfirm = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.White)
+                        }
+                    }
                     if (!uiState.isLoading) {
                         IconButton(onClick = { viewModel.onEvent(LessonFormEvent.Submit) }) {
                             Icon(Icons.Default.Save, contentDescription = "Guardar", tint = Color.White)

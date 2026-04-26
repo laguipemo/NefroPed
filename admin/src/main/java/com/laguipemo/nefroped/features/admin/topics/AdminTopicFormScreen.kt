@@ -62,6 +62,32 @@ fun AdminTopicFormScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     var showLinkDialog by remember { mutableStateOf(false) }
     var selectedLink by remember { mutableStateOf<ExternalLink?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Eliminar Tema") },
+            text = { Text("¿Estás seguro de que deseas eliminar este tema y todo su contenido? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        topicId?.let { viewModel.onEvent(TopicFormEvent.DeleteTopic(it)) }
+                        showDeleteConfirm = false
+                        onBackClick()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     LaunchedEffect(uiState.isSaveSuccess) {
         if (uiState.isSaveSuccess) {
@@ -110,6 +136,11 @@ fun AdminTopicFormScreen(
                     }
                 },
                 actions = {
+                    if (topicId != null && !uiState.isLoading) {
+                        IconButton(onClick = { showDeleteConfirm = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.White)
+                        }
+                    }
                     if (!uiState.isLoading) {
                         IconButton(onClick = { viewModel.onEvent(TopicFormEvent.Submit) }) {
                             Icon(
@@ -209,6 +240,12 @@ fun AdminTopicFormScreen(
                         },
                         onDeleteLink = { linkId ->
                             viewModel.onEvent(TopicFormEvent.DeleteExternalLink(linkId))
+                        },
+                        onDeleteLesson = { lessonId ->
+                            viewModel.onEvent(TopicFormEvent.DeleteLesson(lessonId))
+                        },
+                        onDeleteClinicalCase = { caseId ->
+                            viewModel.onEvent(TopicFormEvent.DeleteClinicalCase(caseId))
                         }
                     )
                 }
@@ -411,7 +448,9 @@ private fun TopicContentSection(
     onEditClinicalCase: (String, String) -> Unit,
     onAddLink: () -> Unit,
     onEditLink: (ExternalLink) -> Unit,
-    onDeleteLink: (String) -> Unit
+    onDeleteLink: (String) -> Unit,
+    onDeleteLesson: (String) -> Unit,
+    onDeleteClinicalCase: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -480,7 +519,8 @@ private fun TopicContentSection(
                     uiState.clinicalCases.forEach { clinicalCase ->
                         AdminClinicalCaseItem(
                             clinicalCase = clinicalCase,
-                            onClick = { onEditClinicalCase(topicId, clinicalCase.id) }
+                            onClick = { onEditClinicalCase(topicId, clinicalCase.id) },
+                            onDelete = { onDeleteClinicalCase(clinicalCase.id) }
                         )
                     }
                 }
@@ -492,7 +532,8 @@ private fun TopicContentSection(
                     uiState.lessons.forEach { lesson ->
                         AdminLessonItem(
                             lesson = lesson,
-                            onClick = { onEditLesson(topicId, lesson.id) }
+                            onClick = { onEditLesson(topicId, lesson.id) },
+                            onDelete = { onDeleteLesson(lesson.id) }
                         )
                     }
                 }
@@ -506,8 +547,35 @@ private fun TopicContentSection(
 @Composable
 private fun AdminClinicalCaseItem(
     clinicalCase: ClinicalCase,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Eliminar Caso Clínico") },
+            text = { Text("¿Estás seguro de que deseas eliminar el caso clínico \"${clinicalCase.title}\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirm = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -543,6 +611,15 @@ private fun AdminClinicalCaseItem(
                     overflow = TextOverflow.Ellipsis
                 )
             }
+
+            IconButton(onClick = { showDeleteConfirm = true }) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                )
+            }
+
             Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
         }
     }
@@ -654,8 +731,35 @@ private fun ExternalLinkDialog(
 @Composable
 private fun AdminLessonItem(
     lesson: Lesson,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Eliminar Lección") },
+            text = { Text("¿Estás seguro de que deseas eliminar la lección \"${lesson.title}\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirm = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -689,6 +793,15 @@ private fun AdminLessonItem(
                     if (!lesson.pdfUrl.isNullOrBlank()) Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFFE57373))
                 }
             }
+            
+            IconButton(onClick = { showDeleteConfirm = true }) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                )
+            }
+
             Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
         }
     }

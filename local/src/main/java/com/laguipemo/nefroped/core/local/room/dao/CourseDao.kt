@@ -14,6 +14,9 @@ interface CourseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTopics(topics: List<TopicEntity>)
 
+    @Query("DELETE FROM topics WHERE id = :id")
+    suspend fun deleteTopicById(id: String)
+
     @Query("UPDATE topics SET completedLessonsCount = (SELECT COUNT(*) FROM lessons WHERE topicId = :topicId AND isCompleted = 1) WHERE id = :topicId")
     suspend fun refreshTopicProgress(topicId: String)
 
@@ -30,6 +33,9 @@ interface CourseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLessons(lessons: List<LessonEntity>)
 
+    @Query("DELETE FROM lessons WHERE id = :id")
+    suspend fun deleteLessonById(id: String)
+
     @Query("UPDATE lessons SET isCompleted = :completed WHERE id = :lessonId")
     suspend fun updateLessonCompletion(lessonId: String, completed: Boolean)
 
@@ -45,11 +51,17 @@ interface CourseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuiz(quiz: QuizEntity)
 
+    @Query("DELETE FROM quizzes WHERE id = :id")
+    suspend fun deleteQuizById(id: String)
+
     @Query("DELETE FROM quizzes WHERE topicId = :topicId")
     suspend fun deleteQuizByTopic(topicId: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuestions(questions: List<QuestionEntity>)
+
+    @Query("DELETE FROM questions WHERE id = :id")
+    suspend fun deleteQuestionById(id: String)
 
     @Query("DELETE FROM questions WHERE quizId = :quizId")
     suspend fun deleteQuestionsForQuiz(quizId: String)
@@ -70,6 +82,9 @@ interface CourseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertClinicalCases(cases: List<ClinicalCaseEntity>)
+
+    @Query("DELETE FROM clinical_cases WHERE id = :id")
+    suspend fun deleteClinicalCaseById(id: String)
 
     @Query("SELECT * FROM complementary_resources WHERE topicId = :topicId")
     fun observeComplementaryResources(topicId: String): Flow<List<ComplementaryResourceEntity>>

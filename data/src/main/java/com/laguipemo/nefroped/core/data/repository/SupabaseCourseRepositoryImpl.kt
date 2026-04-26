@@ -342,7 +342,7 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun deleteTopic(id: String): Result<Unit> {
         return try {
             supabase.from("topics").delete { filter { eq("id", id) } }
-            // Opcional: limpiar Room
+            courseDao.deleteTopicById(id)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
@@ -376,9 +376,15 @@ class SupabaseCourseRepositoryImpl(
                 val bucket = supabase.storage.from("content")
                 
                 Log.d("CourseRepo", "Subiendo contenido MD a $path")
-                bucket.upload(path, lesson.content.toByteArray()) { upsert = true }
-                contentUrl = bucket.publicUrl(path)
-                Log.d("CourseRepo", "Contenido MD subido. URL: $contentUrl")
+                try {
+                    bucket.upload(path, lesson.content.toByteArray()) { upsert = true }
+                    contentUrl = bucket.publicUrl(path)
+                    Log.d("CourseRepo", "Contenido MD subido. URL: $contentUrl")
+                } catch (e: Exception) {
+                    Log.e("CourseRepo", "Error subiendo a storage, buscando si ya existe...", e)
+                    // Si falla por RLS o similar, intentamos obtener la URL de todas formas si no es crítico
+                    contentUrl = bucket.publicUrl(path)
+                }
             }
 
             val dto = LessonDto(
@@ -413,6 +419,7 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun deleteLesson(id: String): Result<Unit> {
         return try {
             supabase.from("lessons").delete { filter { eq("id", id) } }
+            courseDao.deleteLessonById(id)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
@@ -455,7 +462,7 @@ class SupabaseCourseRepositoryImpl(
         return try {
             Log.d("CourseRepo", "Eliminando Quiz ID: $id")
             supabase.from("quizzes").delete { filter { eq("id", id) } }
-            // Room cleanup is handled by cascade if configured
+            courseDao.deleteQuizById(id)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
@@ -479,6 +486,7 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun deleteQuestion(id: String): Result<Unit> {
         return try {
             supabase.from("questions").delete { filter { eq("id", id) } }
+            courseDao.deleteQuestionById(id)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
@@ -532,7 +540,7 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun deleteClinicalCase(id: String): Result<Unit> {
         return try {
             supabase.from("clinical_cases").delete { filter { eq("id", id) } }
-            // Opcional: limpiar Room si es necesario
+            courseDao.deleteClinicalCaseById(id)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

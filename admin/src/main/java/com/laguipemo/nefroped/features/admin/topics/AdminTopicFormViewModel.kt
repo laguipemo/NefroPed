@@ -43,6 +43,13 @@ sealed interface TopicFormEvent {
     // Eventos para Enlaces Externos
     data class SaveExternalLink(val link: ExternalLink) : TopicFormEvent
     data class DeleteExternalLink(val linkId: String) : TopicFormEvent
+
+    // Eventos para Lecciones
+    data class DeleteLesson(val lessonId: String) : TopicFormEvent
+
+    // Eventos para Casos Clínicos
+    data class DeleteClinicalCase(val caseId: String) : TopicFormEvent
+    data class DeleteTopic(val topicId: String) : TopicFormEvent
 }
 
 class AdminTopicFormViewModel(
@@ -146,6 +153,27 @@ class AdminTopicFormViewModel(
             TopicFormEvent.Submit -> saveTopic()
             is TopicFormEvent.SaveExternalLink -> saveExternalLink(event.link)
             is TopicFormEvent.DeleteExternalLink -> deleteExternalLink(event.linkId)
+            is TopicFormEvent.DeleteLesson -> deleteLesson(event.lessonId)
+            is TopicFormEvent.DeleteClinicalCase -> deleteClinicalCase(event.caseId)
+            is TopicFormEvent.DeleteTopic -> deleteTopic(event.topicId)
+        }
+    }
+
+    private fun deleteTopic(topicId: String) {
+        viewModelScope.launch {
+            repository.deleteTopic(topicId)
+        }
+    }
+
+    private fun deleteLesson(lessonId: String) {
+        viewModelScope.launch {
+            repository.deleteLesson(lessonId)
+        }
+    }
+
+    private fun deleteClinicalCase(caseId: String) {
+        viewModelScope.launch {
+            repository.deleteClinicalCase(caseId)
         }
     }
 
