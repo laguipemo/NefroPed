@@ -22,12 +22,16 @@ import com.laguipemo.nefroped.features.course.clinical.ClinicalCaseListScreen
 import com.laguipemo.nefroped.features.course.lessons.LessonsListScreen
 import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailScreen
 import com.laguipemo.nefroped.features.course.quiz.QuizScreen
+import com.laguipemo.nefroped.features.course.support.SupportResourcesScreen
 import com.laguipemo.nefroped.features.profile.ProfileScreen
 import com.laguipemo.nefroped.core.domain.model.notification.NotificationType
 import com.laguipemo.nefroped.features.admin.AdminDashboardScreen
 import com.laguipemo.nefroped.features.admin.topics.AdminTopicsScreen
 import com.laguipemo.nefroped.features.admin.lessons.AdminLessonFormScreen
+import com.laguipemo.nefroped.features.admin.clinical.AdminClinicalCaseFormScreen
 import com.laguipemo.nefroped.features.admin.topics.AdminTopicFormScreen
+import com.laguipemo.nefroped.features.admin.quizzes.AdminQuizFormScreen
+import com.laguipemo.nefroped.features.admin.quizzes.AdminQuizListScreen
 import com.laguipemo.nefroped.features.notifications.NotificationsScreen
 
 @Composable
@@ -60,6 +64,9 @@ fun AuthenticatedNavGraph(
                 onClinicalCasesClick = { topicId ->
                     navController.navigate(AuthenticatedRoute.ClinicalCaseList(topicId))
                 },
+                onSupportClick = { topicId ->
+                    navController.navigate(AuthenticatedRoute.SupportResources(topicId))
+                },
                 onNotificationsClick = {
                     navController.navigate(AuthenticatedRoute.Notifications)
                 }
@@ -87,6 +94,14 @@ fun AuthenticatedNavGraph(
                 onCaseClick = { quizId, title ->
                     navController.navigate(AuthenticatedRoute.Quiz(id = quizId, isTopicId = false, title = title))
                 }
+            )
+        }
+
+        composable<AuthenticatedRoute.SupportResources> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.SupportResources>()
+            SupportResourcesScreen(
+                topicId = route.topicId,
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -154,7 +169,9 @@ fun AuthenticatedNavGraph(
                 onManageTopicsClick = { 
                     navController.navigate(AuthenticatedRoute.AdminTopics)
                 },
-                onManageQuizzesClick = { /* TODO */ },
+                onManageQuizzesClick = { 
+                    navController.navigate(AuthenticatedRoute.AdminQuizList)
+                },
                 onManageClinicalCasesClick = { /* TODO */ }
             )
         }
@@ -171,6 +188,15 @@ fun AuthenticatedNavGraph(
             )
         }
 
+        composable<AuthenticatedRoute.AdminQuizList> {
+            AdminQuizListScreen(
+                onBackClick = { navController.popBackStack() },
+                onQuizClick = { topicId ->
+                    navController.navigate(AuthenticatedRoute.AdminQuizForm(topicId = topicId, quizId = null))
+                }
+            )
+        }
+
         composable<AuthenticatedRoute.AdminTopicForm> { backStackEntry ->
             val route = backStackEntry.toRoute<AuthenticatedRoute.AdminTopicForm>()
             AdminTopicFormScreen(
@@ -182,7 +208,19 @@ fun AuthenticatedNavGraph(
                 },
                 onEditLesson = { topicId, lessonId ->
                     navController.navigate(AuthenticatedRoute.AdminLessonForm(topicId = topicId, lessonId = lessonId))
+                },
+                onAddClinicalCase = { topicId ->
+                    navController.navigate(AuthenticatedRoute.AdminClinicalCaseForm(topicId = topicId))
+                },
+                onEditClinicalCase = { topicId, caseId ->
+                    navController.navigate(AuthenticatedRoute.AdminClinicalCaseForm(topicId = topicId, caseId = caseId))
                 }
+            )
+        }
+
+        composable<AuthenticatedRoute.AdminClinicalCaseForm> {
+            AdminClinicalCaseFormScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -191,6 +229,16 @@ fun AuthenticatedNavGraph(
             AdminLessonFormScreen(
                 topicId = route.topicId,
                 lessonId = route.lessonId,
+                onBackClick = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
+            )
+        }
+
+        composable<AuthenticatedRoute.AdminQuizForm> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthenticatedRoute.AdminQuizForm>()
+            AdminQuizFormScreen(
+                topicId = route.topicId,
+                quizId = route.quizId,
                 onBackClick = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
             )

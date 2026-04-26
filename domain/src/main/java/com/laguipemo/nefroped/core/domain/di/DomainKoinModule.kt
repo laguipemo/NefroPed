@@ -54,6 +54,9 @@ val domainKoinModule = module {
     
     // Clinical Cases (Tema 4)
     factoryOf(::ObserveClinicalCasesUseCase)
+    factoryOf(::SaveClinicalCaseUseCase)
+    factoryOf(::DeleteClinicalCaseUseCase)
+    factoryOf(::UploadClinicalCaseImageUseCase)
     factoryOf(::ObserveComplementaryResourcesUseCase)
     factoryOf(::SyncClinicalDataUseCase)
     
@@ -63,6 +66,16 @@ val domainKoinModule = module {
     factoryOf(::SubmitQuizUseCase)
     factoryOf(::SyncQuizUseCase)
     factoryOf(::SyncQuizByIdUseCase)
+    factoryOf(::SaveQuizUseCase)
+    factoryOf(::DeleteQuizUseCase)
+    factoryOf(::SaveQuestionUseCase)
+    factoryOf(::DeleteQuestionUseCase)
+    
+    // Support (External Links)
+    factoryOf(::ObserveExternalLinksUseCase)
+    factoryOf(::SyncExternalLinksUseCase)
+    factoryOf(::SaveExternalLinkUseCase)
+    factoryOf(::DeleteExternalLinkUseCase)
     
     // Onboarding
     factoryOf(::CompleteOnboardingUseCaseImpl) { bind<CompleteOnboardingUseCase>() }

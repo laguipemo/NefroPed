@@ -6,6 +6,7 @@ import com.laguipemo.nefroped.core.data.mapper.*
 import com.laguipemo.nefroped.core.domain.model.course.*
 import com.laguipemo.nefroped.core.domain.repository.course.CourseRepository
 import com.laguipemo.nefroped.core.local.room.dao.CourseDao
+import com.laguipemo.nefroped.core.local.room.dao.SupportDao
 import com.laguipemo.nefroped.core.local.room.entity.*
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -22,6 +23,7 @@ import kotlinx.datetime.Instant
 class SupabaseCourseRepositoryImpl(
     private val supabase: SupabaseClient,
     private val courseDao: CourseDao,
+    private val supportDao: SupportDao,
     private val httpClient: HttpClient
 ) : CourseRepository {
 
@@ -56,6 +58,9 @@ class SupabaseCourseRepositoryImpl(
 
     override fun observeComplementaryResources(topicId: String): Flow<List<ComplementaryResource>> =
         courseDao.observeComplementaryResources(topicId).map { entities -> entities.map { it.toDomain() } }
+
+    override fun observeExternalLinks(topicId: String): Flow<List<ExternalLink>> =
+        supportDao.observeExternalLinks(topicId).map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun syncTopics(): Result<Unit> {
         return try {
@@ -129,27 +134,69 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun syncQuiz(topicId: String): Result<Unit> {
         return try {
-            val quizDto = supabase.from("quizzes").select { filter { eq("topic_id", topicId) } }.decodeSingleOrNull<QuizDto>() ?: return Result.failure(Exception("Quiz not found"))
+            Log.d("CourseRepo", "Sincronizando Quiz para topicId: $topicId")
+            val quizDto = supabase.from("quizzes").select { 
+                filter { eq("topic_id", topicId) } 
+            }.decodeSingleOrNull<QuizDto>()
+            
+            if (quizDto == null) {
+                Log.d("CourseRepo", "No se encontró Quiz en Supabase para el tema $topicId. Sincronización finalizada (vío).")
+                // No es un error, simplemente no hay quiz para este tema aún
+                return Result.success(Unit)
+            }
+            
+            Log.d("CourseRepo", "Quiz encontrado: ${quizDto.title} (ID: ${quizDto.id})")
             syncQuestionsAndResult(quizDto)
             Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
+        } catch (e: Exception) {
+            Log.e("CourseRepo", "Error sincronizando Quiz para $topicId", e)
+            Result.failure(e)
+        }
     }
 
     override suspend fun syncQuizById(quizId: String): Result<Unit> {
         return try {
-            val quizDto = supabase.from("quizzes").select { filter { eq("id", quizId) } }.decodeSingleOrNull<QuizDto>() ?: return Result.failure(Exception("Quiz not found"))
+            Log.d("CourseRepo", "Sincronizando Quiz por ID: $quizId")
+            val quizDto = supabase.from("quizzes").select { 
+                filter { eq("id", quizId) } 
+            }.decodeSingleOrNull<QuizDto>()
+            
+            if (quizDto == null) {
+                Log.d("CourseRepo", "No se encontró Quiz con ID $quizId")
+                return Result.success(Unit)
+            }
+
             syncQuestionsAndResult(quizDto)
             Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
+        } catch (e: Exception) { 
+            Log.e("CourseRepo", "Error sincronizando Quiz por ID $quizId", e)
+            Result.failure(e) 
+        }
     }
 
     private suspend fun syncQuestionsAndResult(quizDto: QuizDto) {
-        val questionsDto = supabase.from("questions").select { filter { eq("quiz_id", quizDto.id) } }.decodeList<QuestionDto>()
+        Log.d("CourseRepo", "Buscando preguntas para quizId: ${quizDto.id}")
+        val questionsDto = supabase.from("questions").select { 
+            filter { eq("quiz_id", quizDto.id) } 
+        }.decodeList<QuestionDto>()
+        
+        Log.d("CourseRepo", "Preguntas encontradas en Supabase: ${questionsDto.size}")
+        
+        // Limpiar datos antiguos del mismo tema para evitar conflictos
+        courseDao.deleteQuizByTopic(quizDto.topicId)
+        
+        // Insertar el nuevo Quiz y sus preguntas
         courseDao.insertQuiz(quizDto.toEntity())
-        courseDao.insertQuestions(questionsDto.map { it.toEntity() })
+        
+        // Asegurar que las preguntas están vinculadas al ID de quiz correcto
+        val questionEntities = questionsDto.map { it.toEntity().copy(quizId = quizDto.id) }
+        courseDao.insertQuestions(questionEntities)
+        
+        Log.d("CourseRepo", "Quiz y ${questionEntities.size} preguntas insertados en Room exitosamente")
 
         val userId = supabase.auth.currentUserOrNull()?.id
         if (userId != null) {
+            // ... resto del código de resultados
             val resultDto = supabase.from("quiz_results").select {
                 filter { eq("quiz_id", quizDto.id); eq("user_id", userId) }
             }.decodeSingleOrNull<QuizResultDto>()
@@ -163,12 +210,41 @@ class SupabaseCourseRepositoryImpl(
 
     override suspend fun syncClinicalData(topicId: String): Result<Unit> {
         return try {
+            Log.d("CourseRepo", "Sincronizando datos clínicos para topic: $topicId")
             val casesDto = supabase.from("clinical_cases").select { filter { eq("topic_id", topicId) } }.decodeList<ClinicalCaseDto>()
+            Log.d("CourseRepo", "Casos clínicos recibidos de Supabase: ${casesDto.size}")
+            
             val resourcesDto = supabase.from("complementary_resources").select { filter { eq("topic_id", topicId) } }.decodeList<ComplementaryResourceDto>()
-            courseDao.insertClinicalCases(casesDto.map { it.toEntity() })
-            courseDao.insertComplementaryResources(resourcesDto.map { it.toEntity() })
+            Log.d("CourseRepo", "Recursos complementarios recibidos: ${resourcesDto.size}")
+            
+            val entities = casesDto.map { it.toEntity() }
+            courseDao.insertClinicalCases(entities)
+            
+            val resourceEntities = resourcesDto.map { it.toEntity() }
+            courseDao.insertComplementaryResources(resourceEntities)
+            
+            Log.d("CourseRepo", "Sincronización clínica completada exitosamente en Room")
             Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
+        } catch (e: Exception) { 
+            Log.e("CourseRepo", "Error sincronizando datos clínicos para $topicId", e)
+            Result.failure(e) 
+        }
+    }
+
+    override suspend fun syncExternalLinks(topicId: String): Result<Unit> {
+        return try {
+            // Nota: El DTO ExternalLinkDto debe ser creado en el módulo :data
+            // Por ahora usamos una consulta genérica si no tenemos el DTO aún
+            val links = supabase.from("external_links")
+                .select { filter { eq("topic_id", topicId) } }
+                .decodeList<ExternalLinkDto>()
+            
+            supportDao.insertExternalLinks(links.map { it.toEntity() })
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("CourseRepo", "Error syncing external links", e)
+            Result.failure(e)
+        }
     }
 
     override suspend fun markLessonAsCompleted(lessonId: String): Boolean {
@@ -240,7 +316,11 @@ class SupabaseCourseRepositoryImpl(
                 imagePlaceholder = topic.imagePlaceholder,
                 contentUrl = finalContentUrl,
                 order = topic.order,
-                type = if (topic.type == TopicType.CLINICAL_CASES) "clinical_cases" else "lessons",
+                type = when(topic.type) {
+                    TopicType.THEORY -> "theory"
+                    TopicType.PRACTICE -> "practice"
+                    TopicType.SUPPORT -> "support"
+                },
                 conversationId = topic.conversationId
             )
             
@@ -262,7 +342,7 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun deleteTopic(id: String): Result<Unit> {
         return try {
             supabase.from("topics").delete { filter { eq("id", id) } }
-            // Opcional: limpiar Room
+            courseDao.deleteTopicById(id)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
@@ -296,9 +376,15 @@ class SupabaseCourseRepositoryImpl(
                 val bucket = supabase.storage.from("content")
                 
                 Log.d("CourseRepo", "Subiendo contenido MD a $path")
-                bucket.upload(path, lesson.content.toByteArray()) { upsert = true }
-                contentUrl = bucket.publicUrl(path)
-                Log.d("CourseRepo", "Contenido MD subido. URL: $contentUrl")
+                try {
+                    bucket.upload(path, lesson.content.toByteArray()) { upsert = true }
+                    contentUrl = bucket.publicUrl(path)
+                    Log.d("CourseRepo", "Contenido MD subido. URL: $contentUrl")
+                } catch (e: Exception) {
+                    Log.e("CourseRepo", "Error subiendo a storage, buscando si ya existe...", e)
+                    // Si falla por RLS o similar, intentamos obtener la URL de todas formas si no es crítico
+                    contentUrl = bucket.publicUrl(path)
+                }
             }
 
             val dto = LessonDto(
@@ -333,6 +419,7 @@ class SupabaseCourseRepositoryImpl(
     override suspend fun deleteLesson(id: String): Result<Unit> {
         return try {
             supabase.from("lessons").delete { filter { eq("id", id) } }
+            courseDao.deleteLessonById(id)
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
@@ -353,5 +440,121 @@ class SupabaseCourseRepositoryImpl(
             bucket.upload(path, byteArray) { upsert = true }
             Result.success(bucket.publicUrl(path))
         } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun saveQuiz(quiz: Quiz): Result<Unit> {
+        return try {
+            Log.d("CourseRepo", "--- GUARDANDO QUIZ ---")
+            Log.d("CourseRepo", "ID: ${quiz.id}, TopicID: ${quiz.topicId}, Title: ${quiz.title}")
+            val dto = quiz.toDto()
+            supabase.from("quizzes").upsert(dto)
+            Log.d("CourseRepo", "Quiz guardado en Supabase")
+            courseDao.insertQuiz(dto.toEntity())
+            Log.d("CourseRepo", "Quiz guardado en Room")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("CourseRepo", "Error guardando quiz", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteQuiz(id: String): Result<Unit> {
+        return try {
+            Log.d("CourseRepo", "Eliminando Quiz ID: $id")
+            supabase.from("quizzes").delete { filter { eq("id", id) } }
+            courseDao.deleteQuizById(id)
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun saveQuestion(question: Question): Result<Unit> {
+        return try {
+            Log.d("CourseRepo", "--- GUARDANDO PREGUNTA ---")
+            Log.d("CourseRepo", "ID: ${question.id}, QuizID: ${question.quizId}, Text: ${question.text}")
+            val dto = question.toDto()
+            supabase.from("questions").upsert(dto)
+            Log.d("CourseRepo", "Pregunta guardada en Supabase")
+            courseDao.insertQuestions(listOf(dto.toEntity()))
+            Log.d("CourseRepo", "Pregunta guardada en Room")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("CourseRepo", "Error guardando pregunta", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteQuestion(id: String): Result<Unit> {
+        return try {
+            supabase.from("questions").delete { filter { eq("id", id) } }
+            courseDao.deleteQuestionById(id)
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun saveExternalLink(link: ExternalLink): Result<Unit> {
+        return try {
+            val dto = ExternalLinkDto(
+                id = link.id,
+                topicId = link.topicId,
+                title = link.title,
+                description = link.description,
+                url = link.url,
+                order = link.order
+            )
+            supabase.from("external_links").upsert(dto)
+            supportDao.insertExternalLinks(listOf(dto.toEntity()))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteExternalLink(linkId: String): Result<Unit> {
+        return try {
+            supabase.from("external_links").delete { filter { eq("id", linkId) } }
+            supportDao.deleteExternalLink(linkId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun saveClinicalCase(clinicalCase: ClinicalCase): Result<Unit> {
+        return try {
+            val dto = ClinicalCaseDto(
+                id = clinicalCase.id,
+                topicId = clinicalCase.topicId,
+                title = clinicalCase.title,
+                description = clinicalCase.description,
+                imageUrl = clinicalCase.imageUrl,
+                quizId = clinicalCase.quizId
+            )
+            supabase.from("clinical_cases").upsert(dto)
+            courseDao.insertClinicalCases(listOf(dto.toEntity()))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteClinicalCase(id: String): Result<Unit> {
+        return try {
+            supabase.from("clinical_cases").delete { filter { eq("id", id) } }
+            courseDao.deleteClinicalCaseById(id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun uploadClinicalCaseImage(byteArray: ByteArray, fileName: String): Result<String> {
+        return try {
+            val bucket = supabase.storage.from("content")
+            val path = "clinical/images/$fileName"
+            bucket.upload(path, byteArray) { upsert = true }
+            Result.success(bucket.publicUrl(path))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

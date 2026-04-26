@@ -5,6 +5,7 @@ import com.laguipemo.nefroped.features.course.clinical.ClinicalCaseListViewModel
 import com.laguipemo.nefroped.features.course.lessons.LessonsViewModel
 import com.laguipemo.nefroped.features.course.lessons.detail.LessonDetailViewModel
 import com.laguipemo.nefroped.features.course.quiz.QuizViewModel
+import com.laguipemo.nefroped.features.course.support.SupportResourcesViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -24,4 +25,5 @@ val courseKoinModule = module {
 
     viewModelOf(::QuizViewModel)
     viewModelOf(::ClinicalCaseListViewModel)
+    viewModel { (topicId: String) -> SupportResourcesViewModel(topicId, get(), get()) }
 }

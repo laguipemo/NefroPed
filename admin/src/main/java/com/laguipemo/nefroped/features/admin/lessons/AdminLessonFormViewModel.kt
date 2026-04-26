@@ -36,6 +36,7 @@ sealed interface LessonFormEvent {
     data class UploadResource(val byteArray: ByteArray, val fileName: String, val type: ResourceType) : LessonFormEvent
     data class UploadImage(val byteArray: ByteArray, val fileName: String) : LessonFormEvent
     data object Submit : LessonFormEvent
+    data object Delete : LessonFormEvent
 }
 
 enum class ResourceType {
@@ -117,6 +118,17 @@ class AdminLessonFormViewModel(
             is LessonFormEvent.UploadResource -> uploadResource(event.byteArray, event.fileName, event.type)
             is LessonFormEvent.UploadImage -> uploadImage(event.byteArray, event.fileName)
             LessonFormEvent.Submit -> saveLesson()
+            LessonFormEvent.Delete -> deleteLesson()
+        }
+    }
+
+    private fun deleteLesson() {
+        lessonId?.let { id ->
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true) }
+                repository.deleteLesson(id)
+                _uiState.update { it.copy(isLoading = false, isSaveSuccess = true) }
+            }
         }
     }
 
